@@ -1,0 +1,22 @@
+_schema-version: '3.3'
+ID: ap-react
+version: 1.0.0
+description: Accounts Payable | Intelligent Invoice Automation - React UI
+
+parameters:
+  enable-parallel-deployments: true
+
+modules:
+  - name: ap-react-ui
+    type: staticfile_buildpack
+    path: .
+    parameters:
+      memory: 128M
+      disk-quota: 256M
+      buildpack: staticfile_buildpack
+    build-parameters:
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      build-result: dist
