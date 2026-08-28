@@ -34,6 +34,7 @@ import {
   kpiGuidance,
   kpiRoleSelector,
   apAssistantGuidance,
+  exceptionsPersonaSelector,
 } from './data'
 import './App.css'
 
@@ -62,7 +63,7 @@ const topbarTitleByPage = {
 const defaultTopbarTitle = 'Accounts Payable | Intelligent Invoice Automation'
 
 const personaSelectorByPage = {
-  'Exceptions & Recommendations': { label: 'Persona', value: 'AP Supervisor' },
+  'Exceptions & Recommendations': exceptionsPersonaSelector,
 }
 
 const searchPlaceholderByPage = {

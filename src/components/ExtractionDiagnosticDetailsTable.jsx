@@ -1,12 +1,10 @@
-import { extractionDiagnosticDetails } from '../data'
-
 function confidenceColor(pct) {
   const n = parseInt(pct, 10)
   if (n >= 65) return 'orange'
   return 'red'
 }
 
-export default function ExtractionDiagnosticDetailsTable() {
+export default function ExtractionDiagnosticDetailsTable({ rows }) {
   return (
     <section className="panel extraction-diagnostic-details">
       <h2 className="panel-title">Extraction Diagnostic Details</h2>
@@ -37,7 +35,14 @@ export default function ExtractionDiagnosticDetailsTable() {
             </tr>
           </thead>
           <tbody>
-            {extractionDiagnosticDetails.map((row, i) => (
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={9} className="table-empty-cell">
+                  No issues match the selected filters.
+                </td>
+              </tr>
+            )}
+            {rows.map((row, i) => (
               <tr key={i}>
                 <td className="cell-ellipsis" title={row.vendor}>
                   {row.vendor}

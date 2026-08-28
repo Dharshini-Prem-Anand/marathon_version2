@@ -5,23 +5,35 @@ import CapabilityCards from '../components/CapabilityCards'
 import PriorityQueue from '../components/PriorityQueue'
 import Bottlenecks from '../components/Bottlenecks'
 import ValueRealization from '../components/ValueRealization'
-import { scorecardMetrics } from '../data'
-
-const filters = [
-  { label: 'Company Code', value: 'All' },
-  { label: 'Invoice Channel', value: 'All' },
-  { label: 'Vendor', value: 'All' },
-  { label: 'Status', value: 'All' },
-]
+import { useFilters, matchesCompanyCode, matchesOption } from '../hooks/useFilters'
+import { scorecardMetrics, dashboardFilters, dashboardPersonaField, priorityQueue } from '../data'
 
 export default function Dashboard() {
+  const { draft, applied, setField, apply } = useFilters(dashboardFilters)
+
+  const filteredQueue = priorityQueue.filter(
+    (row) =>
+      matchesCompanyCode(applied['Company Code']) &&
+      matchesOption(applied['Vendor'], row.vendor) &&
+      matchesOption(applied['Invoice Channel'], row.channel) &&
+      matchesOption(applied['Status'], row.status)
+  )
+
   return (
     <>
-      <FilterBar fields={filters} personaField={{ label: 'Persona', value: 'Executive' }} />
+      <FilterBar
+        fields={dashboardFilters}
+        values={draft}
+        onFieldChange={setField}
+        onGo={apply}
+        personaField={dashboardPersonaField}
+        personaValue={draft.Persona ?? dashboardPersonaField.value}
+        onPersonaChange={(v) => setField('Persona', v)}
+      />
       <Scorecard title="Business Outcome Scorecard" metrics={scorecardMetrics} />
       <FlowSteps />
       <CapabilityCards />
-      <PriorityQueue />
+      <PriorityQueue rows={filteredQueue} />
       <Bottlenecks />
       <ValueRealization />
     </>

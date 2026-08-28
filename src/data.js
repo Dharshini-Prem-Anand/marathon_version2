@@ -1,3 +1,16 @@
+export const companyCodeOptions = ['All', '1000 - Marathon US', '2000 - Marathon Canada', '3000 - Marathon EU']
+export const invoiceChannelOptions = ['All', 'Email', 'Vendor Portal', 'EDI', 'Upload']
+export const vendorOptions = [
+  'All',
+  'Global Industrial Supply',
+  'Office Depot',
+  'Cintas Corporation',
+  'Verizon Wireless',
+  'Grainger',
+  'Staples',
+  'Delta Dental',
+]
+
 export const scorecardMetrics = [
   { label: 'Touchless Invoice Processing', value: '46%', target: 'Target 80%', trend: 'up', color: 'blue' },
   { label: 'First-Pass VIM Readiness', value: '84%', target: 'Target 95%', trend: 'up', color: 'green' },
@@ -6,6 +19,19 @@ export const scorecardMetrics = [
   { label: 'Human Touches per Invoice', value: '1.8', target: 'Target 0.8', trend: 'down', color: 'red' },
   { label: 'Extraction & Validation Accuracy', value: '94%', target: 'Target 98%', trend: 'up', color: 'green' },
 ]
+
+export const dashboardFilters = [
+  { label: 'Company Code', value: 'All', options: companyCodeOptions },
+  { label: 'Invoice Channel', value: 'All', options: invoiceChannelOptions },
+  { label: 'Vendor', value: 'All', options: vendorOptions },
+  { label: 'Status', value: 'All', options: ['All', 'Active', 'Pending', 'Closed'] },
+]
+
+export const dashboardPersonaField = {
+  label: 'Persona',
+  value: 'Executive',
+  options: ['Executive', 'CFO', 'Controller', 'AP Director', 'Transformation Leader'],
+}
 
 export const flowSteps = [
   { label: 'Emails / Documents Received', value: '2,600' },
@@ -86,11 +112,11 @@ export const capabilityCards = [
 ]
 
 export const priorityQueue = [
-  { priority: 'High', invoice: 'INV-2025-10456', vendor: 'Global Industrial Supply', issue: 'Late-Payment Risk', due: 'May 21, 2025', owner: 'Sarah J.', action: 'Approve for posting' },
-  { priority: 'High', invoice: 'INV-2025-10412', vendor: 'Office Depot', issue: 'Low Extraction Confidence', due: 'May 21, 2025', owner: 'Michael T.', action: 'Review & confirm data' },
-  { priority: 'Medium', invoice: 'INV-2025-10398', vendor: 'Cintas Corporation', issue: 'PO Line Mismatch', due: 'May 22, 2025', owner: 'Alicia R.', action: 'Correct PO / line' },
-  { priority: 'Medium', invoice: 'INV-2025-10422', vendor: 'Verizon Wireless', issue: 'Vendor / Payee Ambiguity', due: 'May 23, 2025', owner: 'Daniel K.', action: 'Confirm vendor details' },
-  { priority: 'Low', invoice: 'CM-2025-10077', vendor: 'Grainger', issue: 'Tax / Freight Variance', due: 'May 24, 2025', owner: 'Priya S.', action: 'Verify charges' },
+  { priority: 'High', invoice: 'INV-2025-10456', vendor: 'Global Industrial Supply', issue: 'Late-Payment Risk', due: 'May 21, 2025', owner: 'Sarah J.', action: 'Approve for posting', channel: 'Email', status: 'Active' },
+  { priority: 'High', invoice: 'INV-2025-10412', vendor: 'Office Depot', issue: 'Low Extraction Confidence', due: 'May 21, 2025', owner: 'Michael T.', action: 'Review & confirm data', channel: 'Vendor Portal', status: 'Active' },
+  { priority: 'Medium', invoice: 'INV-2025-10398', vendor: 'Cintas Corporation', issue: 'PO Line Mismatch', due: 'May 22, 2025', owner: 'Alicia R.', action: 'Correct PO / line', channel: 'EDI', status: 'Pending' },
+  { priority: 'Medium', invoice: 'INV-2025-10422', vendor: 'Verizon Wireless', issue: 'Vendor / Payee Ambiguity', due: 'May 23, 2025', owner: 'Daniel K.', action: 'Confirm vendor details', channel: 'Email', status: 'Pending' },
+  { priority: 'Low', invoice: 'CM-2025-10077', vendor: 'Grainger', issue: 'Tax / Freight Variance', due: 'May 24, 2025', owner: 'Priya S.', action: 'Verify charges', channel: 'Upload', status: 'Active' },
 ]
 
 export const bottlenecks = [
@@ -183,11 +209,15 @@ export const dashboardGuidance = {
 }
 
 export const emailTriageFilters = [
-  { label: 'Source', value: 'All' },
-  { label: 'Channel', value: 'All' },
-  { label: 'Sender / Vendor', value: 'All' },
-  { label: 'Proposed Category', value: 'All' },
-  { label: 'Priority', value: 'All' },
+  { label: 'Source', value: 'All', options: ['All', 'Email', 'Vendor Portal', 'EDI 810', 'Upload'] },
+  { label: 'Channel', value: 'All', options: ['All', 'Email', 'Vendor Portal', 'EDI 810', 'Upload'] },
+  { label: 'Sender / Vendor', value: 'All', options: vendorOptions },
+  {
+    label: 'Proposed Category',
+    value: 'All',
+    options: ['All', 'Invoice', 'Credit Memo', 'Statement', 'Inquiry', 'Duplicate', 'Non-Invoice'],
+  },
+  { label: 'Priority', value: 'All', options: ['All', 'High', 'Medium', 'Low'] },
 ]
 
 export const emailTriageStats = [
@@ -423,10 +453,10 @@ export const emailTriageGuidance = {
 }
 
 export const documentAiFilters = [
-  { label: 'Company Code', value: 'All' },
-  { label: 'Invoice Channel', value: 'All' },
-  { label: 'Vendor', value: 'All' },
-  { label: 'Status', value: 'All' },
+  { label: 'Company Code', value: 'All', options: companyCodeOptions },
+  { label: 'Invoice Channel', value: 'All', options: invoiceChannelOptions },
+  { label: 'Vendor', value: 'All', options: vendorOptions },
+  { label: 'Status', value: 'All', options: ['All', 'Processed', 'Pending', 'Failed'] },
 ]
 
 export const documentAiStats = [
@@ -439,11 +469,11 @@ export const documentAiStats = [
 ]
 
 export const documentQueue = [
-  { format: 'PDF', icon: 'pdf', color: 'red', documents: 1128, percent: '50%', topVendor: 'Global Industrial Supply', topVendorCount: 312, lowConfidence: 8 },
-  { format: 'Word', icon: 'word', color: 'blue', documents: 396, percent: '18%', topVendor: 'Office Depot', topVendorCount: 178, lowConfidence: 4 },
-  { format: 'Excel', icon: 'excel', color: 'green', documents: 332, percent: '15%', topVendor: 'Cintas Corporation', topVendorCount: 142, lowConfidence: 3 },
-  { format: 'Image', icon: 'image', color: 'purple', documents: 256, percent: '11%', topVendor: 'Verizon Wireless', topVendorCount: 98, lowConfidence: 2 },
-  { format: 'Handwritten', icon: 'handwritten', color: 'orange', documents: 132, percent: '6%', topVendor: 'Delta Dental', topVendorCount: 61, lowConfidence: 1 },
+  { format: 'PDF', icon: 'pdf', color: 'red', documents: 1128, percent: '50%', topVendor: 'Global Industrial Supply', topVendorCount: 312, lowConfidence: 8, channel: 'Email', status: 'Processed' },
+  { format: 'Word', icon: 'word', color: 'blue', documents: 396, percent: '18%', topVendor: 'Office Depot', topVendorCount: 178, lowConfidence: 4, channel: 'Vendor Portal', status: 'Processed' },
+  { format: 'Excel', icon: 'excel', color: 'green', documents: 332, percent: '15%', topVendor: 'Cintas Corporation', topVendorCount: 142, lowConfidence: 3, channel: 'EDI', status: 'Pending' },
+  { format: 'Image', icon: 'image', color: 'purple', documents: 256, percent: '11%', topVendor: 'Verizon Wireless', topVendorCount: 98, lowConfidence: 2, channel: 'Upload', status: 'Processed' },
+  { format: 'Handwritten', icon: 'handwritten', color: 'orange', documents: 132, percent: '6%', topVendor: 'Delta Dental', topVendorCount: 61, lowConfidence: 1, channel: 'Upload', status: 'Failed' },
 ]
 
 export const invoicePreview = {
@@ -587,11 +617,15 @@ export const documentAiGuidance = {
 }
 
 export const preValidationFilters = [
-  { label: 'Company Code', value: '1000 - Marathon US' },
-  { label: 'Vendor', value: 'All' },
-  { label: 'Document Type', value: 'All' },
-  { label: 'Confidence Band', value: 'All' },
-  { label: 'Validation Status', value: 'All' },
+  { label: 'Company Code', value: '1000 - Marathon US', options: companyCodeOptions },
+  { label: 'Vendor', value: 'All', options: vendorOptions },
+  { label: 'Document Type', value: 'All', options: ['All', 'Invoice', 'Credit Memo', 'Debit Memo'] },
+  {
+    label: 'Confidence Band',
+    value: 'All',
+    options: ['All', 'High (90-100%)', 'Medium (70-89%)', 'Low (< 70%)'],
+  },
+  { label: 'Validation Status', value: 'All', options: ['All', 'Passed', 'Review', 'Failed'] },
 ]
 
 export const preValidationStats = [
@@ -748,11 +782,17 @@ export const preValidationGuidance = {
 }
 
 export const poMatchingFilters = [
-  { label: 'Company Code', value: 'All' },
-  { label: 'Invoice Channel', value: 'All' },
-  { label: 'Vendor', value: 'All' },
-  { label: 'Status', value: 'All' },
+  { label: 'Company Code', value: 'All', options: companyCodeOptions },
+  { label: 'Invoice Channel', value: 'All', options: invoiceChannelOptions },
+  { label: 'Vendor', value: 'All', options: vendorOptions },
+  { label: 'Status', value: 'All', options: ['All', 'Matched', 'Partial Match', 'Mismatch', 'Not Found'] },
 ]
+
+export const poMatchingContext = {
+  vendor: 'Cintas Corporation',
+  channel: 'EDI',
+  status: 'Mismatch',
+}
 
 export const poMatchingStats = [
   { icon: 'fileText', label: 'PO Invoices', value: '1,986', valueColor: 'blue', target: null },
@@ -1082,6 +1122,12 @@ export const whatIfScenarios = [
 export const scenarioInfoText =
   'Recommended scenario saves 26 minutes, reduces cycle time by 67%, and avoids estimated late-payment exposure of $4,200.'
 
+export const exceptionsPersonaSelector = {
+  label: 'Persona',
+  value: 'AP Supervisor',
+  options: ['AP Supervisor', 'AP Processor', 'Tax Reviewer', 'Buyer', 'Controller'],
+}
+
 export const exceptionsGuidance = {
   title: 'Business Use & Guidance',
   closeIcon: 'x',
@@ -1154,11 +1200,26 @@ export const vimPageHeader = {
 }
 
 export const vimFilters = [
-  { label: 'Company Code', value: 'All' },
-  { label: 'Vendor', value: 'All' },
-  { label: 'VIM Status', value: 'All' },
-  { label: 'Due Date', value: 'All' },
-  { label: 'Touchless/Human Review', value: 'All' },
+  { label: 'Company Code', value: 'All', options: companyCodeOptions },
+  {
+    label: 'Vendor',
+    value: 'All',
+    options: [
+      'All',
+      'Apex Field Services',
+      'Global Industrial Supply',
+      'ElectroMax Solutions',
+      'Precision Components Inc.',
+      'Office Depot Business',
+    ],
+  },
+  {
+    label: 'VIM Status',
+    value: 'All',
+    options: ['All', 'Awaiting Approval', 'Injected', 'Posting Failed', 'Blocked', 'Posted'],
+  },
+  { label: 'Due Date', value: 'All', options: ['All', 'May 18, 2026', 'May 21, 2026', 'May 22, 2026', 'May 23, 2026'] },
+  { label: 'Touchless/Human Review', value: 'All', options: ['All', 'Touchless', 'Human Review'] },
 ]
 
 export const vimStats = [
@@ -1411,11 +1472,19 @@ export const workAssignmentPageHeader = {
 }
 
 export const workAssignmentFilters = [
-  { label: 'Team', value: 'All' },
-  { label: 'Role', value: 'All' },
-  { label: 'Company Code', value: 'All' },
-  { label: 'Priority', value: 'All' },
-  { label: 'SLA Status', value: 'All' },
+  {
+    label: 'Team',
+    value: 'All',
+    options: ['All', 'Validators', 'AP Processors', 'Tax Review', 'Vendor Master Review'],
+  },
+  {
+    label: 'Role',
+    value: 'All',
+    options: ['All', 'Validator', 'AP Processor', 'Tax Reviewer', 'Buyer'],
+  },
+  { label: 'Company Code', value: 'All', options: companyCodeOptions },
+  { label: 'Priority', value: 'All', options: ['All', 'Critical', 'High', 'Medium', 'Low'] },
+  { label: 'SLA Status', value: 'All', options: ['All', 'On Track', 'At Risk'] },
 ]
 
 export const workAssignmentStats = [
@@ -1428,10 +1497,12 @@ export const workAssignmentStats = [
 ]
 
 export const teamCapacity = [
-  { initials: 'MS', name: 'Maria S.', role: 'Validator', utilization: 92, assigned: 48, atRisk: 7, atRiskColor: 'red', available: '4.2 hrs available' },
-  { initials: 'DR', name: 'David R.', role: 'Validator', utilization: 76, assigned: 35, atRisk: 2, atRiskColor: 'orange', available: '7.8 hrs available' },
-  { initials: 'AP', name: 'Anita P.', role: 'AP Processor', utilization: 88, assigned: 41, atRisk: 6, atRiskColor: 'red', available: '5.1 hrs available' },
-  { initials: 'JK', name: 'James K.', role: 'AP Processor', utilization: 69, assigned: 28, atRisk: 1, atRiskColor: 'yellow', available: '9.4 hrs available' },
+  { initials: 'MS', name: 'Maria S.', role: 'Validator', team: 'Validators', utilization: 92, assigned: 48, atRisk: 7, atRiskColor: 'red', available: '4.2 hrs available' },
+  { initials: 'DR', name: 'David R.', role: 'Validator', team: 'Validators', utilization: 76, assigned: 35, atRisk: 2, atRiskColor: 'orange', available: '7.8 hrs available' },
+  { initials: 'AP', name: 'Anita P.', role: 'AP Processor', team: 'AP Processors', utilization: 88, assigned: 41, atRisk: 6, atRiskColor: 'red', available: '5.1 hrs available' },
+  { initials: 'JK', name: 'James K.', role: 'AP Processor', team: 'AP Processors', utilization: 69, assigned: 28, atRisk: 1, atRiskColor: 'yellow', available: '9.4 hrs available' },
+  { initials: 'TR', name: 'Tom R.', role: 'Tax Reviewer', team: 'Tax Review', utilization: 81, assigned: 22, atRisk: 3, atRiskColor: 'orange', available: '3.8 hrs available' },
+  { initials: 'LB', name: 'Lena B.', role: 'Buyer', team: 'Vendor Master Review', utilization: 58, assigned: 15, atRisk: 1, atRiskColor: 'yellow', available: '10.2 hrs available' },
 ]
 
 export const priorityModel = {
@@ -1596,10 +1667,10 @@ export const workAssignmentGuidance = {
 }
 
 export const operationalAnalyticsFilters = [
-  { label: 'Company Code', value: 'All' },
-  { label: 'Invoice Channel', value: 'All' },
-  { label: 'Vendor', value: 'All' },
-  { label: 'Status', value: 'All' },
+  { label: 'Company Code', value: 'All', options: companyCodeOptions },
+  { label: 'Invoice Channel', value: 'All', options: invoiceChannelOptions },
+  { label: 'Vendor', value: 'All', options: vendorOptions },
+  { label: 'Status', value: 'All', options: ['All', 'Active', 'Pending', 'Closed'] },
 ]
 
 export const operationalAnalyticsScorecard = [
@@ -1738,11 +1809,15 @@ export const operationalAnalyticsGuidance = {
 }
 
 export const extractionDiagFilters = [
-  { label: 'Company Code', value: '1000 - Marathon US' },
-  { label: 'Vendor', value: 'All' },
-  { label: 'Invoice Type', value: 'All' },
-  { label: 'Confidence Band', value: 'All' },
-  { label: 'Validation Status', value: 'All' },
+  { label: 'Company Code', value: '1000 - Marathon US', options: companyCodeOptions },
+  {
+    label: 'Vendor',
+    value: 'All',
+    options: ['All', 'Global Industrial Supply', 'Houston Components', 'Precision Parts Co.', 'Summit Solutions'],
+  },
+  { label: 'Invoice Type', value: 'All', options: ['All', 'PDF', 'Word', 'Excel', 'Image', 'Handwritten'] },
+  { label: 'Confidence Band', value: 'All', options: ['All', 'High', 'Medium', 'Low'] },
+  { label: 'Validation Status', value: 'All', options: ['All', 'Passed', 'Review', 'Failed'] },
 ]
 
 export const extractionDiagStats = [
@@ -1965,7 +2040,11 @@ export const extractionDiagGuidance = {
   footerButton: 'View KPI Definitions',
 }
 
-export const auditPersonaSelector = { label: 'Persona', value: 'AP Controller' }
+export const auditPersonaSelector = {
+  label: 'Persona',
+  value: 'AP Controller',
+  options: ['AP Controller', 'Controller', 'Internal Audit', 'AP Controls', 'Compliance', 'VIM Product Owner'],
+}
 
 export const auditStats = [
   { label: 'Invoices Received', value: '2,600', color: 'blue' },
@@ -2094,7 +2173,10 @@ export const auditGuidance = {
   footerButton: 'View KPI Definitions',
 }
 
-export const kpiRoleSelector = 'Process Owner'
+export const kpiRoleSelector = {
+  value: 'Process Owner',
+  options: ['Process Owner', 'CFO', 'Controller', 'AP Director', 'Data Steward', 'Value Lead'],
+}
 
 export const kpiPageHeader = {
   title: 'KPI, Metrics & Value',
@@ -2109,10 +2191,23 @@ export const kpiHeaderActions = [
 
 export const kpiFilters = {
   searchPlaceholder: 'Search name or measure...',
-  category: 'All',
-  status: 'Active',
-  reportingPeriod: 'Current Month',
+  fields: [
+    {
+      label: 'Category',
+      value: 'All',
+      options: ['All', 'Automation', 'VIM Quality', 'Extraction Quality', 'Matching', 'Operational', 'Financial'],
+    },
+    { label: 'Status', value: 'Active', options: ['All', 'Active', 'Draft', 'Retired'] },
+    {
+      label: 'Reporting Period',
+      value: 'All',
+      options: ['All', 'Current Month', 'Last Month', 'Current Quarter', 'Year to Date'],
+    },
+  ],
 }
+
+export const measureCategoryOptions = ['Automation', 'VIM Quality', 'Extraction Quality', 'Matching', 'Operational', 'Financial']
+export const measureOwnerOptions = ['AP Operations', 'AP Process Owner', 'Data Steward', 'AP Manager', 'Finance Transformation']
 
 export const kpiStats = [
   { label: 'Touchless Processing', value: '46%', valueColor: 'blue', target: 'Target 80%', percent: 58, barColor: 'blue' },
@@ -2126,12 +2221,12 @@ export const kpiStats = [
 export const measureDefinitionRegister = {
   count: '6 measures',
   rows: [
-    { measure: 'Touchless Processing', subtitle: 'BTP IIA + SAP VIM', category: 'Automation', baseline: '28%', current: '46%', target: '80%', owner: 'AP Operations', status: 'Active', selected: false },
-    { measure: 'First-Pass VIM Readiness', subtitle: 'Pre-Validation + VIM', category: 'VIM Quality', baseline: '72%', current: '84%', target: '95%', owner: 'AP Process Owner', status: 'Active', selected: true },
-    { measure: 'Extraction Accuracy', subtitle: 'Document AI', category: 'Extraction Quality', baseline: '88%', current: '94%', target: '98%', owner: 'Data Steward', status: 'Active', selected: false },
-    { measure: 'Line Match Rate', subtitle: 'PO & Line Matching', category: 'Matching', baseline: '62%', current: '78%', target: '90%', owner: 'AP Operations', status: 'Active', selected: false },
-    { measure: 'Human Touches', subtitle: 'Audit Event Log', category: 'Operational', baseline: '2.6', current: '1.8', target: '0.8', owner: 'AP Manager', status: 'Active', selected: false },
-    { measure: 'Annualized Value', subtitle: 'Value Realization', category: 'Financial', baseline: '$0.6M', current: '$1.2M', target: '$1.0M', owner: 'Finance Transformation', status: 'Active', selected: false },
+    { measure: 'Touchless Processing', subtitle: 'BTP IIA + SAP VIM', category: 'Automation', baseline: '28%', current: '46%', target: '80%', owner: 'AP Operations', status: 'Active', reportingPeriod: 'Current Month', selected: false },
+    { measure: 'First-Pass VIM Readiness', subtitle: 'Pre-Validation + VIM', category: 'VIM Quality', baseline: '72%', current: '84%', target: '95%', owner: 'AP Process Owner', status: 'Active', reportingPeriod: 'Current Month', selected: true },
+    { measure: 'Extraction Accuracy', subtitle: 'Document AI', category: 'Extraction Quality', baseline: '88%', current: '94%', target: '98%', owner: 'Data Steward', status: 'Active', reportingPeriod: 'Current Month', selected: false },
+    { measure: 'Line Match Rate', subtitle: 'PO & Line Matching', category: 'Matching', baseline: '62%', current: '78%', target: '90%', owner: 'AP Operations', status: 'Active', reportingPeriod: 'Last Month', selected: false },
+    { measure: 'Human Touches', subtitle: 'Audit Event Log', category: 'Operational', baseline: '2.6', current: '1.8', target: '0.8', owner: 'AP Manager', status: 'Active', reportingPeriod: 'Current Quarter', selected: false },
+    { measure: 'Annualized Value', subtitle: 'Value Realization', category: 'Financial', baseline: '$0.6M', current: '$1.2M', target: '$1.0M', owner: 'Finance Transformation', status: 'Active', reportingPeriod: 'Year to Date', selected: false },
   ],
 }
 
@@ -2395,7 +2490,7 @@ export const sidebarItems = [
   { icon: 'fileText', label: 'Document AI & Extraction' },
   { icon: 'checkCircle', label: 'Pre-Validation' },
   { icon: 'grid', label: 'PO & Line Matching' },
-  { icon: 'alertTriangle', label: 'Exceptions & Recommendations', badge: '12' },
+  { icon: 'alertTriangle', label: 'Exceptions & Recommendations' },
   { icon: 'layers', label: 'VIM Processing' },
   { icon: 'users', label: 'Work Assignment' },
   { icon: 'barChart', label: 'Operational Analytics' },

@@ -1,11 +1,9 @@
-import { measureDefinitionRegister } from '../data'
-
-export default function MeasureDefinitionRegister() {
+export default function MeasureDefinitionRegister({ rows }) {
   return (
     <section className="panel measure-register">
       <div className="panel-title-row">
         <h2 className="panel-title">Measure Definition Register</h2>
-        <span className="measure-count">{measureDefinitionRegister.count}</span>
+        <span className="measure-count">{rows.length} measures</span>
       </div>
 
       <div className="table-wrap">
@@ -31,7 +29,14 @@ export default function MeasureDefinitionRegister() {
             </tr>
           </thead>
           <tbody>
-            {measureDefinitionRegister.rows.map((row) => (
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={7} className="table-empty-cell">
+                  No measures match the selected filters.
+                </td>
+              </tr>
+            )}
+            {rows.map((row) => (
               <tr key={row.measure} className={row.selected ? 'scenario-row-selected' : undefined}>
                 <td>
                   <div className="measure-name-cell cell-ellipsis" title={row.measure}>

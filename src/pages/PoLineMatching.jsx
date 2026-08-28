@@ -4,21 +4,37 @@ import ThreeWayMatchReview from '../components/ThreeWayMatchReview'
 import MatchExplanation from '../components/MatchExplanation'
 import MatchingPerformance from '../components/MatchingPerformance'
 import VimProcessingTimeline from '../components/VimProcessingTimeline'
-import { poMatchingFilters, poMatchingStats } from '../data'
+import FilterEmptyState from '../components/FilterEmptyState'
+import { useFilters, matchesCompanyCode, matchesOption } from '../hooks/useFilters'
+import { poMatchingFilters, poMatchingStats, poMatchingContext } from '../data'
 
 export default function PoLineMatching() {
+  const { draft, applied, setField, apply } = useFilters(poMatchingFilters)
+
+  const matchesFilters =
+    matchesCompanyCode(applied['Company Code']) &&
+    matchesOption(applied['Invoice Channel'], poMatchingContext.channel) &&
+    matchesOption(applied['Vendor'], poMatchingContext.vendor) &&
+    matchesOption(applied['Status'], poMatchingContext.status)
+
   return (
     <>
-      <FilterBar fields={poMatchingFilters} />
+      <FilterBar fields={poMatchingFilters} values={draft} onFieldChange={setField} onGo={apply} />
       <StatsRow stats={poMatchingStats} />
 
-      <div className="po-main-grid">
-        <ThreeWayMatchReview />
-        <MatchExplanation />
-      </div>
+      {matchesFilters ? (
+        <>
+          <div className="po-main-grid">
+            <ThreeWayMatchReview />
+            <MatchExplanation />
+          </div>
 
-      <MatchingPerformance />
-      <VimProcessingTimeline />
+          <MatchingPerformance />
+          <VimProcessingTimeline />
+        </>
+      ) : (
+        <FilterEmptyState message="No PO match record matches the selected filters." />
+      )}
     </>
   )
 }

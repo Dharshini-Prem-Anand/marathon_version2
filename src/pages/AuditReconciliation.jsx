@@ -11,7 +11,9 @@ export default function AuditReconciliation() {
       <div className="page-persona-row">
         <label>{auditPersonaSelector.label}</label>
         <select defaultValue={auditPersonaSelector.value} onChange={() => {}}>
-          <option>{auditPersonaSelector.value}</option>
+          {auditPersonaSelector.options.map((opt) => (
+            <option key={opt}>{opt}</option>
+          ))}
         </select>
       </div>
 

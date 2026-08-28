@@ -18,15 +18,19 @@ export default function TopBar({ onToggleSidebar, title, personaSelector, search
 
       <div className="topbar-right">
         {roleSelector && (
-          <select className="topbar-role-select" defaultValue={roleSelector} onChange={() => {}}>
-            <option>{roleSelector}</option>
+          <select className="topbar-role-select" defaultValue={roleSelector.value} onChange={() => {}}>
+            {roleSelector.options.map((opt) => (
+              <option key={opt}>{opt}</option>
+            ))}
           </select>
         )}
         {personaSelector && (
           <div className="topbar-persona">
             <label>{personaSelector.label}:</label>
             <select defaultValue={personaSelector.value} onChange={() => {}}>
-              <option>{personaSelector.value}</option>
+              {personaSelector.options.map((opt) => (
+                <option key={opt}>{opt}</option>
+              ))}
             </select>
           </div>
         )}

@@ -1,7 +1,6 @@
 import { Users } from 'lucide-react'
-import { teamCapacity } from '../data'
 
-export default function TeamCapacityWorkload() {
+export default function TeamCapacityWorkload({ rows }) {
   return (
     <section className="panel team-capacity">
       <div className="panel-title-row">
@@ -36,7 +35,14 @@ export default function TeamCapacityWorkload() {
             </tr>
           </thead>
           <tbody>
-            {teamCapacity.map((m) => (
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={6} className="table-empty-cell">
+                  No team members match the selected filters.
+                </td>
+              </tr>
+            )}
+            {rows.map((m) => (
               <tr key={m.name}>
                 <td>
                   <span className="team-member-cell">

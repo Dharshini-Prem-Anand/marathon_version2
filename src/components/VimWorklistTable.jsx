@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react'
-import { vimWorklist } from '../data'
 
 const priorityColor = { High: 'red', Medium: 'orange', Low: 'blue' }
 
-export default function VimWorklistTable() {
+export default function VimWorklistTable({ rows }) {
   const [page] = useState(1)
 
   return (
@@ -45,7 +44,14 @@ export default function VimWorklistTable() {
             </tr>
           </thead>
           <tbody>
-            {vimWorklist.map((row) => {
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={13} className="table-empty-cell">
+                  No invoices match the selected filters.
+                </td>
+              </tr>
+            )}
+            {rows.map((row) => {
               const ArrowIcon = row.priorityDir === 'up' ? ArrowUp : ArrowDown
               return (
                 <tr key={row.invoiceId}>
@@ -91,7 +97,7 @@ export default function VimWorklistTable() {
       </div>
 
       <div className="table-pagination">
-        <span>Showing 1 to {vimWorklist.length} of {vimWorklist.length} entries</span>
+        <span>Showing {rows.length === 0 ? 0 : 1} to {rows.length} of {rows.length} entries</span>
         <div className="pagination-controls">
           <button className="pagination-btn" disabled>
             <ChevronLeft size={14} />

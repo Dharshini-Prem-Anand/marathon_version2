@@ -3958,3 +3958,28 @@ tbody tr:last-child td {
   border-top: 1px solid var(--border);
   padding-top: 10px;
 }
+
+/* ---------- SHARED: EMPTY FILTER STATE ---------- */
+.table-empty-cell {
+  text-align: center !important;
+  padding: 28px 12px !important;
+  color: var(--text-muted);
+  font-size: 13px;
+  white-space: normal !important;
+}
+
+.filter-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 56px 20px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.filter-empty-state p {
+  margin: 0;
+  font-size: 14px;
+}

@@ -1,7 +1,6 @@
 import { ListOrdered } from 'lucide-react'
-import { priorityWorkQueue } from '../data'
 
-export default function PriorityWorkQueue() {
+export default function PriorityWorkQueue({ rows }) {
   return (
     <section className="panel priority-work-queue">
       <div className="panel-title-row">
@@ -43,7 +42,14 @@ export default function PriorityWorkQueue() {
             </tr>
           </thead>
           <tbody>
-            {priorityWorkQueue.map((row) => (
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={9} className="table-empty-cell">
+                  No invoices match the selected filters.
+                </td>
+              </tr>
+            )}
+            {rows.map((row) => (
               <tr key={row.invoice}>
                 <td>
                   <span className={`priority-score-badge priority-score-${row.scoreColor}`}>

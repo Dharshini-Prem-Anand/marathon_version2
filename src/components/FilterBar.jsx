@@ -2,19 +2,26 @@ import { Calendar } from 'lucide-react'
 
 export default function FilterBar({
   fields,
+  values,
+  onFieldChange,
   dateRangeLabel = 'Last 7 Days',
   dateFieldLabel = 'Date Range',
   personaField,
+  personaValue,
+  onPersonaChange,
   hideAdaptLink,
   hideGoButton,
+  onGo,
 }) {
   return (
     <div className="filter-bar">
       {fields.map((f) => (
         <div className="filter-field" key={f.label}>
           <label>{f.label}</label>
-          <select defaultValue={f.value} onChange={() => {}}>
-            <option>{f.value}</option>
+          <select value={values[f.label]} onChange={(e) => onFieldChange(f.label, e.target.value)}>
+            {f.options.map((opt) => (
+              <option key={opt}>{opt}</option>
+            ))}
           </select>
         </div>
       ))}
@@ -30,13 +37,19 @@ export default function FilterBar({
       {personaField && (
         <div className="filter-field">
           <label>{personaField.label}</label>
-          <select defaultValue={personaField.value} onChange={() => {}}>
-            <option>{personaField.value}</option>
+          <select value={personaValue} onChange={(e) => onPersonaChange(e.target.value)}>
+            {personaField.options.map((opt) => (
+              <option key={opt}>{opt}</option>
+            ))}
           </select>
         </div>
       )}
 
-      {!hideGoButton && <button className="btn-go">Go</button>}
+      {!hideGoButton && (
+        <button className="btn-go" onClick={onGo}>
+          Go
+        </button>
+      )}
       {!hideAdaptLink && <button className="btn-link">Adapt Filters</button>}
     </div>
   )

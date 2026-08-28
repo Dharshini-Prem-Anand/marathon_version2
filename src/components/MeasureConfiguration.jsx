@@ -1,4 +1,4 @@
-import { measureConfiguration } from '../data'
+import { measureConfiguration, measureCategoryOptions, measureOwnerOptions } from '../data'
 
 export default function MeasureConfiguration() {
   const c = measureConfiguration
@@ -18,13 +18,17 @@ export default function MeasureConfiguration() {
         <div className="filter-field">
           <label>Category</label>
           <select defaultValue={c.category} onChange={() => {}}>
-            <option>{c.category}</option>
+            {measureCategoryOptions.map((opt) => (
+              <option key={opt}>{opt}</option>
+            ))}
           </select>
         </div>
         <div className="filter-field">
           <label>Business Owner</label>
           <select defaultValue={c.businessOwner} onChange={() => {}}>
-            <option>{c.businessOwner}</option>
+            {measureOwnerOptions.map((opt) => (
+              <option key={opt}>{opt}</option>
+            ))}
           </select>
         </div>
       </div>

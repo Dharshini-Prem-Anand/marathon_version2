@@ -9,7 +9,7 @@ const iconMap = {
   handwritten: PenTool,
 }
 
-export default function DocumentQueueTable() {
+export default function DocumentQueueTable({ rows = documentQueue }) {
   return (
     <section className="panel document-queue">
       <h2 className="panel-title">Document Extraction Queue</h2>
@@ -32,27 +32,35 @@ export default function DocumentQueueTable() {
             </tr>
           </thead>
           <tbody>
-            {documentQueue.map((row) => {
-              const Icon = iconMap[row.icon]
-              return (
-                <tr key={row.format}>
-                  <td>
-                    <span className="format-cell">
-                      <span className={`format-icon format-icon-${row.color}`}>
-                        <Icon size={14} strokeWidth={1.8} />
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="table-empty-cell">
+                  No documents match the selected filters.
+                </td>
+              </tr>
+            ) : (
+              rows.map((row) => {
+                const Icon = iconMap[row.icon]
+                return (
+                  <tr key={row.format}>
+                    <td>
+                      <span className="format-cell">
+                        <span className={`format-icon format-icon-${row.color}`}>
+                          <Icon size={14} strokeWidth={1.8} />
+                        </span>
+                        <span>{row.format}</span>
                       </span>
-                      <span>{row.format}</span>
-                    </span>
-                  </td>
-                  <td>{row.documents.toLocaleString()}</td>
-                  <td>{row.percent}</td>
-                  <td className="cell-ellipsis" title={`${row.topVendor} (${row.topVendorCount})`}>
-                    {row.topVendor} ({row.topVendorCount})
-                  </td>
-                  <td>{row.lowConfidence}</td>
-                </tr>
-              )
-            })}
+                    </td>
+                    <td>{row.documents.toLocaleString()}</td>
+                    <td>{row.percent}</td>
+                    <td className="cell-ellipsis" title={`${row.topVendor} (${row.topVendorCount})`}>
+                      {row.topVendor} ({row.topVendorCount})
+                    </td>
+                    <td>{row.lowConfidence}</td>
+                  </tr>
+                )
+              })
+            )}
           </tbody>
         </table>
       </div>
