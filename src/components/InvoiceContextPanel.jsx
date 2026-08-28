@@ -1,4 +1,5 @@
 import { FileText } from 'lucide-react'
+import MarathonMark from './MarathonMark'
 import { invoiceContext } from '../data'
 
 export default function InvoiceContextPanel() {
@@ -12,8 +13,8 @@ export default function InvoiceContextPanel() {
           Invoice Context
         </h2>
         <div className="marathon-logo">
-          <span className="marathon-mark">M</span>
-          <span className="marathon-word">marathon</span>
+          <MarathonMark size={22} />
+          <span className="marathon-word">Marathon</span>
         </div>
       </div>
 

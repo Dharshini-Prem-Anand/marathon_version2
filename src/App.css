@@ -41,15 +41,6 @@
   background: var(--bg-app);
 }
 
-.sap-logo {
-  background: var(--sap-blue);
-  color: #fff;
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  padding: 5px 10px;
-  border-radius: 3px;
-}
 
 .topbar-title {
   font-size: 16px;
@@ -1605,18 +1596,10 @@ tbody tr:last-child td {
   flex-shrink: 0;
 }
 
-.marathon-mark {
-  color: var(--red);
-  font-size: 22px;
-  font-weight: 900;
-  line-height: 1;
-  font-style: italic;
-}
-
 .marathon-word {
-  color: var(--red);
+  color: #003da5;
   font-size: 19px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.2px;
 }
 
@@ -1632,8 +1615,7 @@ tbody tr:last-child td {
 }
 
 .sap-logo-sm {
-  font-size: 11px;
-  padding: 3px 7px;
+  vertical-align: middle;
 }
 
 .page-footer-divider {
