@@ -1,10 +1,10 @@
-import SapLogo from './SapLogo'
+import sapLogo from '../../images/sap-logo-png_seeklogo-465583.png'
 
 export default function PageFooter({ platformLabel }) {
   return (
     <div className="page-footer">
       <span>Powered by</span>
-      <SapLogo width={34} height={19} className="sap-logo-sm" />
+      <img src={sapLogo} alt="SAP" className="sap-logo-sm" />
       {platformLabel && <span>{platformLabel}</span>}
       <span className="page-footer-divider">|</span>
       <span>Built by Sierra Digital</span>

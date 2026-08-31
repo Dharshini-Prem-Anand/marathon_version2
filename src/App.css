@@ -1626,6 +1626,9 @@ tbody tr:last-child td {
 }
 
 .sap-logo-sm {
+  width: 34px;
+  height: auto;
+  object-fit: contain;
   vertical-align: middle;
 }
 
