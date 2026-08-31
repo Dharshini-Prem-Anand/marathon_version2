@@ -1,6 +1,6 @@
 import { Search, Menu, CircleHelp, ChevronDown, Bell } from 'lucide-react'
-import SapLogo from './SapLogo'
-import MarathonMark from './MarathonMark'
+import sapLogo from '../../images/sap-logo-png_seeklogo-465583.png'
+import marathonLogo from '../../images/images.jpg'
 
 export default function TopBar({ onToggleSidebar, title, personaSelector, searchPlaceholder = 'Search in: "Apps"', roleSelector }) {
   return (
@@ -9,8 +9,7 @@ export default function TopBar({ onToggleSidebar, title, personaSelector, search
         <button className="icon-btn" aria-label="Toggle sidebar" onClick={onToggleSidebar}>
           <Menu size={20} />
         </button>
-        <SapLogo />
-        <h1 className="topbar-title">{title}</h1>
+<img src={sapLogo} alt="SAP Logo" className="sap-logo" />        <h1 className="topbar-title">{title}</h1>
       </div>
 
       <div className="topbar-search">
@@ -36,10 +35,9 @@ export default function TopBar({ onToggleSidebar, title, personaSelector, search
             </select>
           </div>
         )}
-        <div className="marathon-logo">
-          <MarathonMark size={26} />
-          <span className="marathon-word">Marathon</span>
-        </div>
+       <div className="marathon-logo">
+  <img src={marathonLogo} alt="Marathon Logo" className="marathon-logo-image" />
+</div>
         <button className="icon-btn" aria-label="Help">
           <CircleHelp size={19} />
         </button>

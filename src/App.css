@@ -3965,3 +3965,18 @@ tbody tr:last-child td {
   margin: 0;
   font-size: 14px;
 }
+
+
+/*logo */
+
+.sap-logo {
+  width: 70px;
+  height: auto;
+  object-fit: contain;
+}
+
+.marathon-logo-image {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+}
