@@ -8,12 +8,8 @@ parameters:
 
 modules:
   - name: ap-react-ui
-    type: staticfile_buildpack
+    type: html5
     path: .
-    parameters:
-      memory: 128M
-      disk-quota: 256M
-      buildpack: staticfile_buildpack
     build-parameters:
       builder: custom
       commands:
