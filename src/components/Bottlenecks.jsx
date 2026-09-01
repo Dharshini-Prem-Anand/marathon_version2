@@ -1,5 +1,5 @@
 import { ClipboardList, List, Search, CheckSquare } from 'lucide-react'
-import { bottlenecks, diagnostics } from '../data'
+import { bottlenecks as defaultBottlenecks, diagnostics, dashboardIntervention } from '../data'
 
 const iconMap = {
   clipboard: ClipboardList,
@@ -8,7 +8,11 @@ const iconMap = {
   check: CheckSquare,
 }
 
-export default function Bottlenecks() {
+export default function Bottlenecks({
+  bottlenecks = defaultBottlenecks,
+  intervention = dashboardIntervention,
+  onReviewRecommendations,
+}) {
   const maxValue = Math.max(...bottlenecks.map((b) => b.value))
 
   return (
@@ -45,20 +49,20 @@ export default function Bottlenecks() {
 
         <div className="intervention-panel">
           <div className="intervention-title">Recommended Intervention</div>
-          <div className="intervention-desc">
-            Review 12 evidence-based recommendations
-          </div>
+          <div className="intervention-desc">{intervention.description}</div>
           <div className="intervention-stats">
             <div>
               <div className="intervention-stat-label">Confidence</div>
-              <div className="intervention-stat-value color-green">92%</div>
+              <div className="intervention-stat-value color-green">{intervention.confidence}</div>
             </div>
             <div>
               <div className="intervention-stat-label">Value at Risk</div>
-              <div className="intervention-stat-value color-orange">$420K</div>
+              <div className="intervention-stat-value color-orange">{intervention.valueAtRisk}</div>
             </div>
           </div>
-          <button className="btn-primary">Review Recommendations</button>
+          <button className="btn-primary" onClick={onReviewRecommendations}>
+            Review Recommendations
+          </button>
         </div>
       </div>
     </section>

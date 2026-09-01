@@ -16,7 +16,6 @@ export default function EmailTriage() {
   const filteredRows = triageQueue.filter(
     (row) =>
       matchesOption(applied['Source'], row.source) &&
-      matchesOption(applied['Channel'], row.source) &&
       matchesOption(applied['Sender / Vendor'], row.vendor) &&
       matchesOption(applied['Proposed Category'], row.category) &&
       matchesOption(applied['Priority'], row.priority)

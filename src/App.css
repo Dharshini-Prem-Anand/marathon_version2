@@ -405,27 +405,64 @@
 /* ---------- FLOW STEPS ---------- */
 .flow-row {
   display: flex;
-  align-items: center;
-  gap: 4px;
+  align-items: stretch;
+  gap: 0;
 }
 
 .flow-step-wrap {
   display: flex;
-  align-items: center;
-  gap: 4px;
+  align-items: stretch;
   flex: 1;
+}
+
+.flow-step-wrap:not(:first-child) {
+  margin-left: -16px;
 }
 
 .flow-step {
+  position: relative;
+  isolation: isolate;
   flex: 1;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px 12px;
+  padding: 12px 26px 12px 22px;
   text-align: center;
 }
 
+.flow-step::before,
+.flow-step::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.flow-step::before {
+  background: var(--blue);
+  z-index: 0;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 0 100%, 16px 50%);
+}
+
+.flow-step::after {
+  background: var(--bg-panel);
+  z-index: 1;
+  inset: 1.5px;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%);
+}
+
+.flow-step-wrap:first-child .flow-step::before {
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 0 100%);
+}
+
+.flow-step-wrap:first-child .flow-step::after {
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);
+}
+
+.flow-step-label,
+.flow-step-value {
+  position: relative;
+  z-index: 2;
+}
+
 .flow-step-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-secondary);
   margin-bottom: 4px;
 }
@@ -433,27 +470,23 @@
 .flow-step-value {
   font-size: 22px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--blue);
 }
 
 .flow-chevron {
-  color: var(--text-muted);
-  flex-shrink: 0;
+  display: none;
 }
 
 .flow-legend {
-  margin-top: 10px;
+  margin-top: 12px;
   font-size: 13px;
   display: flex;
+  justify-content: center;
   gap: 10px;
 }
 
-.legend-label {
-  font-weight: 600;
-}
-
+.legend-label,
 .legend-value {
-  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -490,7 +523,7 @@
 .capability-value {
   font-size: 28px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--blue);
   margin-top: 2px;
   line-height: 1.1;
 }
@@ -528,6 +561,27 @@
 /* ---------- PRIORITY QUEUE TABLE ---------- */
 .table-wrap {
   overflow-x: auto;
+}
+
+.priority-queue table {
+  font-size: 10.5px;
+}
+
+.priority-queue .cell-mono {
+  font-size: 10px;
+}
+
+.priority-queue thead th,
+.priority-queue tbody td {
+  padding: 5px 3px;
+}
+
+.priority-queue td:nth-child(3),
+.priority-queue td:nth-child(4),
+.priority-queue td:nth-child(5),
+.priority-queue td:nth-child(6),
+.priority-queue td:nth-child(7) {
+  white-space: normal;
 }
 
 table {
@@ -592,6 +646,13 @@ tbody tr:last-child td {
   color: transparent;
 }
 
+.dashboard-queue-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 12px;
+  align-items: start;
+}
+
 /* ---------- BOTTLENECKS ---------- */
 .bottlenecks-grid {
   display: grid;
@@ -645,6 +706,11 @@ tbody tr:last-child td {
   gap: 8px;
   font-size: 13px;
   color: var(--text-secondary);
+}
+
+.diagnostic-row svg {
+  color: var(--blue);
+  flex-shrink: 0;
 }
 
 .diagnostic-label {
@@ -1152,6 +1218,130 @@ tbody tr:last-child td {
 .proposed-classification-confidence {
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+/* ---------- TRIAGE STEPPER ---------- */
+.triage-stepper {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 10px 14px;
+  background: var(--bg-app);
+}
+
+.stepper-line {
+  display: flex;
+  align-items: flex-start;
+}
+
+.stepper-line + .stepper-line {
+  margin-top: 22px;
+}
+
+.stepper-item-wrap {
+  display: flex;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+}
+
+.stepper-item-wrap:last-child {
+  flex: 0 0 auto;
+  width: 92px;
+}
+
+.stepper-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 3px;
+  width: 92px;
+  flex-shrink: 0;
+}
+
+.stepper-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  border: 2px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.stepper-circle.is-done {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.stepper-circle.is-flagged {
+  border-color: var(--red);
+}
+
+.stepper-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.stepper-caption {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.25;
+}
+
+.stepper-connector {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  margin-top: 12px;
+  min-width: 8px;
+}
+
+.stepper-connector.is-done {
+  background: var(--green);
+}
+
+.stepper-row-connector {
+  width: 2px;
+  height: 18px;
+  background: var(--border);
+  margin: 6px auto;
+}
+
+.stepper-row-connector.is-done {
+  background: var(--green);
+}
+
+.stepper-branch {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.stepper-branch.is-exception {
+  background: var(--red-light);
+  color: var(--red);
+}
+
+.stepper-branch.is-success {
+  background: var(--green-light);
+  color: var(--green);
 }
 
 /* ---------- INTAKE BY CHANNEL (DONUT) ---------- */
@@ -2412,8 +2602,14 @@ tbody tr:last-child td {
   background: var(--bg-panel);
   border-radius: 6px;
   padding: 5px 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.pagination-btn:disabled {
   color: var(--text-muted);
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .pagination-btn-second {
@@ -2421,14 +2617,21 @@ tbody tr:last-child td {
 }
 
 .pagination-page {
-  border: none;
-  background: var(--blue);
-  color: #fff;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-secondary);
   border-radius: 6px;
   width: 26px;
   height: 26px;
   font-size: 12px;
   font-weight: 600;
+  cursor: pointer;
+}
+
+.pagination-page.active {
+  border: none;
+  background: var(--blue);
+  color: #fff;
   cursor: default;
 }
 

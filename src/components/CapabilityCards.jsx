@@ -1,5 +1,5 @@
 import { Mail, FileText, CheckCircle2, Link2, Lightbulb, BarChart3 } from 'lucide-react'
-import { capabilityCards } from '../data'
+import { capabilityCards as defaultCapabilityCards } from '../data'
 
 const iconMap = {
   mail: Mail,
@@ -10,12 +10,12 @@ const iconMap = {
   barChart: BarChart3,
 }
 
-export default function CapabilityCards() {
+export default function CapabilityCards({ cards = defaultCapabilityCards }) {
   return (
     <section className="panel">
       <h2 className="panel-title">MVP Capability Performance</h2>
       <div className="capability-grid">
-        {capabilityCards.map((c) => {
+        {cards.map((c) => {
           const Icon = iconMap[c.icon]
           return (
             <div className="capability-card" key={c.title}>
@@ -25,7 +25,18 @@ export default function CapabilityCards() {
               </div>
               <div className="capability-value">{c.value}</div>
               <div className="capability-value-label">{c.valueLabel}</div>
-              <div className="capability-target">{c.target}</div>
+              <div className="capability-target">
+                {c.targetHighlight ? (
+                  <>
+                    <span className={`color-${c.targetColor}`}>{c.targetHighlight}</span>
+                    {c.target.slice(c.targetHighlight.length)}
+                  </>
+                ) : c.targetColor ? (
+                  <span className={`color-${c.targetColor}`}>{c.target}</span>
+                ) : (
+                  c.target
+                )}
+              </div>
               <div className="capability-footer">
                 <span className={`capability-stat color-${c.statColor}`}>{c.stat}</span>
                 <span className="capability-stat-label">{c.statLabel}</span>

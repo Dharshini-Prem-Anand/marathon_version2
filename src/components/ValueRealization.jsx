@@ -1,5 +1,5 @@
 import { Users, Clock, ShieldCheck, TrendingUp, DollarSign } from 'lucide-react'
-import { valueRealization, valueFooter } from '../data'
+import { valueRealization as defaultValueRealization, valueFooter as defaultValueFooter } from '../data'
 
 const iconMap = {
   users: Users,
@@ -9,12 +9,12 @@ const iconMap = {
   dollar: DollarSign,
 }
 
-export default function ValueRealization() {
+export default function ValueRealization({ items = defaultValueRealization, footer = defaultValueFooter }) {
   return (
     <section className="panel">
       <h2 className="panel-title">MVP Value Realization</h2>
       <div className="value-grid">
-        {valueRealization.map((v) => {
+        {items.map((v) => {
           const Icon = iconMap[v.icon]
           return (
             <div className="value-card" key={v.title}>
@@ -31,10 +31,10 @@ export default function ValueRealization() {
         })}
       </div>
       <div className="value-footer">
-        {valueFooter.map((f, i) => (
+        {footer.map((f, i) => (
           <span key={f.label} className="value-footer-item">
             {f.label} <strong>{f.value}</strong>
-            {i < valueFooter.length - 1 && <span className="legend-divider">|</span>}
+            {i < footer.length - 1 && <span className="legend-divider">|</span>}
           </span>
         ))}
       </div>

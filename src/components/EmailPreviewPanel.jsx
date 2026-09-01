@@ -1,5 +1,6 @@
 import { FileText } from 'lucide-react'
 import { triageQueue, categoryColor } from '../data'
+import TriageStepper from './TriageStepper'
 
 function buildPreview(row) {
   if (row.preview) return row.preview
@@ -100,10 +101,8 @@ export default function EmailPreviewPanel({ selectedId }) {
         </div>
       </div>
 
-      <button className="btn-primary btn-block">Accept Classification</button>
-      <button className="btn-outline btn-block">Correct Category</button>
-      <button className="btn-outline btn-block">Prioritize for Intake</button>
-      <button className="btn-outline btn-block btn-outline-red">Route to Review</button>
+      <h3 className="preview-subheading">Processing Pipeline</h3>
+      <TriageStepper row={row} preview={preview} />
     </section>
   )
 }

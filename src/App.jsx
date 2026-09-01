@@ -89,7 +89,7 @@ function App() {
   const guidance = guidanceByPage[activeItem]
 
   function renderPage() {
-    if (activeItem === 'Dashboard') return <Dashboard />
+    if (activeItem === 'Dashboard') return <Dashboard onNavigate={setActiveItem} />
     if (activeItem === 'Email & Attachment Triage') return <EmailTriage />
     if (activeItem === 'Document AI & Extraction') return <DocumentAiExtraction />
     if (activeItem === 'Pre-Validation') return <PreValidation />
