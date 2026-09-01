@@ -1,10 +1,25 @@
+import { useState } from 'react'
 import { Calendar } from 'lucide-react'
+
+const defaultDateRangeOptions = [
+  'Today',
+  'Last 7 Days',
+  'Last 30 Days',
+  'Last 90 Days',
+  'This Month',
+  'Last Month',
+  'This Quarter',
+  'Last Quarter',
+  'Year to Date',
+  'Custom Range',
+]
 
 export default function FilterBar({
   fields,
   values,
   onFieldChange,
   dateRangeLabel = 'Last 7 Days',
+  dateRangeOptions,
   dateFieldLabel = 'Date Range',
   personaField,
   personaValue,
@@ -13,6 +28,13 @@ export default function FilterBar({
   hideGoButton,
   onGo,
 }) {
+  const options =
+    dateRangeOptions ??
+    (defaultDateRangeOptions.includes(dateRangeLabel)
+      ? defaultDateRangeOptions
+      : [dateRangeLabel, ...defaultDateRangeOptions])
+  const [dateRange, setDateRange] = useState(dateRangeLabel)
+
   return (
     <div className="filter-bar">
       {fields.map((f) => (
@@ -28,9 +50,13 @@ export default function FilterBar({
 
       <div className="filter-field">
         <label>{dateFieldLabel}</label>
-        <div className="filter-date">
-          <span>{dateRangeLabel}</span>
-          <Calendar size={15} />
+        <div className="filter-date-select">
+          <select value={dateRange} onChange={(e) => setDateRange(e.target.value)}>
+            {options.map((opt) => (
+              <option key={opt}>{opt}</option>
+            ))}
+          </select>
+          <Calendar size={15} className="filter-date-icon" />
         </div>
       </div>
 

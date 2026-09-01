@@ -1,4 +1,4 @@
-import { ArrowUp, ArrowDown } from 'lucide-react'
+import { TrendingUp, TrendingDown } from 'lucide-react'
 
 export default function Scorecard({ title, metrics }) {
   return (
@@ -7,13 +7,13 @@ export default function Scorecard({ title, metrics }) {
       <div className="scorecard-grid">
         {metrics.map((m) => (
           <div className="scorecard-card" key={m.label}>
-            <div className="scorecard-label">{m.label}</div>
-            <div className="scorecard-value-row">
+            <div className="scorecard-main">
+              <div className="scorecard-label">{m.label}</div>
               <span className={`scorecard-value color-${m.color}`}>{m.value}</span>
-              {m.trend === 'up' && <ArrowUp size={18} className="trend-up" />}
-              {m.trend === 'down' && <ArrowDown size={18} className="trend-down" />}
+              {m.target && <div className="scorecard-target">{m.target}</div>}
             </div>
-            {m.target && <div className="scorecard-target">{m.target}</div>}
+            {m.trend === 'up' && <TrendingUp size={44} strokeWidth={2.25} className={`scorecard-trend-icon color-${m.color}`} />}
+            {m.trend === 'down' && <TrendingDown size={44} strokeWidth={2.25} className={`scorecard-trend-icon color-${m.color}`} />}
           </div>
         ))}
       </div>

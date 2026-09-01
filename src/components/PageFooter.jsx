@@ -7,7 +7,7 @@ export default function PageFooter({ platformLabel }) {
       <img src={sapLogo} alt="SAP" className="sap-logo-sm" />
       {platformLabel && <span>{platformLabel}</span>}
       <span className="page-footer-divider">|</span>
-      <span>Built by Sierra Digital</span>
+      <span>Built by Sierra Digital Inc</span>
     </div>
   )
 }

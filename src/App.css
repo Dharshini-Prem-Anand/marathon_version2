@@ -268,6 +268,35 @@
   font-family: inherit;
 }
 
+.filter-date-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.filter-date-select select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 30px 0 10px;
+  height: 34px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-panel);
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.filter-date-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
 .filter-date {
   display: flex;
   align-items: center;
@@ -323,20 +352,27 @@
   border-radius: 6px;
   padding: 11px 12px;
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.scorecard-main {
+  display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
+}
+
+.scorecard-trend-icon {
+  flex-shrink: 0;
 }
 
 .scorecard-label {
   font-size: 12px;
   color: var(--text-secondary);
   min-height: 28px;
-}
-
-.scorecard-value-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
 }
 
 .scorecard-value {
@@ -348,14 +384,6 @@
 .scorecard-target {
   font-size: 11px;
   color: var(--text-muted);
-}
-
-.trend-up {
-  color: var(--green);
-}
-
-.trend-down {
-  color: var(--red);
 }
 
 .color-blue {
@@ -1388,7 +1416,7 @@ tbody tr:last-child td {
 /* Invoice Preview & Extracted Fields */
 .invoice-preview-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
   gap: 20px;
   align-items: start;
 }
@@ -1400,12 +1428,14 @@ tbody tr:last-child td {
   font-size: 12px;
   color: var(--text-primary);
   background: var(--bg-panel);
+  overflow: hidden;
 }
 
 .invoice-mock-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 10px;
   border-bottom: 2px solid var(--text-primary);
   padding-bottom: 10px;
   margin-bottom: 10px;
@@ -1418,12 +1448,21 @@ tbody tr:last-child td {
   font-weight: 700;
   font-size: 12px;
   letter-spacing: 0.3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.invoice-mock-brand span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .invoice-mock-heading {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: 1px;
+  flex-shrink: 0;
 }
 
 .invoice-mock-meta {
@@ -1455,6 +1494,7 @@ tbody tr:last-child td {
 
 .invoice-mock-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 12px;
   margin-bottom: 10px;
@@ -1467,11 +1507,17 @@ tbody tr:last-child td {
   color: var(--text-muted);
   font-weight: 600;
   font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .invoice-mock-table td {
   padding: 6px 4px;
   border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .invoice-mock-totals {

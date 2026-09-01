@@ -51,6 +51,12 @@ export default function InvoicePreviewPanel() {
           </div>
 
           <table className="invoice-mock-table">
+            <colgroup>
+              <col style={{ width: '46%' }} />
+              <col style={{ width: '14%' }} />
+              <col style={{ width: '19%' }} />
+              <col style={{ width: '21%' }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>Description</th>
