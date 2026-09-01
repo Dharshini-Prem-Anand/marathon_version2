@@ -21,17 +21,19 @@ export default function Dashboard() {
 
   return (
     <>
-      <FilterBar
-        fields={dashboardFilters}
-        values={draft}
-        onFieldChange={setField}
-        onGo={apply}
-        personaField={dashboardPersonaField}
-        personaValue={draft.Persona ?? dashboardPersonaField.value}
-        onPersonaChange={(v) => setField('Persona', v)}
-      />
-      <Scorecard title="Business Outcome Scorecard" metrics={scorecardMetrics} />
-      <FlowSteps />
+      <div className="dashboard-top-zoom">
+        <FilterBar
+          fields={dashboardFilters}
+          values={draft}
+          onFieldChange={setField}
+          onGo={apply}
+          personaField={dashboardPersonaField}
+          personaValue={draft.Persona ?? dashboardPersonaField.value}
+          onPersonaChange={(v) => setField('Persona', v)}
+        />
+        <Scorecard title="Business Outcome Scorecard" metrics={scorecardMetrics} />
+        <FlowSteps />
+      </div>
       <CapabilityCards />
       <PriorityQueue rows={filteredQueue} />
       <Bottlenecks />
