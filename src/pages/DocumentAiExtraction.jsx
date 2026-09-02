@@ -8,19 +8,23 @@ import LineItemExtraction from '../components/LineItemExtraction'
 import PainPointTable from '../components/PainPointTable'
 import LearningModelPerformance from '../components/LearningModelPerformance'
 import { useFilters, matchesCompanyCode, matchesOption } from '../hooks/useFilters'
-import { documentAiFilters, documentAiStats } from '../data'
+import { documentAiFilters, documentAiStats, documentAiQueue, documentAiFields } from '../data'
 import {
   fetchDocumentPdf,
   fetchDocumentQueue,
   fetchExtractedHeaderFields,
   fetchExtractedLineItemFields,
 } from '../api/invoiceAutomation'
-import { groupLineItemFields, mapDocumentRow, mapHeaderField } from '../utils/documentMappers'
+import { groupLineItemFields, mapDocumentRow, mapHeaderField, formatReceived } from '../utils/documentMappers'
+import { dateRangeBounds, isTodayRange, mockRowDate } from '../utils/dateRange'
 
 const LOW_CONFIDENCE_THRESHOLD = 80
+const DEFAULT_DATE_RANGE = 'Today'
 
 export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectConsumed, onNavigate }) {
   const { draft, applied, setField, apply } = useFilters(documentAiFilters)
+  const [dateRange, setDateRange] = useState(DEFAULT_DATE_RANGE)
+  const [appliedDateRange, setAppliedDateRange] = useState(DEFAULT_DATE_RANGE)
   const [selectedId, setSelectedId] = useState(null)
 
   const [documents, setDocuments] = useState([])
@@ -70,7 +74,25 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingSelectId, documents])
 
-  const filteredQueue = documents.filter(
+  const showLive = isTodayRange(appliedDateRange)
+
+  // Seed rows for every range other than Today, narrowed to the chosen
+  // window — same mechanism Email Triage uses for its mockRows.
+  const mockDocuments = useMemo(() => {
+    const { start, end } = dateRangeBounds(appliedDateRange)
+    return documentAiQueue
+      .map((row, index) => ({ ...row, receivedDate: mockRowDate(row, index) }))
+      .filter((row) => row.receivedDate >= start && row.receivedDate < end)
+      .map((row) => ({
+        ...row,
+        receivedDateTime: row.receivedDate.toISOString(),
+        received: formatReceived(row.receivedDate.toISOString()),
+      }))
+  }, [appliedDateRange])
+
+  const sourceDocuments = showLive ? documents : mockDocuments
+
+  const filteredQueue = sourceDocuments.filter(
     (row) =>
       matchesCompanyCode(applied['Company Code']) &&
       matchesOption(applied['Vendor'], row.vendor) &&
@@ -86,6 +108,15 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
     if (!selectedDoc) {
       setHeaderFields([])
       setLineItems({ columns: [], rows: [] })
+      setFieldsError(null)
+      setFieldsLoading(false)
+      return
+    }
+
+    if (!selectedDoc.isRemote) {
+      const seed = documentAiFields[selectedDoc.id]
+      setHeaderFields(seed?.headerFields ?? [])
+      setLineItems(seed?.lineItems ?? { columns: [], rows: [] })
       setFieldsError(null)
       setFieldsLoading(false)
       return
@@ -128,7 +159,9 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
   useEffect(() => {
     if (!dieDocumentId) {
       setPdfUrl(null)
-      setPdfError(selectedDoc ? 'No DIE document ID on this record.' : null)
+      setPdfError(
+        selectedDoc ? (selectedDoc.isRemote ? 'No DIE document ID on this record.' : 'Preview not available for sample data.') : null
+      )
       setPdfLoading(false)
       return
     }
@@ -157,29 +190,47 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
       cancelled = true
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
+    // dieDocumentId alone isn't enough: it stays null across the transition
+    // from "no selection yet" to "seed doc selected" (seed rows have no DIE
+    // id), so docKey is needed too or this effect silently never re-runs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dieDocumentId])
+  }, [docKey, dieDocumentId])
+
+  const statsLoading = showLive && documentsLoading
 
   const stats = useMemo(() => {
-    const total = documents.length
-    const lowConfidence = documents.filter(
+    const total = sourceDocuments.length
+    const lowConfidence = sourceDocuments.filter(
       (d) => Number.isFinite(d.confidenceValue) && d.confidenceValue < LOW_CONFIDENCE_THRESHOLD
     ).length
 
     return documentAiStats.map((stat) => {
       if (stat.label === 'Documents Processed') {
-        return { ...stat, value: documentsLoading ? '…' : total.toLocaleString(), target: null }
+        return { ...stat, value: statsLoading ? '…' : total.toLocaleString(), target: null }
       }
       if (stat.label === 'Low Confidence') {
-        return { ...stat, value: documentsLoading ? '…' : String(lowConfidence) }
+        return { ...stat, value: statsLoading ? '…' : String(lowConfidence) }
       }
       return stat
     })
-  }, [documents, documentsLoading])
+  }, [sourceDocuments, statsLoading])
+
+  const handleGo = () => {
+    apply()
+    setAppliedDateRange(dateRange)
+  }
 
   return (
     <>
-      <FilterBar fields={documentAiFilters} values={draft} onFieldChange={setField} onGo={apply} />
+      <FilterBar
+        fields={documentAiFilters}
+        values={draft}
+        onFieldChange={setField}
+        dateRangeLabel={DEFAULT_DATE_RANGE}
+        dateRangeValue={dateRange}
+        onDateRangeChange={setDateRange}
+        onGo={handleGo}
+      />
       <StatsRow stats={stats} />
 
       <div className="docai-main-grid">
@@ -187,8 +238,8 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
           rows={filteredQueue}
           selectedId={selectedDoc?.id ?? null}
           onSelect={setSelectedId}
-          loading={documentsLoading}
-          error={documentsError}
+          loading={showLive && documentsLoading}
+          error={showLive ? documentsError : null}
         />
         <InvoicePreviewPanel
           document={selectedDoc}

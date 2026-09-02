@@ -86,12 +86,18 @@ function App() {
   const [showGuidance, setShowGuidance] = useState(true)
   const [collapsed, setCollapsed] = useState(false)
   const [pendingDocumentId, setPendingDocumentId] = useState(null)
+  const [pendingExceptionId, setPendingExceptionId] = useState(null)
 
   const guidance = guidanceByPage[activeItem]
 
   function handleNavigateToDocument(documentId) {
     setPendingDocumentId(documentId)
     setActiveItem('Document AI & Extraction')
+  }
+
+  function handleNavigateToException(invoiceId) {
+    setPendingExceptionId(invoiceId)
+    setActiveItem('Exceptions & Recommendations')
   }
 
   function renderPage() {
@@ -105,9 +111,17 @@ function App() {
           onNavigate={setActiveItem}
         />
       )
-    if (activeItem === 'Pre-Validation') return <PreValidation onNavigate={setActiveItem} />
-    if (activeItem === 'PO & Line Matching') return <PoLineMatching onNavigate={setActiveItem} />
-    if (activeItem === 'Exceptions & Recommendations') return <ExceptionsRecommendations />
+    if (activeItem === 'Pre-Validation')
+      return <PreValidation onNavigate={setActiveItem} onNavigateToException={handleNavigateToException} />
+    if (activeItem === 'PO & Line Matching')
+      return <PoLineMatching onNavigateToException={handleNavigateToException} />
+    if (activeItem === 'Exceptions & Recommendations')
+      return (
+        <ExceptionsRecommendations
+          pendingSelectId={pendingExceptionId}
+          onPendingSelectConsumed={() => setPendingExceptionId(null)}
+        />
+      )
     if (activeItem === 'VIM Processing') return <VimProcessing />
     if (activeItem === 'Work Assignment') return <WorkAssignment />
     if (activeItem === 'Operational Analytics') return <OperationalAnalytics />

@@ -1437,6 +1437,18 @@ tbody tr:last-child td {
   color: var(--green);
 }
 
+.stepper-branch-link {
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.stepper-branch-link:hover {
+  background: var(--red);
+  color: #fff;
+}
+
 /* ---------- INTAKE BY CHANNEL (DONUT) ---------- */
 .donut-row {
   display: flex;
@@ -2033,12 +2045,24 @@ tbody tr:last-child td {
   color: var(--green);
 }
 
+.pv-page-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 2.15fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.pv-detail-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
 .pv-main-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-areas:
-    'preview rules vendor'
-    'actions actions vendor';
+  grid-template-areas: 'preview rules vendor';
   gap: 12px;
   align-items: start;
 }
@@ -2056,19 +2080,6 @@ tbody tr:last-child td {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.pv-actions {
-  grid-area: actions;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: flex-start;
-}
-
-.pv-actions button {
-  flex: 1;
-  min-width: 140px;
 }
 
 .pv-invoice-brand {
@@ -2111,6 +2122,58 @@ tbody tr:last-child td {
   flex: 1;
 }
 
+.pv-correct-field-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--orange);
+  color: var(--orange);
+  background: var(--orange-light);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pv-field-edit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pv-field-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--blue);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: var(--text-primary);
+  background: var(--bg-panel);
+}
+
+.pv-field-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.pv-field-icon-btn:first-of-type {
+  border-color: var(--green);
+  color: var(--green);
+}
+
 .pv-total-row {
   margin-top: 12px;
 }
@@ -2149,19 +2212,6 @@ tbody tr:last-child td {
   flex-shrink: 0;
 }
 
-.doc-classification-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.doc-classification-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: default;
-}
-
 .radio-dot {
   width: 16px;
   height: 16px;
@@ -2181,12 +2231,6 @@ tbody tr:last-child td {
 
 .radio-dot-inner.checked {
   background: var(--blue);
-}
-
-.doc-classification-label {
-  flex: 1;
-  font-size: 13px;
-  color: var(--text-primary);
 }
 
 .inline-bar-cell {

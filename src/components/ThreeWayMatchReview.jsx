@@ -1,6 +1,4 @@
 import { FileText, Clipboard, Truck, Scale, CheckCircle2, CircleDot, XCircle } from 'lucide-react'
-import { matchSummaryCards, threeWayMatchLines } from '../data'
-import PoMatchingPipelineStepper from './PoMatchingPipelineStepper'
 
 const iconMap = {
   fileText: FileText,
@@ -13,15 +11,16 @@ const matchStatusConfig = {
   matched: { icon: CheckCircle2, color: 'green', label: 'Matched' },
   tolerance: { icon: CircleDot, color: 'orange', label: 'In Tolerance' },
   mismatch: { icon: XCircle, color: 'red', label: 'Mismatch' },
+  notfound: { icon: XCircle, color: 'gray', label: 'Not Found' },
 }
 
-export default function ThreeWayMatchReview({ onNavigate }) {
+export default function ThreeWayMatchReview({ summaryCards = [], matchLines = [] }) {
   return (
     <section className="panel three-way-match">
-      <h2 className="panel-title">Three-Way Match Review</h2>
+      <h2 className="panel-title">Matching review</h2>
 
       <div className="match-summary-grid">
-        {matchSummaryCards.map((c) => {
+        {summaryCards.map((c) => {
           const Icon = iconMap[c.icon]
           return (
             <div className="match-summary-card" key={c.label}>
@@ -68,7 +67,7 @@ export default function ThreeWayMatchReview({ onNavigate }) {
             </tr>
           </thead>
           <tbody>
-            {threeWayMatchLines.map((line) => {
+            {matchLines.map((line) => {
               const cfg = matchStatusConfig[line.matchStatus]
               const Icon = cfg.icon
               return (
@@ -96,9 +95,6 @@ export default function ThreeWayMatchReview({ onNavigate }) {
           </tbody>
         </table>
       </div>
-
-      <h3 className="preview-subheading">Processing Pipeline</h3>
-      <PoMatchingPipelineStepper onNavigate={onNavigate} />
     </section>
   )
 }

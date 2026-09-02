@@ -1,7 +1,14 @@
 import PipelineStepper from './PipelineStepper'
-import { preValidationInvoice, validationRuleResults } from '../data'
 
-export default function PreValidationPipelineStepper({ onNavigate }) {
+export default function PreValidationPipelineStepper({
+  invoice,
+  validationRuleResults = [],
+  invoiceId,
+  onNavigate,
+  onNavigateToException,
+}) {
+  if (!invoice) return null
+
   const failedCount = validationRuleResults.filter((r) => r.result === 'failed').length
   const reviewCount = validationRuleResults.filter((r) => r.result === 'review').length
   const ready = failedCount === 0
@@ -11,7 +18,7 @@ export default function PreValidationPipelineStepper({ onNavigate }) {
       key: 'fetch',
       label: 'Fetching Invoice Data',
       done: true,
-      caption: `Invoice ${preValidationInvoice.invoiceNumber} retrieved`,
+      caption: `Invoice ${invoice.invoiceNumber} retrieved`,
     },
     {
       key: 'validate',
@@ -23,12 +30,15 @@ export default function PreValidationPipelineStepper({ onNavigate }) {
       key: 'ready',
       label: 'Ready for Matching',
       done: ready,
+      failed: !ready,
       caption: ready ? 'All checks passed' : 'Blocked — validation failed',
-      isLink: true,
-      onClick: () => onNavigate?.(ready ? 'PO & Line Matching' : 'Exceptions & Recommendations'),
-      linkTitle: ready ? 'Open PO & Line Matching' : 'Open Exceptions & Recommendations',
+      isLink: ready,
+      onClick: ready ? () => onNavigate?.('PO & Line Matching') : undefined,
+      linkTitle: 'Open PO & Line Matching',
       exception: !ready,
       exceptionText: 'Exception — routed for review',
+      exceptionOnClick: !ready ? () => onNavigateToException?.(invoiceId) : undefined,
+      exceptionLinkTitle: 'Open this invoice in Exceptions & Recommendations',
     },
   ]
 

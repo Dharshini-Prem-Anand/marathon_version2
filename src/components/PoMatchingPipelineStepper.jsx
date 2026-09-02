@@ -1,11 +1,12 @@
 import PipelineStepper from './PipelineStepper'
-import { poMatchingContext, threeWayMatchLines } from '../data'
 
-export default function PoMatchingPipelineStepper({ onNavigate }) {
-  const mismatchLine = threeWayMatchLines.find((l) => l.matchStatus === 'mismatch')
-  const toleranceCount = threeWayMatchLines.filter((l) => l.matchStatus === 'tolerance').length
-  const matchedCount = threeWayMatchLines.filter((l) => l.matchStatus === 'matched').length
-  const hasException = Boolean(mismatchLine) || poMatchingContext.status === 'Mismatch'
+export default function PoMatchingPipelineStepper({ context, matchLines = [], invoiceId, onNavigateToException }) {
+  if (!context) return null
+
+  const mismatchLine = matchLines.find((l) => l.matchStatus === 'mismatch' || l.matchStatus === 'notfound')
+  const toleranceCount = matchLines.filter((l) => l.matchStatus === 'tolerance').length
+  const matchedCount = matchLines.filter((l) => l.matchStatus === 'matched').length
+  const hasException = Boolean(mismatchLine) || context.status !== 'Matched'
   const posted = !hasException
 
   const steps = [
@@ -13,7 +14,7 @@ export default function PoMatchingPipelineStepper({ onNavigate }) {
       key: 'fetch',
       label: 'Fetching Invoice Data',
       done: true,
-      caption: `${poMatchingContext.vendor} · ${poMatchingContext.channel}`,
+      caption: `${context.vendor} · ${context.channel}`,
     },
     {
       key: 'grn',
@@ -32,19 +33,19 @@ export default function PoMatchingPipelineStepper({ onNavigate }) {
       label: 'Three-Way Matching',
       done: true,
       caption: mismatchLine
-        ? `Mismatch on line ${mismatchLine.invLine}`
+        ? `${context.status} on line ${mismatchLine.invLine}`
         : `${matchedCount} matched · ${toleranceCount} in tolerance`,
     },
     {
       key: 'post',
       label: 'Post to SAP',
       done: posted,
+      failed: hasException,
       caption: posted ? 'Posted to SAP automatically' : 'Blocked by exception',
-      isLink: hasException,
-      onClick: hasException ? () => onNavigate?.('Exceptions & Recommendations') : undefined,
-      linkTitle: 'Open Exceptions & Recommendations',
       exception: hasException,
       exceptionText: 'Exception — routed for manual review',
+      exceptionOnClick: hasException ? () => onNavigateToException?.(invoiceId) : undefined,
+      exceptionLinkTitle: 'Open this invoice in Exceptions & Recommendations',
     },
   ]
 

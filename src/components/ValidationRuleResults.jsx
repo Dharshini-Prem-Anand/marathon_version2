@@ -1,5 +1,4 @@
 import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
-import { validationRuleResults } from '../data'
 
 const resultConfig = {
   passed: { icon: CheckCircle2, color: 'green', label: 'Passed' },
@@ -7,7 +6,7 @@ const resultConfig = {
   failed: { icon: XCircle, color: 'red', label: 'Failed' },
 }
 
-export default function ValidationRuleResults() {
+export default function ValidationRuleResults({ rules = [] }) {
   return (
     <section className="panel pv-rules">
       <h2 className="panel-title">Validation Rule Results</h2>
@@ -30,7 +29,7 @@ export default function ValidationRuleResults() {
             </tr>
           </thead>
           <tbody>
-            {validationRuleResults.map((r) => {
+            {rules.map((r) => {
               const cfg = resultConfig[r.result]
               const Icon = cfg.icon
               return (

@@ -102,10 +102,6 @@ export default function InvoicePreviewPanel({
               )}
             </tbody>
           </table>
-
-          <button className="btn-primary btn-block">Accept High Confidence</button>
-          <button className="btn-outline btn-block">Correct Field</button>
-          <button className="btn-outline btn-block btn-outline-red">Route to Review</button>
         </div>
       </div>
 

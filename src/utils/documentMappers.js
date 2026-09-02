@@ -14,7 +14,7 @@ export function formatConfidence(score) {
   return `${Math.round(n)}%`
 }
 
-function formatReceived(iso) {
+export function formatReceived(iso) {
   if (!iso) return '—'
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return '—'
@@ -90,6 +90,7 @@ export function mapDocumentRow(record) {
     receivedDateTime: email.ReceivedDateTime ?? null,
     channel: email.Source || 'Email',
     status: email.Status || null,
+    isRemote: true,
   }
 }
 

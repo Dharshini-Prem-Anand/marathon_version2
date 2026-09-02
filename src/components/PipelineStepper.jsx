@@ -1,7 +1,8 @@
 import { Check, ArrowRight, AlertTriangle } from 'lucide-react'
 
 // Generic renderer for a linear automation pipeline. Each step:
-// { key, label, done, caption, isLink?, onClick?, linkTitle?, exception?, exceptionText? }
+// { key, label, done, caption, failed?, isLink?, onClick?, linkTitle?,
+//   exception?, exceptionText?, exceptionOnClick?, exceptionLinkTitle? }
 export default function PipelineStepper({ steps }) {
   return (
     <div className="triage-stepper">
@@ -13,7 +14,7 @@ export default function PipelineStepper({ steps }) {
           return (
             <div className="stepper-item-wrap" key={step.key}>
               <div className="stepper-item">
-                <div className={`stepper-circle ${step.done ? 'is-done' : 'is-pending'}`}>
+                <div className={`stepper-circle ${step.done ? 'is-done' : 'is-pending'} ${step.failed ? 'is-flagged' : ''}`}>
                   {step.done ? <Check size={14} strokeWidth={3} /> : i + 1}
                 </div>
                 {step.isLink ? (
@@ -29,12 +30,23 @@ export default function PipelineStepper({ steps }) {
                 ) : (
                   <div className="stepper-label">{step.label}</div>
                 )}
-                <div className="stepper-caption">{step.caption}</div>
-                {step.exception && (
-                  <div className="stepper-branch is-exception">
-                    <AlertTriangle size={11} /> {step.exceptionText ?? 'Exception'}
-                  </div>
-                )}
+                <div className={`stepper-caption${step.failed ? ' color-red' : ''}`}>{step.caption}</div>
+                {step.exception &&
+                  (step.exceptionOnClick ? (
+                    <button
+                      type="button"
+                      className="stepper-branch is-exception stepper-branch-link"
+                      onClick={step.exceptionOnClick}
+                      title={step.exceptionLinkTitle}
+                    >
+                      <AlertTriangle size={11} /> {step.exceptionText ?? 'Exception'}
+                      <ArrowRight size={11} />
+                    </button>
+                  ) : (
+                    <div className="stepper-branch is-exception">
+                      <AlertTriangle size={11} /> {step.exceptionText ?? 'Exception'}
+                    </div>
+                  ))}
               </div>
               {next && <div className={`stepper-connector ${connectorDone ? 'is-done' : ''}`} />}
             </div>

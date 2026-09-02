@@ -660,6 +660,357 @@ export const documentAiStats = [
   { icon: 'clock', label: 'Average Extraction Time', value: '3.8 Min', valueColor: 'blue', target: '-0.4 min vs prior 7 days' },
 ]
 
+// Seed queue shown for any Date Range other than "Today" — same convention
+// as Email Triage's triageQueue: mockRowDate() spreads these across recent
+// days at render time, keyed off `time` the same way triageQueue rows are.
+// Reuses the same vendors / invoice numbers as triageQueue and priorityQueue
+// so a document opened here matches the Email Triage inbox and the
+// Dashboard's Priority Action Queue exceptions.
+export const documentAiQueue = [
+  {
+    id: 'DEMO-10456::INV-2025-10456.pdf',
+    messageId: 'DEMO-10456',
+    fileName: 'INV-2025-10456.pdf',
+    dieDocumentId: null,
+    contentType: 'application/pdf',
+    format: 'PDF',
+    size: '241 KB',
+    category: 'Invoice',
+    confidence: '99%',
+    confidenceValue: 99,
+    classificationReason: null,
+    classificationStatus: null,
+    objectStoreKey: null,
+    vendor: 'Global Industrial Supply',
+    senderAddress: 'invoices@gis.com',
+    subject: 'Invoice INV-2025-10456',
+    time: '10:24 AM',
+    channel: 'Email',
+    status: 'Processed',
+    isRemote: false,
+  },
+  {
+    id: 'DEMO-10412::INV-2025-10412.pdf',
+    messageId: 'DEMO-10412',
+    fileName: 'INV-2025-10412.pdf',
+    dieDocumentId: null,
+    contentType: 'application/pdf',
+    format: 'PDF',
+    size: '198 KB',
+    category: 'Invoice',
+    confidence: '62%',
+    confidenceValue: 62,
+    classificationReason: null,
+    classificationStatus: null,
+    objectStoreKey: null,
+    vendor: 'Office Depot',
+    senderAddress: 'billing@officedepot.com',
+    subject: 'Invoice INV-2025-10412',
+    time: '10:18 AM',
+    channel: 'Vendor Portal',
+    status: 'Failed',
+    isRemote: false,
+  },
+  {
+    id: 'DEMO-10398::INV-2025-10398.pdf',
+    messageId: 'DEMO-10398',
+    fileName: 'INV-2025-10398.pdf',
+    dieDocumentId: null,
+    contentType: 'application/pdf',
+    format: 'PDF',
+    size: '176 KB',
+    category: 'Invoice',
+    confidence: '92%',
+    confidenceValue: 92,
+    classificationReason: null,
+    classificationStatus: null,
+    objectStoreKey: null,
+    vendor: 'Cintas Corporation',
+    senderAddress: 'ap@cintas.com',
+    subject: 'Invoice INV-2025-10398',
+    time: '10:16 AM',
+    channel: 'EDI',
+    status: 'Pending',
+    isRemote: false,
+  },
+  {
+    id: 'DEMO-10422::INV-2025-10422.pdf',
+    messageId: 'DEMO-10422',
+    fileName: 'INV-2025-10422.pdf',
+    dieDocumentId: null,
+    contentType: 'application/pdf',
+    format: 'PDF',
+    size: '312 KB',
+    category: 'Invoice',
+    confidence: '85%',
+    confidenceValue: 85,
+    classificationReason: null,
+    classificationStatus: null,
+    objectStoreKey: null,
+    vendor: 'Verizon Wireless',
+    senderAddress: 'einvoice@verizon.com',
+    subject: 'Invoice INV-2025-10422',
+    time: '10:12 AM',
+    channel: 'Email',
+    status: 'Processed',
+    isRemote: false,
+  },
+  {
+    id: 'DEMO-10077::CM-2025-10077.pdf',
+    messageId: 'DEMO-10077',
+    fileName: 'CM-2025-10077.pdf',
+    dieDocumentId: null,
+    contentType: 'application/pdf',
+    format: 'PDF',
+    size: '154 KB',
+    category: 'Credit Memo',
+    confidence: '95%',
+    confidenceValue: 95,
+    classificationReason: null,
+    classificationStatus: null,
+    objectStoreKey: null,
+    vendor: 'Grainger',
+    senderAddress: 'invoices@grainger.com',
+    subject: 'Credit Memo CM-2025-10077',
+    time: '10:10 AM',
+    channel: 'Upload',
+    status: 'Processed',
+    isRemote: false,
+  },
+  {
+    id: 'DEMO-STAPLES::Statement_05252025.xlsx',
+    messageId: 'DEMO-STAPLES',
+    fileName: 'Statement_05252025.xlsx',
+    dieDocumentId: null,
+    contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    format: 'XLSX',
+    size: '88 KB',
+    category: 'Statement',
+    confidence: '91%',
+    confidenceValue: 91,
+    classificationReason: null,
+    classificationStatus: null,
+    objectStoreKey: null,
+    vendor: 'Staples',
+    senderAddress: 'statements@staples.com',
+    subject: 'Statement 05252025',
+    time: '10:08 AM',
+    channel: 'Email',
+    status: 'Processed',
+    isRemote: false,
+  },
+]
+
+// Header / line-item extraction results for the fallback queue above, keyed
+// by document id (MessageID::FileName) — same shape mapHeaderField() and
+// groupLineItemFields() produce from the live DIE response.
+export const documentAiFields = {
+  'DEMO-10456::INV-2025-10456.pdf': {
+    headerFields: [
+      { key: 'VendorName', field: 'Vendor', value: 'Global Industrial Supply', confidence: '96%' },
+      { key: 'InvoiceNumber', field: 'Invoice Number', value: 'INV-2025-10456', confidence: '99%' },
+      { key: 'CreationDate', field: 'Invoice Date', value: 'May 18, 2025', confidence: '98%' },
+      { key: 'PurchaseOrder', field: 'PO Number', value: '4500089210', confidence: '93%' },
+      { key: 'GrossAmount', field: 'Gross Amount', value: '$2,215.00', confidence: '96%' },
+      { key: 'TaxAmount', field: 'Tax Amount', value: '$152.50', confidence: '94%' },
+      { key: 'Payee', field: 'Payee', value: 'Global Industrial Supply', confidence: '93%' },
+    ],
+    lineItems: {
+      columns: [
+        { key: 'MaterialDescription', label: 'Description' },
+        { key: 'Quantity', label: 'Quantity' },
+        { key: 'UnitPrice', label: 'Unit Price' },
+        { key: 'AmountInDocCurrency', label: 'Amount' },
+      ],
+      rows: [
+        {
+          itemNumber: '1',
+          cells: {
+            MaterialDescription: { value: 'Industrial Safety Gloves', confidence: '96%' },
+            Quantity: { value: '100', confidence: '95%' },
+            UnitPrice: { value: '$12.50', confidence: '94%' },
+            AmountInDocCurrency: { value: '$1,250.00', confidence: '96%' },
+          },
+        },
+        {
+          itemNumber: '2',
+          cells: {
+            MaterialDescription: { value: 'Safety Glasses', confidence: '95%' },
+            Quantity: { value: '50', confidence: '95%' },
+            UnitPrice: { value: '$8.75', confidence: '93%' },
+            AmountInDocCurrency: { value: '$437.50', confidence: '94%' },
+          },
+        },
+        {
+          itemNumber: '3',
+          cells: {
+            MaterialDescription: { value: 'Hard Hat', confidence: '94%' },
+            Quantity: { value: '25', confidence: '95%' },
+            UnitPrice: { value: '$15.00', confidence: '93%' },
+            AmountInDocCurrency: { value: '$375.00', confidence: '93%' },
+          },
+        },
+      ],
+    },
+  },
+  'DEMO-10412::INV-2025-10412.pdf': {
+    headerFields: [
+      { key: 'VendorName', field: 'Vendor', value: 'Office Depot', confidence: '58%' },
+      { key: 'InvoiceNumber', field: 'Invoice Number', value: 'INV-2025-10412', confidence: '71%' },
+      { key: 'CreationDate', field: 'Invoice Date', value: 'May 17, 2025', confidence: '64%' },
+      { key: 'PurchaseOrder', field: 'PO Number', value: '4500091187', confidence: '55%' },
+      { key: 'GrossAmount', field: 'Gross Amount', value: '$862.40', confidence: '68%' },
+      { key: 'TaxAmount', field: 'Tax Amount', value: '$59.90', confidence: '61%' },
+    ],
+    lineItems: {
+      columns: [
+        { key: 'MaterialDescription', label: 'Description' },
+        { key: 'Quantity', label: 'Quantity' },
+        { key: 'UnitPrice', label: 'Unit Price' },
+        { key: 'AmountInDocCurrency', label: 'Amount' },
+      ],
+      rows: [
+        {
+          itemNumber: '1',
+          cells: {
+            MaterialDescription: { value: 'Copy Paper, Case', confidence: '67%' },
+            Quantity: { value: '40', confidence: '60%' },
+            UnitPrice: { value: '$18.06', confidence: '58%' },
+            AmountInDocCurrency: { value: '$722.40', confidence: '63%' },
+          },
+        },
+        {
+          itemNumber: '2',
+          cells: {
+            MaterialDescription: { value: 'Toner Cartridge', confidence: '71%' },
+            Quantity: { value: '2', confidence: '70%' },
+            UnitPrice: { value: '$70.00', confidence: '65%' },
+            AmountInDocCurrency: { value: '$140.00', confidence: '69%' },
+          },
+        },
+      ],
+    },
+  },
+  'DEMO-10398::INV-2025-10398.pdf': {
+    headerFields: [
+      { key: 'VendorName', field: 'Vendor', value: 'Cintas Corporation', confidence: '95%' },
+      { key: 'InvoiceNumber', field: 'Invoice Number', value: 'INV-2025-10398', confidence: '97%' },
+      { key: 'CreationDate', field: 'Invoice Date', value: 'May 16, 2025', confidence: '96%' },
+      { key: 'PurchaseOrder', field: 'PO Number', value: '4500088765', confidence: '90%' },
+      { key: 'GrossAmount', field: 'Gross Amount', value: '$1,480.00', confidence: '94%' },
+      { key: 'TaxAmount', field: 'Tax Amount', value: '$0.00', confidence: '90%' },
+    ],
+    lineItems: {
+      columns: [
+        { key: 'MaterialDescription', label: 'Description' },
+        { key: 'Quantity', label: 'Quantity' },
+        { key: 'UnitPrice', label: 'Unit Price' },
+        { key: 'AmountInDocCurrency', label: 'Amount' },
+      ],
+      rows: [
+        {
+          itemNumber: '1',
+          cells: {
+            MaterialDescription: { value: 'Uniform Rental Service — Weekly', confidence: '93%' },
+            Quantity: { value: '4', confidence: '92%' },
+            UnitPrice: { value: '$310.00', confidence: '91%' },
+            AmountInDocCurrency: { value: '$1,240.00', confidence: '93%' },
+          },
+        },
+        {
+          itemNumber: '2',
+          cells: {
+            MaterialDescription: { value: 'Floor Mat Service', confidence: '92%' },
+            Quantity: { value: '1', confidence: '90%' },
+            UnitPrice: { value: '$240.00', confidence: '89%' },
+            AmountInDocCurrency: { value: '$240.00', confidence: '91%' },
+          },
+        },
+      ],
+    },
+  },
+  'DEMO-10422::INV-2025-10422.pdf': {
+    headerFields: [
+      { key: 'VendorName', field: 'Vendor', value: 'Verizon Wireless', confidence: '68%' },
+      { key: 'Payee', field: 'Payee', value: 'Verizon Business Services LLC', confidence: '61%' },
+      { key: 'InvoiceNumber', field: 'Invoice Number', value: 'INV-2025-10422', confidence: '95%' },
+      { key: 'CreationDate', field: 'Invoice Date', value: 'May 19, 2025', confidence: '94%' },
+      { key: 'GrossAmount', field: 'Gross Amount', value: '$1,842.60', confidence: '93%' },
+      { key: 'TaxAmount', field: 'Tax Amount', value: '$132.40', confidence: '90%' },
+    ],
+    lineItems: {
+      columns: [
+        { key: 'MaterialDescription', label: 'Description' },
+        { key: 'AmountInDocCurrency', label: 'Amount' },
+      ],
+      rows: [
+        {
+          itemNumber: '1',
+          cells: {
+            MaterialDescription: { value: 'Wireless Service — Account 4521', confidence: '92%' },
+            AmountInDocCurrency: { value: '$1,240.00', confidence: '93%' },
+          },
+        },
+        {
+          itemNumber: '2',
+          cells: {
+            MaterialDescription: { value: 'Equipment Lease — 12 Devices', confidence: '90%' },
+            AmountInDocCurrency: { value: '$470.20', confidence: '91%' },
+          },
+        },
+      ],
+    },
+  },
+  'DEMO-10077::CM-2025-10077.pdf': {
+    headerFields: [
+      { key: 'VendorName', field: 'Vendor', value: 'Grainger', confidence: '97%' },
+      { key: 'InvoiceNumber', field: 'Invoice Number', value: 'CM-2025-10077', confidence: '98%' },
+      { key: 'CreationDate', field: 'Invoice Date', value: 'May 14, 2025', confidence: '97%' },
+      { key: 'PurchaseOrder', field: 'PO Number', value: '4500090512', confidence: '95%' },
+      { key: 'GrossAmount', field: 'Gross Amount', value: '$3,064.20', confidence: '96%' },
+      { key: 'TaxAmount', field: 'Tax Amount', value: '$198.40', confidence: '94%' },
+      { key: 'FreightAmount', field: 'Freight Amount', value: '$186.00', confidence: '88%' },
+    ],
+    lineItems: {
+      columns: [
+        { key: 'MaterialDescription', label: 'Description' },
+        { key: 'Quantity', label: 'Quantity' },
+        { key: 'UnitPrice', label: 'Unit Price' },
+        { key: 'AmountInDocCurrency', label: 'Amount' },
+      ],
+      rows: [
+        {
+          itemNumber: '1',
+          cells: {
+            MaterialDescription: { value: 'Heavy-Duty Shelving Unit', confidence: '96%' },
+            Quantity: { value: '6', confidence: '95%' },
+            UnitPrice: { value: '$410.00', confidence: '95%' },
+            AmountInDocCurrency: { value: '$2,460.00', confidence: '96%' },
+          },
+        },
+        {
+          itemNumber: '2',
+          cells: {
+            MaterialDescription: { value: 'Freight & Handling', confidence: '89%' },
+            Quantity: { value: '1', confidence: '90%' },
+            UnitPrice: { value: '$186.00', confidence: '88%' },
+            AmountInDocCurrency: { value: '$186.00', confidence: '88%' },
+          },
+        },
+      ],
+    },
+  },
+  'DEMO-STAPLES::Statement_05252025.xlsx': {
+    headerFields: [
+      { key: 'VendorName', field: 'Vendor', value: 'Staples', confidence: '92%' },
+      { key: 'InvoiceNumber', field: 'Statement Number', value: '05252025', confidence: '90%' },
+      { key: 'CreationDate', field: 'Statement Date', value: 'May 25, 2025', confidence: '93%' },
+      { key: 'GrossAmount', field: 'Amount Due', value: '$4,318.75', confidence: '89%' },
+    ],
+    lineItems: { columns: [], rows: [] },
+  },
+}
+
 export const documentQueue = [
   { format: 'PDF', icon: 'pdf', color: 'red', documents: 1128, percent: '50%', topVendor: 'Global Industrial Supply', topVendorCount: 312, lowConfidence: 8, channel: 'Email', status: 'Processed' },
   { format: 'Word', icon: 'word', color: 'blue', documents: 396, percent: '18%', topVendor: 'Office Depot', topVendorCount: 178, lowConfidence: 4, channel: 'Vendor Portal', status: 'Processed' },
@@ -870,12 +1221,151 @@ export const documentClassification = [
   { label: 'Credit Memo', confidence: '4%', badgeColor: 'gray', selected: false },
 ]
 
-export const preValidationActions = [
-  { label: 'Accept High Confidence', variant: 'primary' },
-  { label: 'Correct Field', variant: 'outline' },
-  { label: 'Route to Exception', variant: 'outline' },
-  { label: 'Release to Matching', variant: 'outline' },
-]
+// Document Pre Validation Queue — same invoice identities used across the
+// Document AI (documentAiQueue) and Exceptions (priorityExceptionQueue) mocks,
+// so selecting a row here lines up with the rest of the demo dataset.
+export const preValidationQueue = ['INV-2025-10456', 'INV-2025-10412', 'INV-2025-10398', 'INV-2025-10422', 'CM-2025-10077']
+
+export const preValidationRecords = {
+  'INV-2025-10456': {
+    invoice: preValidationInvoice,
+    validationRuleResults,
+    vendorPayeeValidation,
+    documentClassification,
+  },
+  'INV-2025-10412': {
+    invoice: {
+      vendorName: 'OFFICE DEPOT',
+      confidenceBadge: 'LOW CONFIDENCE',
+      invoiceNumber: '10412',
+      invoiceDate: 'May 17, 2025',
+      poNumber: '4500091187',
+      grossAmount: '$862.40 USD',
+      lineItems: [
+        { line: 1, description: 'Copy Paper, Case', quantity: 40, uom: 'CS', unitPrice: '$18.06', amount: '$722.40' },
+        { line: 2, description: 'Toner Cartridge', quantity: 2, uom: 'EA', unitPrice: '$70.00', amount: '$140.00' },
+      ],
+      totalAmountDue: '$862.40 USD',
+    },
+    validationRuleResults: [
+      { category: 'Mandatory Fields', rule: 'Required fields present', result: 'failed', confidence: '58%', issue: 'Low OCR confidence' },
+      { category: 'Duplicate Check', rule: 'Duplicate invoice check', result: 'passed', confidence: '97%', issue: '—' },
+      { category: 'Vendor Validation', rule: 'Vendor exists & active', result: 'passed', confidence: '99%', issue: '—' },
+      { category: 'PO Existence', rule: 'PO exists & open', result: 'review', confidence: '71%', issue: 'Low-confidence PO number' },
+      { category: 'Company Code', rule: 'Company code valid', result: 'passed', confidence: '100%', issue: '—' },
+      { category: 'Total Reconciliation', rule: 'Totals match', result: 'review', confidence: '68%', issue: 'Low-confidence totals' },
+    ],
+    vendorPayeeValidation: [
+      { type: 'Proposed Vendor', name: 'Office Depot', confidence: '58%', badgeColor: 'red', nameColor: 'red' },
+      { type: 'SAP Vendor', name: '10004417', confidence: '100%', badgeColor: 'green' },
+      { type: 'Payee', name: 'Office Depot', confidence: '58%', badgeColor: 'red', nameColor: 'red' },
+      { type: 'Remit-To Address', name: 'PO Box 71318, Chicago, IL 60694', confidence: '62%', badgeColor: 'orange' },
+    ],
+    documentClassification: [
+      { label: 'Invoice', confidence: '62%', badgeColor: 'orange', selected: true },
+      { label: 'Credit Memo', confidence: '38%', badgeColor: 'gray', selected: false },
+    ],
+  },
+  'INV-2025-10398': {
+    invoice: {
+      vendorName: 'CINTAS CORPORATION',
+      confidenceBadge: 'HIGH CONFIDENCE',
+      invoiceNumber: '10398',
+      invoiceDate: 'May 16, 2025',
+      poNumber: '4500088765',
+      grossAmount: '$1,480.00 USD',
+      lineItems: [
+        { line: 1, description: 'Uniform Rental Service — Weekly', quantity: 4, uom: 'WK', unitPrice: '$310.00', amount: '$1,240.00' },
+        { line: 2, description: 'Floor Mat Service', quantity: 1, uom: 'EA', unitPrice: '$240.00', amount: '$240.00' },
+      ],
+      totalAmountDue: '$1,480.00 USD',
+    },
+    validationRuleResults: [
+      { category: 'Mandatory Fields', rule: 'Required fields present', result: 'passed', confidence: '97%', issue: '—' },
+      { category: 'Duplicate Check', rule: 'Duplicate invoice check', result: 'passed', confidence: '98%', issue: '—' },
+      { category: 'Vendor Validation', rule: 'Vendor exists & active', result: 'passed', confidence: '99%', issue: '—' },
+      { category: 'PO Existence', rule: 'PO exists & open', result: 'failed', confidence: '54%', issue: 'PO line mismatch' },
+      { category: 'Company Code', rule: 'Company code valid', result: 'passed', confidence: '100%', issue: '—' },
+      { category: 'Total Reconciliation', rule: 'Totals match', result: 'passed', confidence: '96%', issue: '—' },
+    ],
+    vendorPayeeValidation: [
+      { type: 'Proposed Vendor', name: 'Cintas Corporation', confidence: '96%', badgeColor: 'green' },
+      { type: 'SAP Vendor', name: '10001982', confidence: '100%', badgeColor: 'green' },
+      { type: 'Payee', name: 'Cintas Corporation', confidence: '96%', badgeColor: 'green' },
+      { type: 'Remit-To Address', name: 'PO Box 630910, Cincinnati, OH 45263', confidence: '95%', badgeColor: 'green' },
+    ],
+    documentClassification: [
+      { label: 'Invoice', confidence: '97%', badgeColor: 'green', selected: true },
+      { label: 'Credit Memo', confidence: '3%', badgeColor: 'gray', selected: false },
+    ],
+  },
+  'INV-2025-10422': {
+    invoice: {
+      vendorName: 'VERIZON WIRELESS',
+      confidenceBadge: 'MEDIUM CONFIDENCE',
+      invoiceNumber: '10422',
+      invoiceDate: 'May 19, 2025',
+      poNumber: '—',
+      grossAmount: '$1,842.60 USD',
+      lineItems: [
+        { line: 1, description: 'Wireless Service — Account 4521', quantity: 1, uom: 'EA', unitPrice: '$1,240.00', amount: '$1,240.00' },
+        { line: 2, description: 'Equipment Lease — 12 Devices', quantity: 12, uom: 'EA', unitPrice: '$39.18', amount: '$470.20' },
+      ],
+      totalAmountDue: '$1,842.60 USD',
+    },
+    validationRuleResults: [
+      { category: 'Mandatory Fields', rule: 'Required fields present', result: 'passed', confidence: '94%', issue: '—' },
+      { category: 'Duplicate Check', rule: 'Duplicate invoice check', result: 'passed', confidence: '97%', issue: '—' },
+      { category: 'Vendor Validation', rule: 'Vendor exists & active', result: 'review', confidence: '68%', issue: 'Vendor/payee mismatch' },
+      { category: 'Payee Validation', rule: 'Payee matches vendor', result: 'failed', confidence: '61%', issue: 'Payee differs from vendor' },
+      { category: 'PO Existence', rule: 'PO exists & open', result: 'review', confidence: '—', issue: 'No PO on file' },
+      { category: 'Company Code', rule: 'Company code valid', result: 'passed', confidence: '100%', issue: '—' },
+    ],
+    vendorPayeeValidation: [
+      { type: 'Proposed Vendor', name: 'Verizon Wireless', confidence: '68%', badgeColor: 'orange' },
+      { type: 'SAP Vendor', name: '10003355', confidence: '100%', badgeColor: 'green' },
+      { type: 'Payee', name: 'Verizon Business Services LLC', confidence: '61%', badgeColor: 'red', nameColor: 'red' },
+      { type: 'Remit-To Address', name: 'PO Box 15026, Albany, NY 12212', confidence: '70%', badgeColor: 'orange' },
+    ],
+    documentClassification: [
+      { label: 'Invoice', confidence: '95%', badgeColor: 'green', selected: true },
+      { label: 'Credit Memo', confidence: '5%', badgeColor: 'gray', selected: false },
+    ],
+  },
+  'CM-2025-10077': {
+    invoice: {
+      vendorName: 'GRAINGER',
+      confidenceBadge: 'HIGH CONFIDENCE',
+      invoiceNumber: 'CM-10077',
+      invoiceDate: 'May 14, 2025',
+      poNumber: '4500090512',
+      grossAmount: '$3,064.20 USD',
+      lineItems: [
+        { line: 1, description: 'Returned Safety Equipment', quantity: 1, uom: 'LOT', unitPrice: '$2,878.20', amount: '$2,878.20' },
+        { line: 2, description: 'Restocking Fee Credit', quantity: 1, uom: 'EA', unitPrice: '$186.00', amount: '$186.00' },
+      ],
+      totalAmountDue: '$3,064.20 USD',
+    },
+    validationRuleResults: [
+      { category: 'Mandatory Fields', rule: 'Required fields present', result: 'passed', confidence: '98%', issue: '—' },
+      { category: 'Duplicate Check', rule: 'Duplicate invoice check', result: 'passed', confidence: '99%', issue: '—' },
+      { category: 'Vendor Validation', rule: 'Vendor exists & active', result: 'passed', confidence: '100%', issue: '—' },
+      { category: 'PO Existence', rule: 'PO exists & open', result: 'passed', confidence: '95%', issue: '—' },
+      { category: 'Company Code', rule: 'Company code valid', result: 'passed', confidence: '100%', issue: '—' },
+      { category: 'Credit Memo Review', rule: 'Manual review required for credits', result: 'review', confidence: '—', issue: 'Policy: credit memos require sign-off' },
+    ],
+    vendorPayeeValidation: [
+      { type: 'Proposed Vendor', name: 'Grainger', confidence: '97%', badgeColor: 'green' },
+      { type: 'SAP Vendor', name: '10000541', confidence: '100%', badgeColor: 'green' },
+      { type: 'Payee', name: 'Grainger', confidence: '97%', badgeColor: 'green' },
+      { type: 'Remit-To Address', name: 'Dept 0888, Palatine, IL 60038', confidence: '96%', badgeColor: 'green' },
+    ],
+    documentClassification: [
+      { label: 'Invoice', confidence: '6%', badgeColor: 'gray', selected: false },
+      { label: 'Credit Memo', confidence: '94%', badgeColor: 'green', selected: true },
+    ],
+  },
+}
 
 export const topRuleFailureDrivers = [
   { driver: 'Total Reconciliation', invoices: 34, percent: 32, color: 'red' },
@@ -1068,14 +1558,96 @@ export const threeWayMatchLines = [
 export const matchExplanation = {
   recommendedAction: 'Split freight to PO condition and route tax variance for review.',
   confidence: '92%',
-  evidence: 'PO 4500089210, receipt 50006714, Marathon tolerance rule AP-PO-07',
+  evidence: 'PO 4500088765, receipt 50006714, Marathon tolerance rule AP-PO-07',
 }
 
-export const matchExplanationActions = [
-  { label: 'Accept Recommendation', variant: 'primary' },
-  { label: 'Adjust Match', variant: 'outline' },
-  { label: 'Send to Exception', variant: 'outline-red' },
-]
+// Invoice Matching Queue — same invoice identities used across the Document
+// AI, Pre-Validation, and Exceptions mocks, so selecting a row here lines up
+// with the rest of the demo dataset.
+export const poMatchingQueue = ['INV-2025-10456', 'INV-2025-10412', 'INV-2025-10398', 'INV-2025-10422', 'CM-2025-10077']
+
+export const poMatchingRecords = {
+  'INV-2025-10456': {
+    context: { vendor: 'Global Industrial Supply', channel: 'Email', status: 'Matched' },
+    summaryCards: [
+      { icon: 'fileText', label: 'Invoice', value: '$84,250', valueColor: null },
+      { icon: 'clipboard', label: 'SAP PO', value: '$84,250', valueColor: null },
+      { icon: 'truck', label: 'Received', value: '$84,250', valueColor: null },
+      { icon: 'scale', label: 'Variance', value: '$0', valueColor: 'green' },
+    ],
+    matchLines: [
+      { invLine: 1, description: 'Industrial Valve 2"', qty: 10, unitPrice: '$2,750.00', invAmount: '$27,500.00', proposedPoLine: '00010', poAmount: '$27,500.00', variance: '$0.00', tolerance: '$500.00', matchStatus: 'matched' },
+      { invLine: 2, description: 'Stainless Steel Pipe 4"', qty: 50, unitPrice: '$850.00', invAmount: '$42,500.00', proposedPoLine: '00020', poAmount: '$42,500.00', variance: '$0.00', tolerance: '$800.00', matchStatus: 'matched' },
+      { invLine: 3, description: 'Gasket Set', qty: 20, unitPrice: '$150.00', invAmount: '$3,000.00', proposedPoLine: '00030', poAmount: '$3,000.00', variance: '$0.00', tolerance: '$100.00', matchStatus: 'matched' },
+      { invLine: 4, description: 'Shipping & Handling', qty: 1, unitPrice: '$1,350.00', invAmount: '$1,350.00', proposedPoLine: 'FREIGHT', poAmount: '$1,350.00', variance: '$0.00', tolerance: '$50.00', matchStatus: 'matched' },
+    ],
+    explanation: {
+      recommendedAction: 'All lines matched within tolerance — release for posting.',
+      confidence: '99%',
+      evidence: 'PO 4500089210, receipt 50007021, Marathon tolerance rule AP-PO-07',
+    },
+  },
+  'INV-2025-10412': {
+    context: { vendor: 'Office Depot', channel: 'Vendor Portal', status: 'Partial Match' },
+    summaryCards: [
+      { icon: 'fileText', label: 'Invoice', value: '$862.40', valueColor: null },
+      { icon: 'clipboard', label: 'SAP PO', value: '$825.00', valueColor: null },
+      { icon: 'truck', label: 'Received', value: '$825.00', valueColor: null },
+      { icon: 'scale', label: 'Variance', value: '$37.40', valueColor: 'red' },
+    ],
+    matchLines: [
+      { invLine: 1, description: 'Copy Paper, Case', qty: 40, unitPrice: '$18.06', invAmount: '$722.40', proposedPoLine: '00010', poAmount: '$700.00', variance: '$22.40', tolerance: '$30.00', matchStatus: 'tolerance' },
+      { invLine: 2, description: 'Toner Cartridge', qty: 2, unitPrice: '$70.00', invAmount: '$140.00', proposedPoLine: '00020', poAmount: '$125.00', variance: '$15.00', tolerance: '$10.00', matchStatus: 'mismatch' },
+    ],
+    explanation: {
+      recommendedAction: 'Toner Cartridge line exceeds price tolerance — route for pricing review before posting.',
+      confidence: '74%',
+      evidence: 'PO 4500091187, receipt 50007035, Marathon tolerance rule AP-PO-07',
+    },
+  },
+  'INV-2025-10398': {
+    context: poMatchingContext,
+    summaryCards: matchSummaryCards,
+    matchLines: threeWayMatchLines,
+    explanation: matchExplanation,
+  },
+  'INV-2025-10422': {
+    context: { vendor: 'Verizon Wireless', channel: 'Email', status: 'Not Found' },
+    summaryCards: [
+      { icon: 'fileText', label: 'Invoice', value: '$1,842.60', valueColor: null },
+      { icon: 'clipboard', label: 'SAP PO', value: 'Not Found', valueColor: 'red' },
+      { icon: 'truck', label: 'Received', value: '—', valueColor: null },
+      { icon: 'scale', label: 'Variance', value: '—', valueColor: null },
+    ],
+    matchLines: [
+      { invLine: 1, description: 'Wireless Service — Account 4521', qty: 1, unitPrice: '$1,240.00', invAmount: '$1,240.00', proposedPoLine: '—', poAmount: '—', variance: '—', tolerance: '—', matchStatus: 'notfound' },
+      { invLine: 2, description: 'Equipment Lease — 12 Devices', qty: 12, unitPrice: '$39.18', invAmount: '$470.20', proposedPoLine: '—', poAmount: '—', variance: '—', tolerance: '—', matchStatus: 'notfound' },
+    ],
+    explanation: {
+      recommendedAction: 'No purchase order on file for this vendor/amount — request a PO or route to non-PO exception handling.',
+      confidence: '61%',
+      evidence: 'Vendor master 10003355, no open PO match within ±5% amount tolerance',
+    },
+  },
+  'CM-2025-10077': {
+    context: { vendor: 'Grainger', channel: 'Upload', status: 'Matched' },
+    summaryCards: [
+      { icon: 'fileText', label: 'Invoice', value: '$3,064.20', valueColor: null },
+      { icon: 'clipboard', label: 'SAP PO', value: '$3,064.20', valueColor: null },
+      { icon: 'truck', label: 'Received', value: '$3,064.20', valueColor: null },
+      { icon: 'scale', label: 'Variance', value: '$0', valueColor: 'green' },
+    ],
+    matchLines: [
+      { invLine: 1, description: 'Returned Safety Equipment', qty: 1, unitPrice: '$2,878.20', invAmount: '$2,878.20', proposedPoLine: '00010', poAmount: '$2,878.20', variance: '$0.00', tolerance: '$50.00', matchStatus: 'matched' },
+      { invLine: 2, description: 'Restocking Fee Credit', qty: 1, unitPrice: '$186.00', invAmount: '$186.00', proposedPoLine: '00020', poAmount: '$186.00', variance: '$0.00', tolerance: '$10.00', matchStatus: 'matched' },
+    ],
+    explanation: {
+      recommendedAction: 'Credit memo matches original PO — release for posting.',
+      confidence: '96%',
+      evidence: 'PO 4500090512, original invoice CM-2025-10077, Marathon tolerance rule AP-PO-07',
+    },
+  },
+}
 
 export const matchingPerformance = [
   { label: 'Header Match Rate', percent: '98.2%', fraction: '(1,950 / 1,986)' },
@@ -2678,7 +3250,6 @@ export const apAssistantGuidance = {
 
 export const sidebarItems = [
   { icon: 'layoutDashboard', label: 'Dashboard' },
-  { icon: 'sparkles', label: 'AP Assistant' },
   { icon: 'mail', label: 'Email & Attachment Triage' },
   { icon: 'fileText', label: 'Document AI & Extraction' },
   { icon: 'checkCircle', label: 'Pre-Validation' },
