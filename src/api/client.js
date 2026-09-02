@@ -63,3 +63,24 @@ export function apiGetBlob(url) {
       })
   })
 }
+
+// JSON GET against an absolute URL (the Python service), as opposed to apiGet
+// which is relative to the CAP OData base.
+export function apiGetJson(url) {
+  return new Promise((resolve, reject) => {
+    $.ajax({
+      url,
+      type: 'GET',
+      dataType: 'json',
+      headers: {
+        Accept: 'application/json',
+        ...(AUTH_TOKEN ? { Authorization: `Bearer ${AUTH_TOKEN}` } : {}),
+      },
+    })
+      .done(resolve)
+      .fail((xhr, textStatus, errorThrown) => {
+        const detail = xhr?.responseJSON?.detail
+        reject(new Error(detail || errorThrown || textStatus || 'Request failed'))
+      })
+  })
+}

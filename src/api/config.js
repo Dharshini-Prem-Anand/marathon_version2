@@ -23,3 +23,7 @@ export const AUTH_TOKEN = import.meta.env.VITE_API_TOKEN || 'eyJ0eXAiOiJKV1QiLCJ
 const PDF_HOST = (import.meta.env.VITE_PDF_SERVICE_BASE_URL || 'https://poc-mc10-org-ai-marathoninvoiceautomation-pysrv.cfapps.us10-001.hana.ondemand.com').replace(/\/+$/, '')
 export const PDF_SERVICE_BASE_URL = PDF_HOST && import.meta.env.DEV ? '/pdf-api' : PDF_HOST
 
+// Same FastAPI host also serves /matchExplanation — alias for clarity at the
+// call sites that aren't about PDFs.
+export const PYTHON_SERVICE_BASE_URL = PDF_SERVICE_BASE_URL
+

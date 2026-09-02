@@ -1,5 +1,5 @@
-import { apiGet, apiGetBlob, apiPostJson } from './client'
-import { PDF_SERVICE_BASE_URL } from './config'
+import { apiGet, apiGetBlob, apiGetJson, apiPostJson } from './client'
+import { PDF_SERVICE_BASE_URL, PYTHON_SERVICE_BASE_URL } from './config'
 
 // Escapes a value for use inside an OData string literal.
 function odataString(value) {
@@ -36,6 +36,36 @@ export function fetchExtractedLineItemFields(messageId, fileName) {
   return apiGet('/ExtractedLineItemFields', {
     $filter: documentKeyFilter(messageId, fileName),
   }).then((res) => res?.value ?? [])
+}
+
+// PO & Line Matching. The CAP associations Invoices.purchaseOrder /
+// Invoices.goodsReceipt resolve to null (PurchaseOrderItem, GRNumber,
+// MaterialDocYear and MaterialDocItem are empty on every invoice row), so
+// $expand is useless here — these three sets are fetched whole and joined
+// client-side on PurchaseOrder + ItemNumber. Volumes are small (tens of rows).
+export function fetchInvoices() {
+  return apiGet('/Invoices').then((res) => res?.value ?? [])
+}
+
+export function fetchPurchaseOrders() {
+  return apiGet('/PurchaseOrders').then((res) => res?.value ?? [])
+}
+
+export function fetchGoodsReceipts() {
+  return apiGet('/GoodsReceipts').then((res) => res?.value ?? [])
+}
+
+// Match Explanation for one invoice, from the Python service.
+// Returns { recommendedAction, confidence, evidence }. The route may not be
+// deployed yet, so callers must treat any failure as "not ready" rather than
+// as a page error.
+export function fetchMatchExplanation(invoiceNumber) {
+  if (!PYTHON_SERVICE_BASE_URL) {
+    return Promise.reject(new Error('Python service URL is not configured'))
+  }
+  return apiGetJson(
+    `${PYTHON_SERVICE_BASE_URL}/matchExplanation?invNo=${encodeURIComponent(invoiceNumber)}`
+  )
 }
 
 export const isPdfServiceConfigured = () => Boolean(PDF_SERVICE_BASE_URL)

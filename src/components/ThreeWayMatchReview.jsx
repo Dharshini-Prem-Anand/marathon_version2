@@ -41,16 +41,15 @@ export default function ThreeWayMatchReview({ summaryCards = [], matchLines = []
       <div className="table-wrap">
         <table className="table-fixed match-lines-table">
           <colgroup>
-            <col style={{ width: '5%' }} />
-            <col style={{ width: '16%' }} />
-            <col style={{ width: '5%' }} />
+            <col style={{ width: '6%' }} />
+            <col style={{ width: '20%' }} />
+            <col style={{ width: '7%' }} />
+            <col style={{ width: '11%' }} />
+            <col style={{ width: '12%' }} />
             <col style={{ width: '9%' }} />
-            <col style={{ width: '10%' }} />
-            <col style={{ width: '9%' }} />
-            <col style={{ width: '9%' }} />
-            <col style={{ width: '9%' }} />
-            <col style={{ width: '9%' }} />
-            <col style={{ width: '19%' }} />
+            <col style={{ width: '11%' }} />
+            <col style={{ width: '11%' }} />
+            <col style={{ width: '13%' }} />
           </colgroup>
           <thead>
             <tr>
@@ -62,7 +61,6 @@ export default function ThreeWayMatchReview({ summaryCards = [], matchLines = []
               <th>PO Line</th>
               <th>PO Amt</th>
               <th>Var.</th>
-              <th>Tol.</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -82,7 +80,6 @@ export default function ThreeWayMatchReview({ summaryCards = [], matchLines = []
                   <td>{line.proposedPoLine}</td>
                   <td>{line.poAmount}</td>
                   <td>{line.variance}</td>
-                  <td>{line.tolerance}</td>
                   <td>
                     <span className={`result-cell color-${cfg.color}`}>
                       <Icon size={14} />
