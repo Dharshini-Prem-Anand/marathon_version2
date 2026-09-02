@@ -1,4 +1,4 @@
-import { apiGet, apiGetBlob } from './client'
+import { apiGet, apiGetBlob, apiPostJson } from './client'
 import { PDF_SERVICE_BASE_URL } from './config'
 
 // Escapes a value for use inside an OData string literal.
@@ -49,5 +49,15 @@ export function fetchDocumentPdf(dieDocumentId) {
   }
   const url = `${PDF_SERVICE_BASE_URL}/getExtractedDocument?document_id=${encodeURIComponent(dieDocumentId)}`
   return apiGetBlob(url)
+}
+
+// AP assistant chat — same Python service as the PDF proxy above.
+export function sendAssistantChatMessage(sessionId, message) {
+  if (!PDF_SERVICE_BASE_URL) {
+    return Promise.reject(
+      new Error('AI assistant service URL is not configured — set VITE_PDF_SERVICE_BASE_URL')
+    )
+  }
+  return apiPostJson(`${PDF_SERVICE_BASE_URL}/chat`, { session_id: sessionId, message })
 }
 

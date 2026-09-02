@@ -7,7 +7,11 @@ export default defineConfig(({ mode }) => {
   // build-time only and never inlined into the client bundle.
   const env = loadEnv(mode, process.cwd(), '')
   const odataHost = env.CAP_SERVICE_URL
-  const pdfHost = env.VITE_PDF_SERVICE_BASE_URL
+  // Same default as src/api/config.js — keeps the dev proxy working even
+  // when VITE_PDF_SERVICE_BASE_URL isn't set in .env.local.
+  const pdfHost =
+    env.VITE_PDF_SERVICE_BASE_URL ||
+    'https://poc-mc10-org-ai-marathoninvoiceautomation-pysrv.cfapps.us10-001.hana.ondemand.com'
 
   return {
     plugins: [react()],

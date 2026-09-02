@@ -1,6 +1,5 @@
 import PageHeader from '../components/PageHeader'
 import ApQueryPanel from '../components/ApQueryPanel'
-import InvoiceContextPanel from '../components/InvoiceContextPanel'
 import AssistantRecommendationPanel from '../components/AssistantRecommendationPanel'
 import AssistantWhatIfScenarios from '../components/AssistantWhatIfScenarios'
 import ExpectedValueImpactPanel from '../components/ExpectedValueImpactPanel'
@@ -11,10 +10,7 @@ export default function ApAssistant() {
     <>
       <PageHeader title={apAssistantPageHeader.title} subtitle={apAssistantPageHeader.subtitle} />
 
-      <div className="assistant-top-grid">
-        <ApQueryPanel />
-        <InvoiceContextPanel />
-      </div>
+      <ApQueryPanel />
 
       <AssistantRecommendationPanel />
 
