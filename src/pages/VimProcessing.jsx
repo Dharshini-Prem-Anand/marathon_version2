@@ -48,11 +48,12 @@ export default function VimProcessing() {
       />
       <StatsRow stats={vimStats} />
 
-      <VimWorklistTable rows={filteredRows} />
-
-      <div className="vim-secondary-grid">
-        <SelectedInvoiceTimeline />
-        <IntegrationReconciliation />
+      <div className="vim-worklist-row">
+        <VimWorklistTable rows={filteredRows} />
+        <div className="vim-worklist-side">
+          <SelectedInvoiceTimeline />
+          <IntegrationReconciliation />
+        </div>
       </div>
 
       <OperationalHealth />

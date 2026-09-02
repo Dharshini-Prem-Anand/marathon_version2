@@ -2690,4 +2690,11 @@ export const sidebarItems = [
   { icon: 'search', label: 'Extraction Diagnostics' },
   { icon: 'fileCheck', label: 'Audit & Reconciliation' },
   { icon: 'barChart2', label: 'KPI, Metrics & Value' },
+  { icon: 'layers', label: 'VIM Processing', wip: true },
+  { icon: 'users', label: 'Work Assignment', wip: true },
+  { icon: 'barChart', label: 'Operational Analytics', wip: true },
+  { icon: 'search', label: 'Extraction Diagnostics', wip: true },
+  { icon: 'fileCheck', label: 'Audit & Reconciliation', wip: true },
+  { icon: 'barChart2', label: 'KPI, Metrics & Value', wip: true },
+  { icon: 'sparkles', label: 'AP Assistant' },
 ]

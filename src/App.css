@@ -179,6 +179,19 @@
   flex-shrink: 0;
 }
 
+.sidebar-badge-wip {
+  margin-left: auto;
+  background: #fff3cd;
+  color: #92700c;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border: 1px solid #f0d78c;
+  border-radius: 10px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+}
+
 .sidebar-footer {
   padding: 10px 16px;
   border-top: 1px solid var(--border);
@@ -266,6 +279,11 @@
   color: var(--text-primary);
   background: var(--bg-panel);
   font-family: inherit;
+}
+
+.filter-field select option:disabled {
+  color: #c9ccd1;
+  opacity: 0.35;
 }
 
 .filter-date-select {
@@ -2646,11 +2664,34 @@ tbody tr:last-child td {
 /* ---------- VIM PROCESSING ---------- */
 .vim-filter-bar {
   align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.vim-search-field {
-  min-width: 200px;
-  flex: 1;
+.vim-filter-bar .filter-field {
+  flex: 0 0 92px;
+  min-width: 0;
+}
+
+.vim-filter-bar .filter-field label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vim-filter-bar .filter-field select {
+  width: 100%;
+  padding: 0 6px;
+}
+
+.vim-filter-bar .btn-outline,
+.vim-filter-bar .btn-primary {
+  flex-shrink: 0;
+}
+
+.vim-filter-bar .vim-search-field {
+  flex: 1 1 120px;
+  min-width: 120px;
 }
 
 .vim-search-input {
@@ -2768,13 +2809,61 @@ tbody tr:last-child td {
   cursor: default;
 }
 
-/* Selected Invoice timeline */
-.vim-secondary-grid {
+.vim-worklist-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
   gap: 12px;
-  align-items: start;
+  align-items: stretch;
 }
+
+.vim-worklist-row .vim-worklist {
+  display: flex;
+  flex-direction: column;
+}
+
+.vim-worklist-row .vim-worklist .table-pagination {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.vim-worklist-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.vim-worklist-side .panel {
+  padding: 10px 12px;
+}
+
+.vim-worklist-side .panel-title {
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.vim-worklist-side .integration-reconciliation {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.vim-worklist-side .integration-actions {
+  margin-top: auto;
+}
+
+.vim-worklist-side .integration-actions {
+  gap: 8px;
+}
+
+.vim-worklist-side .integration-actions button {
+  min-width: 130px;
+  height: 30px;
+  font-size: 11.5px;
+  padding: 0 8px;
+}
+
+/* Selected Invoice timeline */
 
 .selected-invoice-heading {
   display: flex;
@@ -2783,7 +2872,7 @@ tbody tr:last-child td {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 
 .selected-invoice-divider {
@@ -2793,8 +2882,8 @@ tbody tr:last-child td {
 .invoice-timeline-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 2px;
+  margin-bottom: 8px;
 }
 
 .invoice-timeline-row {
@@ -2802,7 +2891,7 @@ tbody tr:last-child td {
   align-items: center;
   gap: 10px;
   font-size: 12.5px;
-  padding: 4px 6px;
+  padding: 3px 6px;
   border-radius: 6px;
 }
 
@@ -2834,7 +2923,7 @@ tbody tr:last-child td {
   flex-wrap: wrap;
   gap: 14px;
   border-top: 1px solid var(--border);
-  padding-top: 12px;
+  padding-top: 8px;
   font-size: 11.5px;
   color: var(--text-secondary);
 }
@@ -2848,8 +2937,8 @@ tbody tr:last-child td {
 /* Integration & Reconciliation */
 .connection-row {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 10px;
   flex-wrap: wrap;
 }
 
@@ -2858,7 +2947,7 @@ tbody tr:last-child td {
   min-width: 160px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 10px 12px;
+  padding: 7px 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2886,8 +2975,8 @@ tbody tr:last-child td {
 .integration-details-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 .integration-detail-label {

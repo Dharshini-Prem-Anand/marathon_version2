@@ -73,7 +73,9 @@ export default function FilterBar({
           <label>{personaField.label}</label>
           <select value={personaValue} onChange={(e) => onPersonaChange(e.target.value)}>
             {personaField.options.map((opt) => (
-              <option key={opt}>{opt}</option>
+              <option key={opt} disabled={opt !== personaValue}>
+                {opt}
+              </option>
             ))}
           </select>
         </div>

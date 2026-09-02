@@ -6,7 +6,7 @@ export default function VimFilterBar({ values, onFieldChange, searchValue, onSea
     <div className="filter-bar vim-filter-bar">
       {vimFilters.map((f) => (
         <div className="filter-field" key={f.label}>
-          <label>{f.label}</label>
+          <label title={f.label}>{f.label}</label>
           <select value={values[f.label]} onChange={(e) => onFieldChange(f.label, e.target.value)}>
             {f.options.map((opt) => (
               <option key={opt}>{opt}</option>

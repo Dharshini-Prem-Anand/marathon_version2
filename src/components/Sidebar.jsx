@@ -49,6 +49,11 @@ export default function Sidebar({ active, onSelect, collapsed, onToggleCollapse 
             >
               <Icon size={17} strokeWidth={1.8} />
               <span>{item.label}</span>
+              {item.wip && !collapsed && (
+                <span className="sidebar-badge-wip" title="Work in Progress">
+                  WIP
+                </span>
+              )}
               {item.badge && !collapsed && <span className="sidebar-badge">{item.badge}</span>}
             </button>
           )
