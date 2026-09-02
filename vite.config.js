@@ -1,12 +1,12 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 
-const ODATA_HOST =
-  'https://poc-mc10-org-ai-marathoninvoiceautomation-srv.cfapps.us10-001.hana.ondemand.com'
-
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
+  // Empty prefix: loads unprefixed vars too. Anything without a VITE_ prefix is
+  // build-time only and never inlined into the client bundle.
   const env = loadEnv(mode, process.cwd(), '')
+  const odataHost = env.CAP_SERVICE_URL
   const pdfHost = env.VITE_PDF_SERVICE_BASE_URL
 
   return {
@@ -14,11 +14,17 @@ export default defineConfig(({ mode }) => {
     server: {
       // Proxy both backends so the browser makes same-origin calls in dev.
       proxy: {
-        '/odata': {
-          target: ODATA_HOST,
-          changeOrigin: true,
-          secure: true,
-        },
+        // Dev only — deployed, the Node server module proxies this through
+        // the BTP destination instead.
+        ...(odataHost
+          ? {
+              '/odata': {
+                target: odataHost,
+                changeOrigin: true,
+                secure: true,
+              },
+            }
+          : {}),
         // Only registered once VITE_PDF_SERVICE_BASE_URL is set.
         ...(pdfHost
           ? {

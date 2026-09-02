@@ -1,0 +1,17 @@
+{
+  "name": "ap-react-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Serves the built React UI and proxies OData through the BTP destination",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": "^20 || ^22"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

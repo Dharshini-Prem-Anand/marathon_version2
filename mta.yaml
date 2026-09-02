@@ -7,6 +7,8 @@ parameters:
   enable-parallel-deployments: true
 
 modules:
+  # Builds the React bundle. Not deployed on its own — its dist output is
+  # handed to the server module below (supported-platforms: [] does that).
   - name: ap-react-ui
     type: html5
     path: .
@@ -15,4 +17,35 @@ modules:
       commands:
         - npm ci
         - npm run build
+      supported-platforms: []
       build-result: dist
+
+  # Serves the bundle and proxies /odata through the destination service, so
+  # the CAP URL and its credentials stay server-side.
+  - name: ap-react
+    type: nodejs
+    path: server
+    parameters:
+      memory: 256M
+      disk-quota: 512M
+    properties:
+      CAP_DESTINATION_NAME: MarathonInvoiceAutomation-srv-api
+      CAP_ODATA_BASE_PATH: /odata/v4/invoice-automation
+    requires:
+      - name: ap-react-destination
+    build-parameters:
+      builder: npm
+      requires:
+        - name: ap-react-ui
+          artifacts:
+            - './*'
+          target-path: './dist'
+
+resources:
+  # Reads destinations defined at subaccount level, including
+  # MarathonInvoiceAutomation-srv-api.
+  - name: ap-react-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
