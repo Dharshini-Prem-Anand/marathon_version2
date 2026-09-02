@@ -2678,18 +2678,11 @@ export const apAssistantGuidance = {
 
 export const sidebarItems = [
   { icon: 'layoutDashboard', label: 'Dashboard' },
-  { icon: 'sparkles', label: 'AP Assistant' },
   { icon: 'mail', label: 'Email & Attachment Triage' },
   { icon: 'fileText', label: 'Document AI & Extraction' },
   { icon: 'checkCircle', label: 'Pre-Validation' },
   { icon: 'grid', label: 'PO & Line Matching' },
   { icon: 'alertTriangle', label: 'Exceptions & Recommendations' },
-  { icon: 'layers', label: 'VIM Processing' },
-  { icon: 'users', label: 'Work Assignment' },
-  { icon: 'barChart', label: 'Operational Analytics' },
-  { icon: 'search', label: 'Extraction Diagnostics' },
-  { icon: 'fileCheck', label: 'Audit & Reconciliation' },
-  { icon: 'barChart2', label: 'KPI, Metrics & Value' },
   { icon: 'layers', label: 'VIM Processing', wip: true },
   { icon: 'users', label: 'Work Assignment', wip: true },
   { icon: 'barChart', label: 'Operational Analytics', wip: true },
