@@ -3139,43 +3139,6 @@ export const invoiceContext = {
   paymentRisk: 'High',
 }
 
-export const assistantRecommendation = {
-  title: 'AI Review Recommendation',
-  recommendation:
-    'Accept the proposed vendor, allocate $1,350 freight to the approved PO freight condition, and route the $6,240 tax variance to AP Tax Review.',
-  confidence: '92%',
-  evidenceUsed: [
-    { icon: 'fileText', text: 'Invoice image and extracted fields' },
-    { icon: 'users', text: 'SAP vendor master' },
-    { icon: 'cart', text: 'PO and goods receipt' },
-    { icon: 'history', text: 'VIM history' },
-    { icon: 'shield', text: 'Marathon AP policy' },
-  ],
-  requiredApprovals: ['AP Processor', 'AP Tax Reviewer'],
-  prohibitedActions: ['No autonomous posting', 'No tolerance override', 'No vendor master change'],
-  actions: [
-    { label: 'Accept Recommendation', icon: 'check', variant: 'primary' },
-    { label: 'Modify', icon: 'pencil', variant: 'outline' },
-    { label: 'Reject', icon: 'x', variant: 'outline-red' },
-    { label: 'View Evidence', icon: 'fileText', variant: 'outline' },
-  ],
-}
-
-export const assistantWhatIfScenarios = {
-  columns: [
-    { num: 1, label: 'Current Process', highlight: false },
-    { num: 2, label: 'AI Assist, Recommended', highlight: true },
-    { num: 3, label: 'Auto-Release, Not Allowed', highlight: false },
-  ],
-  rows: [
-    { label: 'Cycle time', values: ['2.4 days', '0.8 days', '0.2 days'] },
-    { label: 'Manual effort', values: ['38 min', '12 min', '2 min'] },
-    { label: 'Processing cost', values: ['$28.50', '$11.20', '$5.10'] },
-    { label: 'Payment risk', values: ['High', 'Low', 'Low'], badge: true },
-    { label: 'Compliance', values: ['Compliant', 'Compliant', 'Not allowed'], status: true },
-  ],
-}
-
 export const expectedValueImpact = [
   { icon: 'clock', value: '26 minutes', label: 'saved' },
   { icon: 'trendDown', value: '67%', label: 'cycle-time reduction' },
