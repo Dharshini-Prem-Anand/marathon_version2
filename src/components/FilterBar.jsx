@@ -19,6 +19,8 @@ export default function FilterBar({
   values,
   onFieldChange,
   dateRangeLabel = 'Last 7 Days',
+  dateRangeValue,
+  onDateRangeChange,
   dateRangeOptions,
   dateFieldLabel = 'Date Range',
   personaField,
@@ -33,7 +35,13 @@ export default function FilterBar({
     (defaultDateRangeOptions.includes(dateRangeLabel)
       ? defaultDateRangeOptions
       : [dateRangeLabel, ...defaultDateRangeOptions])
-  const [dateRange, setDateRange] = useState(dateRangeLabel)
+  const [internalDateRange, setInternalDateRange] = useState(dateRangeLabel)
+  // Controlled when the parent passes dateRangeValue, uncontrolled otherwise.
+  const dateRange = dateRangeValue ?? internalDateRange
+  const handleDateRangeChange = (value) => {
+    setInternalDateRange(value)
+    onDateRangeChange?.(value)
+  }
 
   return (
     <div className="filter-bar">
@@ -51,7 +59,7 @@ export default function FilterBar({
       <div className="filter-field">
         <label>{dateFieldLabel}</label>
         <div className="filter-date-select">
-          <select value={dateRange} onChange={(e) => setDateRange(e.target.value)}>
+          <select value={dateRange} onChange={(e) => handleDateRangeChange(e.target.value)}>
             {options.map((opt) => (
               <option key={opt}>{opt}</option>
             ))}

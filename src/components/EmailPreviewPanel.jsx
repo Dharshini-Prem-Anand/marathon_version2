@@ -1,31 +1,9 @@
 import { FileText } from 'lucide-react'
-import { triageQueue, categoryColor } from '../data'
+import { categoryColor } from '../data'
 import TriageStepper from './TriageStepper'
 
-function buildPreview(row) {
-  if (row.preview) return row.preview
-
-  const slug = row.subject.replace(/[^a-zA-Z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-  return {
-    from: row.vendor === '—' ? 'Unknown Sender' : `${row.vendor} <info@${row.vendor.split(' ')[0].toLowerCase()}.com>`,
-    to: 'apinvoices@marathon.com',
-    receivedFull: `May 18, 2025 ${row.time}`,
-    source: row.source,
-    attachments: Array.from({ length: row.attachments }).map((_, i) => ({
-      fileName: `${slug}${i > 0 ? `_${i + 1}` : ''}.pdf`,
-      type: 'PDF',
-      size: '204 KB',
-      category: row.category,
-      confidence: row.confidence,
-    })),
-    proposedCategory: row.category,
-    proposedConfidence: row.confidence,
-  }
-}
-
-export default function EmailPreviewPanel({ selectedId }) {
-  const row = triageQueue.find((r) => r.id === selectedId) ?? triageQueue[0]
-  const preview = buildPreview(row)
+export default function EmailPreviewPanel({ row, preview, loadingAttachments, attachmentsError }) {
+  if (!row || !preview) return null
 
   return (
     <section className="panel email-preview">
@@ -72,20 +50,40 @@ export default function EmailPreviewPanel({ selectedId }) {
             </tr>
           </thead>
           <tbody>
-            {preview.attachments.map((a) => (
-              <tr key={a.fileName}>
-                <td className="attachment-file cell-ellipsis" title={a.fileName}>
-                  <FileText size={13} />
-                  <span className="cell-ellipsis">{a.fileName}</span>
+            {loadingAttachments ? (
+              <tr>
+                <td colSpan={5} className="table-empty-cell">
+                  Loading attachments…
                 </td>
-                <td>{a.type}</td>
-                <td>{a.size}</td>
-                <td>
-                  <span className={`badge badge-${categoryColor[a.category]}`}>{a.category}</span>
-                </td>
-                <td>{a.confidence}</td>
               </tr>
-            ))}
+            ) : attachmentsError ? (
+              <tr>
+                <td colSpan={5} className="table-empty-cell">
+                  {attachmentsError}
+                </td>
+              </tr>
+            ) : preview.attachments.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="table-empty-cell">
+                  No attachments on this email.
+                </td>
+              </tr>
+            ) : (
+              preview.attachments.map((a, i) => (
+                <tr key={`${a.fileName}-${i}`}>
+                  <td className="attachment-file cell-ellipsis" title={a.fileName}>
+                    <FileText size={13} />
+                    <span className="cell-ellipsis">{a.fileName}</span>
+                  </td>
+                  <td>{a.type}</td>
+                  <td>{a.size}</td>
+                  <td>
+                    <span className={`badge badge-${categoryColor[a.category] ?? 'gray'}`}>{a.category}</span>
+                  </td>
+                  <td>{a.confidence}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

@@ -1,22 +1,23 @@
 import { MoreVertical } from 'lucide-react'
-import { categoryColor, priorityColor, totalTriageCount } from '../data'
+import TablePagination from './TablePagination'
+import { usePagedRows } from '../hooks/usePagedRows'
 
-export default function TriageQueueTable({ rows, selectedId, onSelect }) {
+export default function TriageQueueTable({ rows, selectedId, onSelect, loading, error }) {
+  const colCount = 6
+  const paging = usePagedRows(rows)
+
   return (
     <section className="panel triage-queue">
       <h2 className="panel-title">Triage Queue</h2>
       <div className="table-wrap">
         <table className="table-fixed">
           <colgroup>
-            <col style={{ width: '9%' }} />
-            <col style={{ width: '10%' }} />
-            <col style={{ width: '17%' }} />
-            <col style={{ width: '21%' }} />
-            <col style={{ width: '8%' }} />
+            <col style={{ width: '12%' }} />
             <col style={{ width: '13%' }} />
-            <col style={{ width: '9%' }} />
-            <col style={{ width: '8%' }} />
-            <col style={{ width: '5%' }} />
+            <col style={{ width: '26%' }} />
+            <col style={{ width: '32%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '7%' }} />
           </colgroup>
           <thead>
             <tr>
@@ -25,21 +26,30 @@ export default function TriageQueueTable({ rows, selectedId, onSelect }) {
               <th>Sender / Vendor</th>
               <th>Subject</th>
               <th>Attach.</th>
-              <th>Category</th>
-              <th>Conf.</th>
-              <th>Priority</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 ? (
+            {loading ? (
               <tr>
-                <td colSpan={9} className="table-empty-cell">
+                <td colSpan={colCount} className="table-empty-cell">
+                  Loading emails…
+                </td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={colCount} className="table-empty-cell">
+                  {error}
+                </td>
+              </tr>
+            ) : paging.visibleRows.length === 0 ? (
+              <tr>
+                <td colSpan={colCount} className="table-empty-cell">
                   No emails match the selected filters.
                 </td>
               </tr>
             ) : (
-              rows.map((row) => (
+              paging.visibleRows.map((row) => (
                 <tr
                   key={row.id}
                   onClick={() => onSelect(row.id)}
@@ -57,11 +67,6 @@ export default function TriageQueueTable({ rows, selectedId, onSelect }) {
                   </td>
                   <td>{row.attachments}</td>
                   <td>
-                    <span className={`badge badge-${categoryColor[row.category]}`}>{row.category}</span>
-                  </td>
-                  <td>{row.confidence}</td>
-                  <td className={`color-${priorityColor[row.priority]}`}>{row.priority}</td>
-                  <td>
                     <button className="icon-btn" onClick={(e) => e.stopPropagation()} aria-label="Row actions">
                       <MoreVertical size={16} />
                     </button>
@@ -72,7 +77,14 @@ export default function TriageQueueTable({ rows, selectedId, onSelect }) {
           </tbody>
         </table>
       </div>
-      <button className="btn-link view-all-link">View All ({totalTriageCount})</button>
+
+      {paging.showViewAll && (
+        <button className="btn-link view-all-link" onClick={paging.expand}>
+          View All ({paging.total})
+        </button>
+      )}
+      {paging.expanded && <TablePagination paging={paging} />}
     </section>
   )
 }
+

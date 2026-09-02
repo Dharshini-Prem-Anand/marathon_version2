@@ -259,6 +259,10 @@ export const categoryColor = {
   Inquiry: 'gray',
   Duplicate: 'red',
   'Non-Invoice': 'gray',
+  // Categories returned by the Document AI classifier.
+  'Standard Invoice': 'green',
+  'Debit Memo': 'orange',
+  'Proforma Invoice': 'yellow',
 }
 
 export const priorityColor = {

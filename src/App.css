@@ -1151,6 +1151,63 @@ tbody tr:last-child td {
   padding-left: 4px;
 }
 
+/* ---------- TABLE PAGINATION ---------- */
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding: 8px 4px 0;
+  border-top: 1px solid var(--border);
+}
+
+.table-pagination-info {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.table-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pagination-btn,
+.pagination-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pagination-btn:hover:not(:disabled),
+.pagination-page:hover:not(.is-active) {
+  background: #f7f8fa;
+  color: var(--text-primary);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-page.is-active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #ffffff;
+}
+
 /* ---------- EMAIL PREVIEW PANEL ---------- */
 .email-preview {
   display: flex;
@@ -1763,6 +1820,49 @@ tbody tr:last-child td {
 .confidence-orange {
   background: var(--orange-light);
   color: var(--orange);
+}
+.confidence-gray {
+  background: #f2f4f7;
+  color: var(--text-secondary);
+}
+
+/* ---------- PDF PREVIEW PANE ---------- */
+.pdf-pane {
+  width: 100%;
+  min-height: 420px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fbfbfc;
+}
+
+.pdf-pane-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.pdf-pane-filename {
+  font-weight: 600;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.pdf-pane-error {
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+/* Line-item cells stack the extracted value above its confidence badge. */
+.line-item-extraction td .line-item-value {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--text-primary);
 }
 
 /* Format Performance bar chart */
