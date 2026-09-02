@@ -3255,6 +3255,7 @@ export const sidebarItems = [
   { icon: 'checkCircle', label: 'Pre-Validation' },
   { icon: 'grid', label: 'PO & Line Matching' },
   { icon: 'alertTriangle', label: 'Exceptions & Recommendations' },
+  { icon: 'sparkles', label: 'AP Assistant' },
   { icon: 'layers', label: 'VIM Processing', wip: true },
   { icon: 'users', label: 'Work Assignment', wip: true },
   { icon: 'barChart', label: 'Operational Analytics', wip: true },
