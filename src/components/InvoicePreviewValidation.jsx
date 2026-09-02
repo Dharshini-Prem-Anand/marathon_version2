@@ -1,7 +1,8 @@
 import { Globe } from 'lucide-react'
 import { preValidationInvoice } from '../data'
+import PreValidationPipelineStepper from './PreValidationPipelineStepper'
 
-export default function InvoicePreviewValidation() {
+export default function InvoicePreviewValidation({ onNavigate }) {
   const inv = preValidationInvoice
 
   return (
@@ -76,6 +77,9 @@ export default function InvoicePreviewValidation() {
         <span className="pv-field-label">Total Amount Due:</span>
         <span className="pv-field-box pv-total-box">{inv.totalAmountDue}</span>
       </div>
+
+      <h3 className="preview-subheading">Processing Pipeline</h3>
+      <PreValidationPipelineStepper onNavigate={onNavigate} />
     </section>
   )
 }

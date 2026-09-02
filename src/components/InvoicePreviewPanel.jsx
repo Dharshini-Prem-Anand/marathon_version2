@@ -1,4 +1,5 @@
 import { FileText } from 'lucide-react'
+import DocAiPipelineStepper from './DocAiPipelineStepper'
 
 function confidenceClass(pct) {
   const n = parseInt(pct, 10)
@@ -35,6 +36,7 @@ export default function InvoicePreviewPanel({
   pdfUrl,
   pdfLoading,
   pdfError,
+  onNavigate,
 }) {
   return (
     <section className="panel invoice-preview">
@@ -106,6 +108,18 @@ export default function InvoicePreviewPanel({
           <button className="btn-outline btn-block btn-outline-red">Route to Review</button>
         </div>
       </div>
+
+      {document && (
+        <>
+          <h3 className="preview-subheading">Processing Pipeline</h3>
+          <DocAiPipelineStepper
+            document={document}
+            headerFields={headerFields}
+            fieldsError={fieldsError}
+            onNavigate={onNavigate}
+          />
+        </>
+      )}
     </section>
   )
 }

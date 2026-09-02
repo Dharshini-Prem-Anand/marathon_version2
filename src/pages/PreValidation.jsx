@@ -21,7 +21,7 @@ const invoiceAttributes = {
   validationStatus: 'Failed',
 }
 
-export default function PreValidation() {
+export default function PreValidation({ onNavigate }) {
   const { draft, applied, setField, apply } = useFilters(preValidationFilters)
 
   const matchesFilters =
@@ -46,7 +46,7 @@ export default function PreValidation() {
       {matchesFilters ? (
         <>
           <div className="pv-main-grid">
-            <InvoicePreviewValidation />
+            <InvoicePreviewValidation onNavigate={onNavigate} />
             <ValidationRuleResults />
             <VendorPayeePanel />
             <ActionButtonsRow />

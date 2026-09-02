@@ -21,7 +21,7 @@ function matchesWhenKnown(selected, actual) {
   return matchesOption(selected, actual)
 }
 
-export default function EmailTriage() {
+export default function EmailTriage({ onNavigateToDocument }) {
   const { draft, applied, setField, apply } = useFilters(emailTriageFilters)
   const [dateRange, setDateRange] = useState(DEFAULT_DATE_RANGE)
   const [appliedDateRange, setAppliedDateRange] = useState(DEFAULT_DATE_RANGE)
@@ -119,6 +119,15 @@ export default function EmailTriage() {
     return selectedRow.isRemote ? buildRemotePreview(selectedRow, attachments) : buildMockPreview(selectedRow)
   }, [selectedRow, attachments])
 
+  // Document AI & Extraction keys its queue by (MessageID, FileName), so a
+  // direct link only resolves for live rows whose attachments have loaded.
+  const documentId = useMemo(() => {
+    if (!selectedRow?.isRemote) return null
+    const primary = attachments[0]
+    if (!primary) return null
+    return `${selectedRow.messageId}::${primary.fileName}`
+  }, [selectedRow, attachments])
+
   // The stepper reads category / confidence off the row; for live rows those
   // come from the leading attachment.
   const stepperRow = useMemo(() => {
@@ -173,6 +182,8 @@ export default function EmailTriage() {
             preview={preview}
             loadingAttachments={Boolean(selectedMessageId) && attachmentsLoading}
             attachmentsError={selectedRow?.isRemote ? attachmentsError : null}
+            documentId={documentId}
+            onNavigateToDocument={onNavigateToDocument}
           />
         )}
       </div>

@@ -8,7 +8,7 @@ import FilterEmptyState from '../components/FilterEmptyState'
 import { useFilters, matchesCompanyCode, matchesOption } from '../hooks/useFilters'
 import { poMatchingFilters, poMatchingStats, poMatchingContext } from '../data'
 
-export default function PoLineMatching() {
+export default function PoLineMatching({ onNavigate }) {
   const { draft, applied, setField, apply } = useFilters(poMatchingFilters)
 
   const matchesFilters =
@@ -25,7 +25,7 @@ export default function PoLineMatching() {
       {matchesFilters ? (
         <>
           <div className="po-main-grid">
-            <ThreeWayMatchReview />
+            <ThreeWayMatchReview onNavigate={onNavigate} />
             <MatchExplanation />
           </div>
 

@@ -19,7 +19,7 @@ import { groupLineItemFields, mapDocumentRow, mapHeaderField } from '../utils/do
 
 const LOW_CONFIDENCE_THRESHOLD = 80
 
-export default function DocumentAiExtraction() {
+export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectConsumed, onNavigate }) {
   const { draft, applied, setField, apply } = useFilters(documentAiFilters)
   const [selectedId, setSelectedId] = useState(null)
 
@@ -59,6 +59,16 @@ export default function DocumentAiExtraction() {
       cancelled = true
     }
   }, [])
+
+  // A deep link from Email & Attachment Triage arrives as a documentId; once
+  // that document has loaded into the queue, select it and clear the pending flag.
+  useEffect(() => {
+    if (!pendingSelectId) return
+    if (!documents.some((d) => d.id === pendingSelectId)) return
+    setSelectedId(pendingSelectId)
+    onPendingSelectConsumed?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingSelectId, documents])
 
   const filteredQueue = documents.filter(
     (row) =>
@@ -188,6 +198,7 @@ export default function DocumentAiExtraction() {
           pdfUrl={pdfUrl}
           pdfLoading={pdfLoading}
           pdfError={pdfError}
+          onNavigate={onNavigate}
         />
       </div>
 

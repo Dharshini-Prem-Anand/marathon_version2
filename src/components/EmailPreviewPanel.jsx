@@ -2,7 +2,14 @@ import { FileText } from 'lucide-react'
 import { categoryColor } from '../data'
 import TriageStepper from './TriageStepper'
 
-export default function EmailPreviewPanel({ row, preview, loadingAttachments, attachmentsError }) {
+export default function EmailPreviewPanel({
+  row,
+  preview,
+  loadingAttachments,
+  attachmentsError,
+  documentId,
+  onNavigateToDocument,
+}) {
   if (!row || !preview) return null
 
   return (
@@ -100,7 +107,11 @@ export default function EmailPreviewPanel({ row, preview, loadingAttachments, at
       </div>
 
       <h3 className="preview-subheading">Processing Pipeline</h3>
-      <TriageStepper row={row} preview={preview} />
+      <TriageStepper
+        row={row}
+        documentId={documentId}
+        onNavigateToDocument={onNavigateToDocument}
+      />
     </section>
   )
 }

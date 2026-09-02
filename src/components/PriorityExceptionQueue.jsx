@@ -1,6 +1,6 @@
 import { priorityExceptionQueue, priorityColor, totalExceptionsCount } from '../data'
 
-export default function PriorityExceptionQueue() {
+export default function PriorityExceptionQueue({ selectedId, onSelect }) {
   return (
     <section className="panel priority-exception-queue">
       <h2 className="panel-title">Priority Exception Queue</h2>
@@ -30,7 +30,11 @@ export default function PriorityExceptionQueue() {
           </thead>
           <tbody>
             {priorityExceptionQueue.map((row) => (
-              <tr key={row.invoice}>
+              <tr
+                key={row.invoice}
+                onClick={() => onSelect?.(row.invoice)}
+                className={`triage-row${selectedId === row.invoice ? ' selected' : ''}`}
+              >
                 <td>
                   <span className={`priority-dot color-${priorityColor[row.priority]}`} />
                   {row.priority}

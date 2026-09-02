@@ -85,15 +85,28 @@ function App() {
   const [activeItem, setActiveItem] = useState('Dashboard')
   const [showGuidance, setShowGuidance] = useState(true)
   const [collapsed, setCollapsed] = useState(false)
+  const [pendingDocumentId, setPendingDocumentId] = useState(null)
 
   const guidance = guidanceByPage[activeItem]
 
+  function handleNavigateToDocument(documentId) {
+    setPendingDocumentId(documentId)
+    setActiveItem('Document AI & Extraction')
+  }
+
   function renderPage() {
     if (activeItem === 'Dashboard') return <Dashboard onNavigate={setActiveItem} />
-    if (activeItem === 'Email & Attachment Triage') return <EmailTriage />
-    if (activeItem === 'Document AI & Extraction') return <DocumentAiExtraction />
-    if (activeItem === 'Pre-Validation') return <PreValidation />
-    if (activeItem === 'PO & Line Matching') return <PoLineMatching />
+    if (activeItem === 'Email & Attachment Triage') return <EmailTriage onNavigateToDocument={handleNavigateToDocument} />
+    if (activeItem === 'Document AI & Extraction')
+      return (
+        <DocumentAiExtraction
+          pendingSelectId={pendingDocumentId}
+          onPendingSelectConsumed={() => setPendingDocumentId(null)}
+          onNavigate={setActiveItem}
+        />
+      )
+    if (activeItem === 'Pre-Validation') return <PreValidation onNavigate={setActiveItem} />
+    if (activeItem === 'PO & Line Matching') return <PoLineMatching onNavigate={setActiveItem} />
     if (activeItem === 'Exceptions & Recommendations') return <ExceptionsRecommendations />
     if (activeItem === 'VIM Processing') return <VimProcessing />
     if (activeItem === 'Work Assignment') return <WorkAssignment />

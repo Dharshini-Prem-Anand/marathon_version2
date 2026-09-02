@@ -1304,7 +1304,7 @@ tbody tr:last-child td {
 
 .stepper-item-wrap:last-child {
   flex: 0 0 auto;
-  width: 92px;
+  width: 140px;
 }
 
 .stepper-item {
@@ -1314,7 +1314,7 @@ tbody tr:last-child td {
   align-items: center;
   text-align: center;
   gap: 3px;
-  width: 92px;
+  width: 140px;
   flex-shrink: 0;
 }
 
@@ -1354,6 +1354,24 @@ tbody tr:last-child td {
   font-size: 10px;
   color: var(--text-muted);
   line-height: 1.25;
+}
+
+.stepper-link-label {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--blue);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.stepper-link-label:hover {
+  color: var(--blue-dark, var(--blue));
 }
 
 .stepper-connector {
@@ -2496,6 +2514,21 @@ tbody tr:last-child td {
 .ai-review-actions button {
   flex: 1;
   min-width: 130px;
+}
+
+.ai-review-posted {
+  flex: 1;
+  min-width: 130px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--green-light);
+  color: var(--green);
 }
 
 /* What-If Resolution Scenarios */

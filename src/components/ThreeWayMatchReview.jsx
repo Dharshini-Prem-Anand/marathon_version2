@@ -1,5 +1,6 @@
 import { FileText, Clipboard, Truck, Scale, CheckCircle2, CircleDot, XCircle } from 'lucide-react'
 import { matchSummaryCards, threeWayMatchLines } from '../data'
+import PoMatchingPipelineStepper from './PoMatchingPipelineStepper'
 
 const iconMap = {
   fileText: FileText,
@@ -14,7 +15,7 @@ const matchStatusConfig = {
   mismatch: { icon: XCircle, color: 'red', label: 'Mismatch' },
 }
 
-export default function ThreeWayMatchReview() {
+export default function ThreeWayMatchReview({ onNavigate }) {
   return (
     <section className="panel three-way-match">
       <h2 className="panel-title">Three-Way Match Review</h2>
@@ -95,6 +96,9 @@ export default function ThreeWayMatchReview() {
           </tbody>
         </table>
       </div>
+
+      <h3 className="preview-subheading">Processing Pipeline</h3>
+      <PoMatchingPipelineStepper onNavigate={onNavigate} />
     </section>
   )
 }
