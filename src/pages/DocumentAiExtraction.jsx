@@ -92,13 +92,15 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
 
   const sourceDocuments = showLive ? documents : mockDocuments
 
-  const filteredQueue = sourceDocuments.filter(
-    (row) =>
-      matchesCompanyCode(applied['Company Code']) &&
-      matchesOption(applied['Vendor'], row.vendor) &&
-      matchesOption(applied['Invoice Channel'], row.channel) &&
-      (applied['Status'] === 'All' || row.status == null || row.status === applied['Status'])
-  )
+  const filteredQueue = sourceDocuments
+    .filter(
+      (row) =>
+        matchesCompanyCode(applied['Company Code']) &&
+        matchesOption(applied['Vendor'], row.vendor) &&
+        matchesOption(applied['Invoice Channel'], row.channel) &&
+        (applied['Status'] === 'All' || row.status == null || row.status === applied['Status'])
+    )
+    .sort((a, b) => new Date(b.receivedDateTime ?? 0) - new Date(a.receivedDateTime ?? 0))
 
   const selectedDoc = filteredQueue.find((d) => d.id === selectedId) ?? filteredQueue[0] ?? null
   const docKey = selectedDoc ? `${selectedDoc.messageId}::${selectedDoc.fileName}` : null
