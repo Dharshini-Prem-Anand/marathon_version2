@@ -1,10 +1,25 @@
+import { useMemo } from 'react'
 import { MoreVertical } from 'lucide-react'
 import TablePagination from './TablePagination'
 import { usePagedRows } from '../hooks/usePagedRows'
 
+function rowDate(row) {
+  return row.receivedDate instanceof Date ? row.receivedDate : new Date(row.receivedDateTime)
+}
+
+function formatDate(row) {
+  const d = rowDate(row)
+  if (Number.isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
 export default function TriageQueueTable({ rows, selectedId, onSelect, loading, error }) {
-  const colCount = 6
-  const paging = usePagedRows(rows)
+  const colCount = 7
+  const sortedRows = useMemo(
+    () => [...rows].sort((a, b) => rowDate(b).getTime() - rowDate(a).getTime()),
+    [rows]
+  )
+  const paging = usePagedRows(sortedRows)
 
   return (
     <section className="panel triage-queue">
@@ -12,15 +27,17 @@ export default function TriageQueueTable({ rows, selectedId, onSelect, loading, 
       <div className="table-wrap">
         <table className="table-fixed">
           <colgroup>
-            <col style={{ width: '12%' }} />
-            <col style={{ width: '13%' }} />
-            <col style={{ width: '26%' }} />
-            <col style={{ width: '32%' }} />
+            <col style={{ width: '11%' }} />
             <col style={{ width: '10%' }} />
-            <col style={{ width: '7%' }} />
+            <col style={{ width: '11%' }} />
+            <col style={{ width: '22%' }} />
+            <col style={{ width: '28%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '8%' }} />
           </colgroup>
           <thead>
             <tr>
+              <th>Date</th>
               <th>Time</th>
               <th>Source</th>
               <th>Sender / Vendor</th>
@@ -57,6 +74,7 @@ export default function TriageQueueTable({ rows, selectedId, onSelect, loading, 
                     row.category === 'Duplicate' && selectedId !== row.id ? ' flagged' : ''
                   }`}
                 >
+                  <td>{formatDate(row)}</td>
                   <td>{row.time}</td>
                   <td className="cell-ellipsis">{row.source}</td>
                   <td className="cell-ellipsis" title={row.vendor}>

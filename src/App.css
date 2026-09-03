@@ -1875,12 +1875,75 @@ tbody tr:last-child td {
 }
 
 /* ---------- PDF PREVIEW PANE ---------- */
+.pdf-pane-wrap {
+  position: relative;
+}
+
 .pdf-pane {
   width: 100%;
   min-height: 420px;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: #fbfbfc;
+}
+
+.pdf-expand-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.pdf-expand-btn:hover {
+  background: var(--bg-app);
+}
+
+.pdf-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 18, 25, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.pdf-modal {
+  width: min(1000px, 100%);
+  height: min(90vh, 1200px);
+  background: var(--bg-panel);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.pdf-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pdf-modal-filename {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-modal-frame {
+  flex: 1;
+  width: 100%;
+  border: none;
 }
 
 .pdf-pane-empty {

@@ -1,4 +1,5 @@
-import { FileText } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { FileText, Maximize2, X } from 'lucide-react'
 import DocAiPipelineStepper from './DocAiPipelineStepper'
 
 function confidenceClass(pct) {
@@ -9,7 +10,33 @@ function confidenceClass(pct) {
   return 'orange'
 }
 
-function PdfPane({ document, pdfUrl, pdfLoading, pdfError }) {
+function PdfExpandModal({ document, pdfUrl, onClose }) {
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
+
+  return (
+    <div className="pdf-modal-overlay" onClick={onClose}>
+      <div className="pdf-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="pdf-modal-header">
+          <span className="pdf-modal-filename" title={document.fileName}>
+            {document.fileName}
+          </span>
+          <button className="icon-btn" onClick={onClose} aria-label="Close preview">
+            <X size={18} />
+          </button>
+        </div>
+        <iframe className="pdf-modal-frame" src={pdfUrl} title={document.fileName} />
+      </div>
+    </div>
+  )
+}
+
+function PdfPane({ document, pdfUrl, pdfLoading, pdfError, onExpand }) {
   if (!document) {
     return <div className="pdf-pane pdf-pane-empty">Select a document to preview it.</div>
   }
@@ -25,7 +52,14 @@ function PdfPane({ document, pdfUrl, pdfLoading, pdfError }) {
       </div>
     )
   }
-  return <iframe className="pdf-pane" src={pdfUrl} title={document.fileName} />
+  return (
+    <div className="pdf-pane-wrap">
+      <iframe className="pdf-pane" src={pdfUrl} title={document.fileName} />
+      <button className="icon-btn pdf-expand-btn" onClick={onExpand} aria-label="Expand preview">
+        <Maximize2 size={16} />
+      </button>
+    </div>
+  )
 }
 
 export default function InvoicePreviewPanel({
@@ -38,11 +72,23 @@ export default function InvoicePreviewPanel({
   pdfError,
   onNavigate,
 }) {
+  const [expanded, setExpanded] = useState(false)
+
+  useEffect(() => {
+    setExpanded(false)
+  }, [document?.id])
+
   return (
     <section className="panel invoice-preview">
       <h2 className="panel-title">Invoice Preview &amp; Extracted Fields</h2>
       <div className="invoice-preview-grid">
-        <PdfPane document={document} pdfUrl={pdfUrl} pdfLoading={pdfLoading} pdfError={pdfError} />
+        <PdfPane
+          document={document}
+          pdfUrl={pdfUrl}
+          pdfLoading={pdfLoading}
+          pdfError={pdfError}
+          onExpand={() => setExpanded(true)}
+        />
 
         <div className="extracted-fields">
           <table className="table-fixed">
@@ -115,6 +161,10 @@ export default function InvoicePreviewPanel({
             onNavigate={onNavigate}
           />
         </>
+      )}
+
+      {expanded && document && pdfUrl && (
+        <PdfExpandModal document={document} pdfUrl={pdfUrl} onClose={() => setExpanded(false)} />
       )}
     </section>
   )
