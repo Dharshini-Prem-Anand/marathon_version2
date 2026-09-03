@@ -1,6 +1,75 @@
 import { CheckCircle2 } from 'lucide-react'
 import { aiReviewRecommendation, aiReviewActions } from '../data'
 
+// Live exceptions carry Evidence, Required Approval and Prohibited Actions as
+// raw JSON strings — render them formatted instead of a wall of unformatted
+// text. Falls back to plain text for the mock's canned sentences, which
+// aren't JSON.
+function tryParseJson(value) {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return null
+  try {
+    return JSON.parse(trimmed)
+  } catch {
+    return null
+  }
+}
+
+function EvidenceNode({ label, value, depth = 0 }) {
+  if (value === null || typeof value !== 'object') {
+    return (
+      <div className="evidence-row" style={{ paddingLeft: depth * 12 }}>
+        {label != null && <span className="evidence-key">{label}:</span>}
+        <span className="evidence-value">{value === null || value === undefined || value === '' ? '—' : String(value)}</span>
+      </div>
+    )
+  }
+
+  const entries = Array.isArray(value) ? value.map((v, i) => [i, v]) : Object.entries(value)
+  if (entries.length === 0) {
+    return (
+      <div className="evidence-row" style={{ paddingLeft: depth * 12 }}>
+        {label != null && <span className="evidence-key">{label}:</span>}
+        <span className="evidence-value">—</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="evidence-group" style={{ paddingLeft: depth * 12 }}>
+      {label != null && (
+        <div className="evidence-group-label">{Array.isArray(value) ? `${label} (${value.length})` : label}</div>
+      )}
+      {entries.map(([key, val]) => (
+        <EvidenceNode key={key} label={Array.isArray(value) ? null : key} value={val} depth={depth + 1} />
+      ))}
+    </div>
+  )
+}
+
+function isPrimitiveArray(value) {
+  return Array.isArray(value) && value.every((v) => v === null || typeof v !== 'object')
+}
+
+// Handles all three JSON-blob fields: a flat array like Required Approval /
+// Prohibited Actions reads better as a plain comma list, while Evidence's
+// nested invoice/PO/GR shape gets the indented tree.
+function JsonOrText({ raw }) {
+  const parsed = tryParseJson(raw)
+  if (parsed === null || typeof parsed !== 'object') {
+    return <p>{raw}</p>
+  }
+  if (isPrimitiveArray(parsed)) {
+    return <p>{parsed.length ? parsed.join(', ') : '—'}</p>
+  }
+  return (
+    <div className="ai-review-evidence">
+      <EvidenceNode value={parsed} />
+    </div>
+  )
+}
+
 function recommendationFor(exception) {
   if (!exception) return aiReviewRecommendation
   if (exception.invoice === aiReviewRecommendation.invoiceId) return aiReviewRecommendation
@@ -55,17 +124,17 @@ export default function AiReviewRecommendation({ exception, posted, onPostToSap 
 
       <div className="ai-review-block">
         <div className="ai-review-label">Evidence Used:</div>
-        <p>{r.evidenceUsed}</p>
+        <JsonOrText raw={r.evidenceUsed} />
       </div>
 
       <div className="ai-review-block">
         <div className="ai-review-label">Required Approval:</div>
-        <p>{r.requiredApproval}</p>
+        <JsonOrText raw={r.requiredApproval} />
       </div>
 
       <div className="ai-review-block">
         <div className="ai-review-label">Prohibited Actions:</div>
-        <p>{r.prohibitedActions}</p>
+        <JsonOrText raw={r.prohibitedActions} />
       </div>
 
       <div className="ai-review-actions">
