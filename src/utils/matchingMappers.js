@@ -36,6 +36,17 @@ function invoiceKey(row) {
   return `${row.InvoiceNumber}/${row.FiscalYear}`
 }
 
+// Newest invoice first. CreationDate is the only reliably-populated date on
+// Invoices (PostingDate is usually null).
+const creationTime = (lines) => {
+  const t = new Date(lines[0]?.CreationDate ?? 0).getTime()
+  return Number.isNaN(t) ? 0 : t
+}
+
+function sortGroupedByCreationDateDesc(grouped) {
+  return [...grouped.entries()].sort((a, b) => creationTime(b[1]) - creationTime(a[1]))
+}
+
 export function buildMatchingRecords(invoices, purchaseOrders, goodsReceipts) {
   // PO lines by "PurchaseOrder::PurchaseOrderItem"
   const poByLine = new Map()
@@ -65,7 +76,7 @@ export function buildMatchingRecords(invoices, purchaseOrders, goodsReceipts) {
   const ids = []
   const records = {}
 
-  for (const [key, lines] of grouped) {
+  for (const [key, lines] of sortGroupedByCreationDateDesc(grouped)) {
     const head = lines[0]
     const currency = head.Currency || 'USD'
     const poNumber = head.PurchaseOrder
@@ -163,7 +174,7 @@ export function buildInvoiceSummaries(invoices) {
   }
 
   const summaries = []
-  for (const [key, lines] of grouped) {
+  for (const [key, lines] of sortGroupedByCreationDateDesc(grouped)) {
     const head = lines[0]
     const currency = head.Currency || 'USD'
     const total = lines.reduce((sum, line) => sum + num(line.AmountInDocCurrency), 0)

@@ -51,7 +51,7 @@ const guidanceByPage = {
   'Extraction Diagnostics': extractionDiagGuidance,
   'Audit & Reconciliation': auditGuidance,
   'KPI, Metrics & Value': kpiGuidance,
-  'AP Assistant': apAssistantGuidance,
+  'Intelligent AP Agent': apAssistantGuidance,
 }
 
 const topbarTitleByPage = {
@@ -78,7 +78,7 @@ const pageFooterPlatformByPage = {
   'Work Assignment': 'Business Technology Platform',
 }
 
-const hidePageFooterFor = new Set(['Operational Analytics', 'KPI, Metrics & Value'])
+const hidePageFooterFor = new Set(['Operational Analytics', 'KPI, Metrics & Value', 'Intelligent AP Agent'])
 const showKpiFooterFor = new Set(['KPI, Metrics & Value'])
 
 function App() {
@@ -128,7 +128,7 @@ function App() {
     if (activeItem === 'Extraction Diagnostics') return <ExtractionDiagnostics />
     if (activeItem === 'Audit & Reconciliation') return <AuditReconciliation />
     if (activeItem === 'KPI, Metrics & Value') return <KpiMetricsValue />
-    if (activeItem === 'AP Assistant') return <ApAssistant />
+    if (activeItem === 'Intelligent AP Agent') return <ApAssistant />
     return <ComingSoon pageName={activeItem} />
   }
 

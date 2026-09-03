@@ -91,63 +91,29 @@ export default function InvoicePreviewPanel({
         />
 
         <div className="extracted-fields">
-          <table className="table-fixed">
-            <colgroup>
-              <col style={{ width: '30%' }} />
-              <col style={{ width: '42%' }} />
-              <col style={{ width: '28%' }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Extracted Value</th>
-                <th>Confidence</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!document ? (
-                <tr>
-                  <td colSpan={3} className="table-empty-cell">
-                    Select a document.
-                  </td>
-                </tr>
-              ) : fieldsLoading ? (
-                <tr>
-                  <td colSpan={3} className="table-empty-cell">
-                    Loading fields…
-                  </td>
-                </tr>
-              ) : fieldsError ? (
-                <tr>
-                  <td colSpan={3} className="table-empty-cell">
-                    {fieldsError}
-                  </td>
-                </tr>
-              ) : headerFields.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="table-empty-cell">
-                    No header fields extracted for this document.
-                  </td>
-                </tr>
-              ) : (
-                headerFields.map((f, i) => (
-                  <tr key={`${f.key}-${i}`}>
-                    <td className="cell-ellipsis" title={f.field}>
-                      {f.field}
-                    </td>
-                    <td className="cell-ellipsis" title={f.value}>
-                      {f.value}
-                    </td>
-                    <td>
-                      <span className={`confidence-badge confidence-${confidenceClass(f.confidence)}`}>
-                        {f.confidence}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          {!document ? (
+            <div className="table-empty-cell">Select a document.</div>
+          ) : fieldsLoading ? (
+            <div className="table-empty-cell">Loading fields…</div>
+          ) : fieldsError ? (
+            <div className="table-empty-cell">{fieldsError}</div>
+          ) : headerFields.length === 0 ? (
+            <div className="table-empty-cell">No header fields extracted for this document.</div>
+          ) : (
+            <div className="docai-field-list">
+              {headerFields.map((f, i) => (
+                <div className="docai-field-row" key={`${f.key}-${i}`}>
+                  <div className="docai-field-row-head">
+                    <span className="docai-field-label">{f.field}</span>
+                    <span className={`confidence-badge confidence-${confidenceClass(f.confidence)}`}>
+                      {f.confidence}
+                    </span>
+                  </div>
+                  <span className="docai-field-box">{f.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

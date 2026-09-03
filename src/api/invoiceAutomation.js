@@ -86,7 +86,7 @@ export function fetchDocumentPdf(dieDocumentId) {
   return apiGetBlob(url)
 }
 
-// AP assistant chat — same Python service as the PDF proxy above.
+// Intelligent AP Agent chat — same Python service as the PDF proxy above.
 export function sendAssistantChatMessage(sessionId, message) {
   if (!PDF_SERVICE_BASE_URL) {
     return Promise.reject(

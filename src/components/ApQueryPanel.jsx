@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { MessageSquare, Sparkles, ThumbsUp, ThumbsDown, Send } from 'lucide-react'
-import { apQuery } from '../data'
+import { apQuery, apAssistantSampleQuestions } from '../data'
 import { sendAssistantChatMessage } from '../api/invoiceAutomation'
 
 function extractReplyText(res) {
@@ -35,8 +35,8 @@ export default function ApQueryPanel() {
     if (el) el.scrollTop = el.scrollHeight
   }, [messages, loading])
 
-  function handleSend() {
-    const question = draft.trim()
+  function handleSend(text) {
+    const question = (text ?? draft).trim()
     if (!question || loading) return
 
     setMessages((prev) => [...prev, { role: 'user', text: question }])
@@ -50,7 +50,7 @@ export default function ApQueryPanel() {
       .catch((err) => {
         setMessages((prev) => [
           ...prev,
-          { role: 'ai', text: `Sorry, I couldn't reach the AP assistant service. (${err.message})` },
+          { role: 'ai', text: `Sorry, I couldn't reach the Intelligent AP Agent service. (${err.message})` },
         ])
       })
       .finally(() => setLoading(false))
@@ -64,7 +64,7 @@ export default function ApQueryPanel() {
   }
 
   return (
-    <section className="panel ap-query-panel">
+    <section className="panel ap-query-panel ap-query-panel-full">
       <h2 className="panel-title ap-query-title">
         <span className="chat-avatar chat-avatar-blue">
           <MessageSquare size={14} />
@@ -74,7 +74,16 @@ export default function ApQueryPanel() {
 
       <div className="chat-thread" ref={threadRef}>
         {messages.length === 0 && !loading && (
-          <div className="chat-empty-state">Ask a question to get started.</div>
+          <div className="chat-empty-state">
+            <p>Ask a question to get started, or try one of these:</p>
+            <div className="chat-sample-questions">
+              {apAssistantSampleQuestions.map((q) => (
+                <button key={q} type="button" className="chat-sample-question" onClick={() => handleSend(q)}>
+                  {q}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
         {messages.map((m, i) =>
           m.role === 'user' ? (
@@ -117,13 +126,13 @@ export default function ApQueryPanel() {
       <div className="chat-input-row">
         <input
           type="text"
-          placeholder="Ask the AP assistant..."
+          placeholder="Ask the Intelligent AP Agent..."
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={loading}
         />
-        <button className="chat-send-btn" aria-label="Send" onClick={handleSend} disabled={loading}>
+        <button className="chat-send-btn" aria-label="Send" onClick={() => handleSend()} disabled={loading}>
           <Send size={15} />
         </button>
       </div>

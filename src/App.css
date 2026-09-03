@@ -1849,6 +1849,47 @@ tbody tr:last-child td {
   font-size: 12px;
 }
 
+/* Extracted header fields, read-only card view — same label+box language as
+   Pre-Validation's Selected Invoice Preview, but with a confidence badge per
+   row instead of a Correct Field control. Label sits above the value (not
+   beside it — this column is much narrower than Pre-Validation's, so a fixed
+   side-by-side label width squeezed the value down to a few px and forced
+   digit-by-digit wrapping) and the value box never truncates.  */
+.docai-field-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.docai-field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.docai-field-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.docai-field-label {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.docai-field-box {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: var(--text-primary);
+  background: var(--bg-app);
+  word-break: break-word;
+}
+
 .confidence-badge {
   display: inline-block;
   padding: 2px 8px;
@@ -4270,12 +4311,13 @@ tbody tr:last-child td {
   gap: 8px;
 }
 
-/* ---------- AP ASSISTANT ---------- */
-.assistant-top-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+/* ---------- INTELLIGENT AP AGENT ---------- */
+.ap-assistant-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   gap: 12px;
-  align-items: start;
 }
 
 /* AP Query chat panel */
@@ -4283,6 +4325,13 @@ tbody tr:last-child td {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.ap-query-panel-full {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-avatar {
@@ -4314,7 +4363,8 @@ tbody tr:last-child td {
 }
 
 .chat-thread {
-  height: 420px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding-right: 8px;
   margin-bottom: 4px;
@@ -4364,6 +4414,31 @@ tbody tr:last-child td {
   font-size: 13px;
   font-style: italic;
   padding: 8px 0 4px;
+}
+
+.chat-sample-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  max-width: 480px;
+}
+
+.chat-sample-question {
+  text-align: left;
+  background: var(--bg-app);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-style: normal;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.chat-sample-question:hover {
+  border-color: var(--blue);
+  color: var(--blue);
 }
 
 .chat-footer {
@@ -4464,50 +4539,6 @@ tbody tr:last-child td {
   color: var(--text-primary);
   font-weight: 600;
   text-align: right;
-}
-
-/* Expected Value Impact */
-.expected-value-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-bottom: 12px;
-}
-
-.expected-value-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-}
-
-.expected-value-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--blue-light);
-  color: var(--blue);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.expected-value-value {
-  font-weight: 700;
-}
-
-.expected-value-label {
-  color: var(--text-secondary);
-}
-
-.expected-value-footnote {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-style: italic;
-  margin: 10px 0 0;
-  border-top: 1px solid var(--border);
-  padding-top: 10px;
 }
 
 /* ---------- SHARED: EMPTY FILTER STATE ---------- */

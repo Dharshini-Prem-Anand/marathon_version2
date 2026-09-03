@@ -2486,6 +2486,7 @@ export const apAssistantGuidance = {
 
 export const sidebarItems = [
   { icon: 'layoutDashboard', label: 'Dashboard' },
+  { icon: 'sparkles', label: 'Intelligent AP Agent' },
   { icon: 'mail', label: 'Email & Attachment Triage' },
   { icon: 'fileText', label: 'Document AI & Extraction' },
   { icon: 'checkCircle', label: 'Pre-Validation' },
@@ -2497,5 +2498,4 @@ export const sidebarItems = [
   { icon: 'search', label: 'Extraction Diagnostics' },
   { icon: 'fileCheck', label: 'Audit & Reconciliation' },
   { icon: 'barChart2', label: 'KPI, Metrics & Value' },
-  { icon: 'sparkles', label: 'AP Assistant' },
 ]

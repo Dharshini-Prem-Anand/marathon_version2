@@ -3124,7 +3124,7 @@ export const kpiGuidance = {
 }
 
 export const apAssistantPageHeader = {
-  title: 'AI Assistant',
+  title: 'Intelligent AP Agent',
   subtitle: 'Evidence-based recommendations with human approval and financial controls',
 }
 
@@ -3135,6 +3135,14 @@ export const apQuery = {
   disclaimer: 'AI-generated response. Validate before action.',
 }
 
+export const apAssistantSampleQuestions = [
+  "What's in the priority exception queue",
+  "What's the status of invoice 660002",
+  'Give me the PO summary for purchase order 4500089210',
+  'List the invoice details from the date 2025-01-07',
+  'List the matches failed invoices',
+]
+
 export const invoiceContext = {
   vendor: 'Gulf Industrial Services',
   invoice: 'INV-984521',
@@ -3144,16 +3152,6 @@ export const invoiceContext = {
   exception: 'Freight and tax variance',
   paymentRisk: 'High',
 }
-
-export const expectedValueImpact = [
-  { icon: 'clock', value: '26 minutes', label: 'saved' },
-  { icon: 'trendDown', value: '67%', label: 'cycle-time reduction' },
-  { icon: 'dollar', value: '$17.30', label: 'cost avoided per invoice' },
-  { icon: 'shield', value: '$4,200', label: 'exposure reduced' },
-  { icon: 'checkCircle', value: 'controls preserved', label: '' },
-]
-
-export const expectedValueFootnote = 'Illustrative scenario values, subject to Marathon baseline validation.'
 
 export const apAssistantGuidance = {
   title: 'Business Use & Guidance',
@@ -3219,12 +3217,12 @@ export const apAssistantGuidance = {
 
 export const sidebarItems = [
   { icon: 'layoutDashboard', label: 'Dashboard' },
+  { icon: 'sparkles', label: 'Intelligent AP Agent' },
   { icon: 'mail', label: 'Email & Attachment Triage' },
   { icon: 'fileText', label: 'Document AI & Extraction' },
   { icon: 'checkCircle', label: 'Pre-Validation' },
   { icon: 'grid', label: 'PO & Line Matching' },
   { icon: 'alertTriangle', label: 'Exceptions & Recommendations' },
-  { icon: 'sparkles', label: 'AP Assistant' },
   { icon: 'layers', label: 'VIM Processing', wip: true },
   { icon: 'users', label: 'Work Assignment', wip: true },
   { icon: 'barChart', label: 'Operational Analytics', wip: true },
