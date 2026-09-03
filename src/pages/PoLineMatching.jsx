@@ -116,13 +116,19 @@ export default function PoLineMatching({ onNavigateToException }) {
 
   const selectedInvoiceNumber = selectedRecord?.invoiceNumber ?? null
 
+  const [explanationLoading, setExplanationLoading] = useState(false)
+
   // One call per invoice selection. Any failure (route missing, network, empty
   // body) degrades to the "not ready" copy — it must never surface as an error.
   // Seed invoices (any range other than Today) aren't known to the Python
   // service, so they use their own canned explanation instead of calling it.
+  // The previous invoice's explanation is cleared up front so a slow request
+  // shows a busy indicator instead of briefly leaving stale content on screen.
   useEffect(() => {
+    setExplanation(null)
+    setExplanationLoading(false)
+
     if (!selectedInvoiceNumber) {
-      setExplanation(null)
       return
     }
 
@@ -132,6 +138,7 @@ export default function PoLineMatching({ onNavigateToException }) {
     }
 
     let cancelled = false
+    setExplanationLoading(true)
 
     fetchMatchExplanation(selectedInvoiceNumber)
       .then((res) => {
@@ -148,6 +155,9 @@ export default function PoLineMatching({ onNavigateToException }) {
       })
       .catch(() => {
         if (!cancelled) setExplanation(EXPLANATION_NOT_READY)
+      })
+      .finally(() => {
+        if (!cancelled) setExplanationLoading(false)
       })
 
     return () => {
@@ -233,7 +243,7 @@ export default function PoLineMatching({ onNavigateToException }) {
             <div className="pv-detail-col">
               <div className="po-main-grid">
                 <ThreeWayMatchReview summaryCards={selectedRecord.summaryCards} matchLines={selectedRecord.matchLines} />
-                <MatchExplanation explanation={explanation} />
+                <MatchExplanation explanation={explanation} loading={explanationLoading} />
               </div>
 
               <PoMatchingPipelinePanel

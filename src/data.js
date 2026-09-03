@@ -1744,6 +1744,12 @@ export const poMatchingGuidance = {
   footerButton: 'View KPI Definitions',
 }
 
+export const exceptionsFilters = [
+  { label: 'Company Code', value: '1000 - Marathon US', options: companyCodeOptions },
+  { label: 'Vendor', value: 'All', options: vendorOptions },
+  { label: 'Priority', value: 'All', options: ['All', 'High', 'Medium', 'Low'] },
+]
+
 export const exceptionsStats = [
   { icon: 'alertTriangle', label: 'Open Exceptions', value: '23', valueColor: 'blue', target: null },
   { icon: 'clock', label: 'At Risk of Late Payment', value: '18', valueColor: 'orange', target: null },

@@ -55,6 +55,11 @@ export function fetchGoodsReceipts() {
   return apiGet('/GoodsReceipts').then((res) => res?.value ?? [])
 }
 
+// Exceptions & Recommendations queue.
+export function fetchExceptions() {
+  return apiGet('/Exceptions').then((res) => res?.value ?? [])
+}
+
 // Match Explanation for one invoice, from the Python service.
 // Returns { recommendedAction, confidence, evidence }. The route may not be
 // deployed yet, so callers must treat any failure as "not ready" rather than

@@ -5,6 +5,21 @@ function recommendationFor(exception) {
   if (!exception) return aiReviewRecommendation
   if (exception.invoice === aiReviewRecommendation.invoiceId) return aiReviewRecommendation
 
+  // Live exceptions carry their own recommendation from the CAP entity —
+  // use it in place of the generic fallback below when it's there.
+  if (exception.recommendation) {
+    return {
+      invoiceId: exception.invoice,
+      vendor: exception.vendor,
+      amount: exception.amount,
+      recommendation: exception.recommendation,
+      confidence: exception.confidence ?? '—',
+      evidenceUsed: exception.evidenceUsed ?? '—',
+      requiredApproval: exception.requiredApproval ?? '—',
+      prohibitedActions: exception.prohibitedActions ?? '—',
+    }
+  }
+
   return {
     invoiceId: exception.invoice,
     vendor: exception.vendor,

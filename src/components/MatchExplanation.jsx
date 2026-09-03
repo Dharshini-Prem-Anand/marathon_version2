@@ -1,4 +1,18 @@
-export default function MatchExplanation({ explanation }) {
+import { Loader2 } from 'lucide-react'
+
+export default function MatchExplanation({ explanation, loading }) {
+  if (loading) {
+    return (
+      <section className="panel match-explanation">
+        <h2 className="panel-title">Match Explanation</h2>
+        <div className="match-explanation-loading">
+          <Loader2 size={20} className="spin-icon" />
+          <span>Loading match explanation…</span>
+        </div>
+      </section>
+    )
+  }
+
   if (!explanation) {
     return (
       <section className="panel match-explanation">
