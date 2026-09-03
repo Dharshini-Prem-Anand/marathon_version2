@@ -13,16 +13,3 @@ export function ruleForField(rules, fieldKey) {
   if (!category) return null
   return rules.find((r) => r.category === category) ?? null
 }
-
-// Applies a user correction: updates the field value and marks its rule
-// passed, as if pre-validation re-ran against the corrected value.
-export function applyFieldCorrection(record, fieldKey, value) {
-  const category = FIELD_RULE_CATEGORY[fieldKey]
-  return {
-    ...record,
-    invoice: { ...record.invoice, [fieldKey]: value },
-    validationRuleResults: record.validationRuleResults.map((r) =>
-      r.category === category ? { ...r, result: 'passed', confidence: '99%', issue: '—' } : r
-    ),
-  }
-}

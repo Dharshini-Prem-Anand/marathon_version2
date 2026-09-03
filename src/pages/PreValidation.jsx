@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import FilterBar from '../components/FilterBar'
 import StatsRow from '../components/StatsRow'
 import PreValidationQueueTable from '../components/PreValidationQueueTable'
@@ -12,17 +12,28 @@ import CorrectionHistoryModelLearning from '../components/CorrectionHistoryModel
 import ApprovalBanner from '../components/ApprovalBanner'
 import FilterEmptyState from '../components/FilterEmptyState'
 import { useFilters, matchesCompanyCode, matchesOption } from '../hooks/useFilters'
-import { preValidationFilters, preValidationStats, preValidationQueue, preValidationRecords } from '../data'
-import { applyFieldCorrection } from '../utils/preValidationMappers'
+import {
+  preValidationFilters,
+  preValidationStats,
+  preValidationQueue,
+  preValidationRecords,
+  validationRuleResults,
+  vendorPayeeValidation,
+} from '../data'
+import { FIELD_RULE_CATEGORY } from '../utils/preValidationMappers'
+import { fetchInvoices } from '../api/invoiceAutomation'
+import { buildInvoiceSummaries, buildInvoicePreviews } from '../utils/matchingMappers'
+import { isTodayRange } from '../utils/dateRange'
 
-// Row-level vendor labels (matching vendorOptions casing) — the invoice
-// preview itself displays the vendor name in caps, so this is kept separate.
-const VENDOR_BY_ID = {
-  'INV-2025-10456': 'Global Industrial Supply',
-  'INV-2025-10412': 'Office Depot',
-  'INV-2025-10398': 'Cintas Corporation',
-  'INV-2025-10422': 'Verizon Wireless',
-  'CM-2025-10077': 'Grainger',
+const DEFAULT_DATE_RANGE = 'Today'
+
+// The queue's Document Type / Confidence Band / Validation Status columns
+// have no CAP source yet, so every live invoice gets the same placeholder
+// classification for now.
+const UNVALIDATED_ATTRS = {
+  documentType: 'Invoice',
+  confidenceBand: '—',
+  validationStatus: 'Review',
 }
 
 const CONFIDENCE_BAND_BY_BADGE = {
@@ -31,57 +42,131 @@ const CONFIDENCE_BAND_BY_BADGE = {
   'LOW CONFIDENCE': 'Low (< 70%)',
 }
 
-function deriveAttributes(id, record) {
+// Row-level vendor labels matching vendorOptions casing — the invoice
+// preview itself displays the vendor name in caps.
+const VENDOR_BY_ID = {
+  'INV-2025-10456': 'Global Industrial Supply',
+  'INV-2025-10412': 'Office Depot',
+  'INV-2025-10398': 'Cintas Corporation',
+  'INV-2025-10422': 'Verizon Wireless',
+  'CM-2025-10077': 'Grainger',
+}
+
+function mockAttrs(id, record) {
   const failedCount = record.validationRuleResults.filter((r) => r.result === 'failed').length
   const reviewCount = record.validationRuleResults.filter((r) => r.result === 'review').length
-  const validationStatus = failedCount > 0 ? 'Failed' : reviewCount > 0 ? 'Review' : 'Passed'
-  const documentType = record.documentClassification.find((d) => d.selected)?.label ?? 'Invoice'
-  const confidenceBand = CONFIDENCE_BAND_BY_BADGE[record.invoice.confidenceBadge] ?? 'High (90-100%)'
-
   return {
     vendor: VENDOR_BY_ID[id] ?? record.invoice.vendorName,
-    documentType,
-    confidenceBand,
-    validationStatus,
+    documentType: record.documentClassification.find((d) => d.selected)?.label ?? 'Invoice',
+    confidenceBand: CONFIDENCE_BAND_BY_BADGE[record.invoice.confidenceBadge] ?? 'High (90-100%)',
+    validationStatus: failedCount > 0 ? 'Failed' : reviewCount > 0 ? 'Review' : 'Passed',
   }
 }
 
+// Seed data shown for any date range other than Today — the CAP /Invoices
+// data has no historical window to page through yet.
+const MOCK_QUEUE = preValidationQueue.map((id) => {
+  const record = preValidationRecords[id]
+  return {
+    id,
+    invoiceNumber: id,
+    amount: record.invoice.grossAmount.replace(' USD', ''),
+    ...mockAttrs(id, record),
+  }
+})
+const MOCK_PREVIEWS = Object.fromEntries(preValidationQueue.map((id) => [id, preValidationRecords[id].invoice]))
+
 export default function PreValidation({ onNavigate, onNavigateToException }) {
   const { draft, applied, setField, apply } = useFilters(preValidationFilters)
-  const [selectedId, setSelectedId] = useState(preValidationQueue[0])
-  // Local, editable copy of the seed records so a field correction can
-  // update the invoice value and re-run its validation rule in place.
-  const [records, setRecords] = useState(preValidationRecords)
+  const [selectedId, setSelectedId] = useState(null)
+  const [dateRange, setDateRange] = useState(DEFAULT_DATE_RANGE)
+  const [appliedDateRange, setAppliedDateRange] = useState(DEFAULT_DATE_RANGE)
 
-  const handleCorrectField = (id, fieldKey, value) => {
-    setRecords((prev) => ({ ...prev, [id]: applyFieldCorrection(prev[id], fieldKey, value) }))
+  // Document Pre Validation Queue and the Selected Invoice Preview both bind
+  // to the same live CAP /Invoices data the PO & Line Matching page uses,
+  // but only for the Today range — any other range falls back to the seed
+  // queue above, same as Document AI & Extraction does.
+  const [liveQueue, setLiveQueue] = useState([])
+  const [livePreviews, setLivePreviews] = useState({})
+  const [liveError, setLiveError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setLiveError(null)
+
+    fetchInvoices()
+      .then((invoices) => {
+        if (cancelled) return
+        setLiveQueue(buildInvoiceSummaries(invoices).map((row) => ({ ...row, ...UNVALIDATED_ATTRS })))
+        setLivePreviews(buildInvoicePreviews(invoices))
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setLiveQueue([])
+        setLivePreviews({})
+        setLiveError(`Could not load invoice queue — ${err.message}`)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Validation Rule Results and Vendor & Payee Validation have no CAP entity
+  // yet, so they stay on fixed sample data — the same panel content no
+  // matter which invoice is selected in the queue.
+  const [rules, setRules] = useState(validationRuleResults)
+
+  const handleCorrectField = (fieldKey) => {
+    const category = FIELD_RULE_CATEGORY[fieldKey]
+    setRules((prev) =>
+      prev.map((r) => (r.category === category ? { ...r, result: 'passed', confidence: '99%', issue: '—' } : r))
+    )
   }
 
-  const filteredQueue = preValidationQueue.filter((id) => {
-    const attrs = deriveAttributes(id, records[id])
+  const showLive = isTodayRange(appliedDateRange)
+  const sourceQueue = showLive ? liveQueue : MOCK_QUEUE
+  const sourcePreviews = showLive ? livePreviews : MOCK_PREVIEWS
+
+  const filteredQueue = sourceQueue.filter((row) => {
     return (
       matchesCompanyCode(applied['Company Code']) &&
-      matchesOption(applied['Vendor'], attrs.vendor) &&
-      matchesOption(applied['Document Type'], attrs.documentType) &&
-      matchesOption(applied['Confidence Band'], attrs.confidenceBand) &&
-      matchesOption(applied['Validation Status'], attrs.validationStatus)
+      matchesOption(applied['Vendor'], row.vendor) &&
+      matchesOption(applied['Document Type'], row.documentType) &&
+      matchesOption(applied['Confidence Band'], row.confidenceBand) &&
+      matchesOption(applied['Validation Status'], row.validationStatus)
     )
   })
 
-  const selectedRecordId = filteredQueue.includes(selectedId) ? selectedId : filteredQueue[0] ?? null
-  const selectedRecord = selectedRecordId ? records[selectedRecordId] : null
+  const selectedRecordId = filteredQueue.some((row) => row.id === selectedId)
+    ? selectedId
+    : filteredQueue[0]?.id ?? null
+  const selectedInvoice = selectedRecordId ? sourcePreviews[selectedRecordId] : null
 
-  const queueRows = filteredQueue.map((id) => {
-    const record = records[id]
-    const attrs = deriveAttributes(id, record)
-    return {
-      id,
-      invoiceNumber: id,
-      vendor: attrs.vendor,
-      amount: record.invoice.grossAmount.replace(' USD', ''),
-      status: attrs.validationStatus,
-    }
-  })
+  const queueRows = filteredQueue.map((row) => ({
+    id: row.id,
+    invoiceNumber: row.invoiceNumber,
+    vendor: row.vendor,
+    amount: row.amount,
+    status: row.validationStatus,
+  }))
+
+  const handleGo = () => {
+    apply()
+    setAppliedDateRange(dateRange)
+  }
+
+  // "Pending Pre-Validation" tracks the queue table below it — the rest of
+  // the tiles have no live source yet, so they stay on their sample values.
+  const stats = useMemo(
+    () =>
+      preValidationStats.map((stat) =>
+        stat.label === 'Pending Pre-Validation'
+          ? { ...stat, value: filteredQueue.length.toLocaleString() }
+          : stat
+      ),
+    [filteredQueue]
+  )
 
   return (
     <>
@@ -89,13 +174,17 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
         fields={preValidationFilters}
         values={draft}
         onFieldChange={setField}
-        onGo={apply}
-        dateRangeLabel="05/11/2025 - 05/18/2025"
+        dateRangeLabel={DEFAULT_DATE_RANGE}
+        dateRangeValue={dateRange}
+        onDateRangeChange={setDateRange}
+        onGo={handleGo}
         hideAdaptLink
       />
-      <StatsRow stats={preValidationStats} />
+      <StatsRow stats={stats} />
 
-      {selectedRecord ? (
+      {filteredQueue.length === 0 ? (
+        <FilterEmptyState message={(showLive && liveError) || 'No invoice matches the selected filters.'} />
+      ) : (
         <>
           <div className="pv-page-grid">
             <PreValidationQueueTable rows={queueRows} selectedId={selectedRecordId} onSelect={setSelectedId} />
@@ -103,17 +192,17 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
             <div className="pv-detail-col">
               <div className="pv-main-grid">
                 <InvoicePreviewValidation
-                  invoice={selectedRecord.invoice}
-                  rules={selectedRecord.validationRuleResults}
-                  onCorrectField={(fieldKey, value) => handleCorrectField(selectedRecordId, fieldKey, value)}
+                  invoice={selectedInvoice}
+                  rules={rules}
+                  onCorrectField={(fieldKey) => handleCorrectField(fieldKey)}
                 />
-                <ValidationRuleResults rules={selectedRecord.validationRuleResults} />
-                <VendorPayeePanel vendorPayee={selectedRecord.vendorPayeeValidation} />
+                <ValidationRuleResults rules={rules} />
+                <VendorPayeePanel vendorPayee={vendorPayeeValidation} />
               </div>
 
               <PreValidationPipelinePanel
-                invoice={selectedRecord.invoice}
-                validationRuleResults={selectedRecord.validationRuleResults}
+                invoice={selectedInvoice}
+                validationRuleResults={rules}
                 invoiceId={selectedRecordId}
                 onNavigate={onNavigate}
                 onNavigateToException={onNavigateToException}
@@ -129,8 +218,6 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
 
           <ApprovalBanner />
         </>
-      ) : (
-        <FilterEmptyState message="No invoice matches the selected filters." />
       )}
     </>
   )

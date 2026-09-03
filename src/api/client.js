@@ -18,7 +18,11 @@ export function apiGet(path, params) {
       .fail((xhr, textStatus, errorThrown) => {
         const message =
           xhr?.responseJSON?.error?.message || errorThrown || textStatus || 'Request failed'
-        reject(new Error(`${path}: ${message}`))
+        // xhr.status is 0 for a request that never got a response at all
+        // (proxy target unreachable, CORS, DNS) — worth surfacing since
+        // "error"/"parsererror" alone doesn't say which.
+        const status = xhr?.status ? ` (HTTP ${xhr.status})` : xhr?.status === 0 ? ' (no response — proxy/network)' : ''
+        reject(new Error(`${path}: ${message}${status}`))
       })
   })
 }
