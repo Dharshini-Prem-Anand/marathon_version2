@@ -16,7 +16,7 @@ const metricIconMap = {
 export default function VimProcessingTimeline() {
   return (
     <section className="panel">
-      <h2 className="panel-title">VIM Processing Timeline</h2>
+      <h2 className="panel-title">VIM Processing Timeline - WIP</h2>
 
       <div className="timeline-row">
         {vimProcessingTimeline.map((step, i) => {

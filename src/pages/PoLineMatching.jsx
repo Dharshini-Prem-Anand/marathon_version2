@@ -88,13 +88,17 @@ export default function PoLineMatching({ onNavigateToException }) {
   const showLive = isTodayRange(appliedDateRange)
   const { ids, records } = showLive ? liveData : MOCK_DATA
 
-  // Vendor options come from the loaded data — the mock list holds different
-  // names, so a static dropdown would filter everything out.
+  // Vendor and Invoice Channel options come from the loaded data — a static
+  // dropdown would offer choices (e.g. EDI) that never match a live invoice,
+  // since Invoices carries no channel and always reports 'Email'.
   const filterFields = useMemo(() => {
     const vendors = [...new Set(ids.map((id) => records[id].context.vendor))].sort()
-    return poMatchingFilters.map((f) =>
-      f.label === 'Vendor' ? { ...f, options: ['All', ...vendors] } : f
-    )
+    const channels = [...new Set(ids.map((id) => records[id].context.channel))].sort()
+    return poMatchingFilters.map((f) => {
+      if (f.label === 'Vendor') return { ...f, options: ['All', ...vendors] }
+      if (f.label === 'Invoice Channel') return { ...f, options: ['All', ...channels] }
+      return f
+    })
   }, [ids, records])
 
   const filteredQueue = ids.filter((id) => {
@@ -162,8 +166,11 @@ export default function PoLineMatching({ onNavigateToException }) {
     }
   })
 
+  // Both the stat tiles and the Matching Performance panel reflect the
+  // filtered queue, not the full dataset, so every filter visibly changes
+  // what's on screen.
   const stats = useMemo(() => {
-    const counts = matchingStatCounts(ids, records)
+    const counts = matchingStatCounts(filteredQueue, records)
     return poMatchingStats.map((stat) => {
       if (STATIC_STAT_LABELS.includes(stat.label)) return stat
       const value = {
@@ -175,7 +182,30 @@ export default function PoLineMatching({ onNavigateToException }) {
       if (value === undefined) return stat
       return { ...stat, value: value.toLocaleString() }
     })
-  }, [ids, records])
+  }, [filteredQueue, records])
+
+  const performanceMetrics = useMemo(() => {
+    const lines = filteredQueue.flatMap((id) => records[id].matchLines)
+    const totalLines = lines.length
+    const matchedLines = lines.filter((l) => l.matchStatus === 'matched').length
+    const totalHeaders = filteredQueue.length
+    const matchedHeaders = filteredQueue.filter((id) => records[id].context.status === 'Matched').length
+
+    const pct = (n, d) => (d ? `${((n / d) * 100).toFixed(1)}%` : '—')
+
+    return [
+      {
+        label: 'Header Match Rate',
+        percent: pct(matchedHeaders, totalHeaders),
+        fraction: `(${matchedHeaders.toLocaleString()} / ${totalHeaders.toLocaleString()})`,
+      },
+      {
+        label: 'Line Match Rate',
+        percent: pct(matchedLines, totalLines),
+        fraction: `(${matchedLines.toLocaleString()} / ${totalLines.toLocaleString()})`,
+      },
+    ]
+  }, [filteredQueue, records])
 
   const handleGo = () => {
     apply()
@@ -215,7 +245,7 @@ export default function PoLineMatching({ onNavigateToException }) {
             </div>
           </div>
 
-          <MatchingPerformance />
+          <MatchingPerformance metrics={performanceMetrics} />
           <VimProcessingTimeline />
         </>
       ) : (
