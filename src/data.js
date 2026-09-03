@@ -1486,9 +1486,9 @@ export const poMatchingStats = [
 ]
 
 export const matchSummaryCards = [
-  { icon: 'fileText', label: 'Invoice', value: '$84,250', valueColor: null },
   { icon: 'clipboard', label: 'SAP PO', value: '$82,900', valueColor: null },
   { icon: 'truck', label: 'Received', value: '$82,900', valueColor: null },
+  { icon: 'fileText', label: 'Invoice', value: '$84,250', valueColor: null },
   { icon: 'scale', label: 'Variance', value: '$1,350', valueColor: 'red' },
 ]
 
@@ -1570,9 +1570,9 @@ export const poMatchingRecords = {
   'INV-2025-10456': {
     context: { vendor: 'Global Industrial Supply', channel: 'Email', status: 'Matched' },
     summaryCards: [
-      { icon: 'fileText', label: 'Invoice', value: '$84,250', valueColor: null },
       { icon: 'clipboard', label: 'SAP PO', value: '$84,250', valueColor: null },
       { icon: 'truck', label: 'Received', value: '$84,250', valueColor: null },
+      { icon: 'fileText', label: 'Invoice', value: '$84,250', valueColor: null },
       { icon: 'scale', label: 'Variance', value: '$0', valueColor: 'green' },
     ],
     matchLines: [
@@ -1590,9 +1590,9 @@ export const poMatchingRecords = {
   'INV-2025-10412': {
     context: { vendor: 'Office Depot', channel: 'Vendor Portal', status: 'Partial Match' },
     summaryCards: [
-      { icon: 'fileText', label: 'Invoice', value: '$862.40', valueColor: null },
       { icon: 'clipboard', label: 'SAP PO', value: '$825.00', valueColor: null },
       { icon: 'truck', label: 'Received', value: '$825.00', valueColor: null },
+      { icon: 'fileText', label: 'Invoice', value: '$862.40', valueColor: null },
       { icon: 'scale', label: 'Variance', value: '$37.40', valueColor: 'red' },
     ],
     matchLines: [
@@ -1614,9 +1614,9 @@ export const poMatchingRecords = {
   'INV-2025-10422': {
     context: { vendor: 'Verizon Wireless', channel: 'Email', status: 'Not Found' },
     summaryCards: [
-      { icon: 'fileText', label: 'Invoice', value: '$1,842.60', valueColor: null },
       { icon: 'clipboard', label: 'SAP PO', value: 'Not Found', valueColor: 'red' },
       { icon: 'truck', label: 'Received', value: '—', valueColor: null },
+      { icon: 'fileText', label: 'Invoice', value: '$1,842.60', valueColor: null },
       { icon: 'scale', label: 'Variance', value: '—', valueColor: null },
     ],
     matchLines: [
@@ -1632,9 +1632,9 @@ export const poMatchingRecords = {
   'CM-2025-10077': {
     context: { vendor: 'Grainger', channel: 'Upload', status: 'Matched' },
     summaryCards: [
-      { icon: 'fileText', label: 'Invoice', value: '$3,064.20', valueColor: null },
       { icon: 'clipboard', label: 'SAP PO', value: '$3,064.20', valueColor: null },
       { icon: 'truck', label: 'Received', value: '$3,064.20', valueColor: null },
+      { icon: 'fileText', label: 'Invoice', value: '$3,064.20', valueColor: null },
       { icon: 'scale', label: 'Variance', value: '$0', valueColor: 'green' },
     ],
     matchLines: [

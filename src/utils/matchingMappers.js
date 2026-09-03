@@ -131,9 +131,9 @@ export function buildMatchingRecords(invoices, purchaseOrders, goodsReceipts) {
         status,
       },
       summaryCards: [
-        { icon: 'fileText', label: 'Invoice', value: money(invTotal, currency), valueColor: null },
         { icon: 'clipboard', label: 'SAP PO', value: money(poTotal, currency), valueColor: null },
         { icon: 'truck', label: 'Received', value: money(receivedTotal, currency), valueColor: null },
+        { icon: 'fileText', label: 'Invoice', value: money(invTotal, currency), valueColor: null },
         {
           icon: 'scale',
           label: 'Variance',
