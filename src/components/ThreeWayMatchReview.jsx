@@ -1,4 +1,6 @@
 import { FileText, Clipboard, Truck, Scale, CheckCircle2, CircleDot, XCircle } from 'lucide-react'
+import SortFilterTh from './SortFilterTh'
+import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const iconMap = {
   fileText: FileText,
@@ -14,7 +16,20 @@ const matchStatusConfig = {
   notfound: { icon: XCircle, color: 'gray', label: 'Not Found' },
 }
 
+const COLUMNS = {
+  invLine: (row) => row.invLine,
+  description: (row) => row.description,
+  qty: (row) => row.qty,
+  unitPrice: (row) => row.unitPrice,
+  invAmount: (row) => row.invAmount,
+  proposedPoLine: (row) => row.proposedPoLine,
+  poAmount: (row) => row.poAmount,
+  variance: (row) => row.variance,
+  matchStatus: (row) => matchStatusConfig[row.matchStatus]?.label,
+}
+
 export default function ThreeWayMatchReview({ summaryCards = [], matchLines = [] }) {
+  const ctl = useColumnSortFilter(matchLines, COLUMNS)
   return (
     <section className="panel three-way-match">
       <h2 className="panel-title">Matching review</h2>
@@ -53,19 +68,19 @@ export default function ThreeWayMatchReview({ summaryCards = [], matchLines = []
           </colgroup>
           <thead>
             <tr>
-              <th>Line</th>
-              <th>Description</th>
-              <th>Qty</th>
-              <th>Unit Price</th>
-              <th>Inv Amount</th>
-              <th>PO Line</th>
-              <th>PO Amt</th>
-              <th>Var.</th>
-              <th>Status</th>
+              <SortFilterTh columnKey="invLine" label="Line" ctl={ctl} />
+              <SortFilterTh columnKey="description" label="Description" ctl={ctl} />
+              <SortFilterTh columnKey="qty" label="Qty" ctl={ctl} />
+              <SortFilterTh columnKey="unitPrice" label="Unit Price" ctl={ctl} />
+              <SortFilterTh columnKey="invAmount" label="Inv Amount" ctl={ctl} />
+              <SortFilterTh columnKey="proposedPoLine" label="PO Line" ctl={ctl} />
+              <SortFilterTh columnKey="poAmount" label="PO Amt" ctl={ctl} />
+              <SortFilterTh columnKey="variance" label="Var." ctl={ctl} />
+              <SortFilterTh columnKey="matchStatus" label="Status" ctl={ctl} />
             </tr>
           </thead>
           <tbody>
-            {matchLines.map((line) => {
+            {ctl.rows.map((line) => {
               const cfg = matchStatusConfig[line.matchStatus]
               const Icon = cfg.icon
               return (

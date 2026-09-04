@@ -1,7 +1,21 @@
 import { Bot, User } from 'lucide-react'
 import { auditTrail, totalAuditEventsLabel } from '../data'
+import SortFilterTh from './SortFilterTh'
+import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
+
+const COLUMNS = {
+  time: (row) => row.time,
+  invoice: (row) => row.invoice,
+  stage: (row) => row.stage,
+  actor: (row) => (row.actor === 'automated' ? 'Automated' : 'Human'),
+  decision: (row) => row.decision,
+  userModel: (row) => row.userModel,
+  result: (row) => row.result,
+}
 
 export default function AuditTrailTable() {
+  const ctl = useColumnSortFilter(auditTrail, COLUMNS)
+
   return (
     <section className="panel audit-trail">
       <h2 className="panel-title">Audit Trail</h2>
@@ -19,18 +33,18 @@ export default function AuditTrailTable() {
           </colgroup>
           <thead>
             <tr>
-              <th>Event Time</th>
-              <th>Invoice</th>
-              <th>Stage</th>
-              <th>Automated / Human</th>
-              <th>Decision</th>
-              <th>User / Model</th>
+              <SortFilterTh columnKey="time" label="Event Time" ctl={ctl} />
+              <SortFilterTh columnKey="invoice" label="Invoice" ctl={ctl} />
+              <SortFilterTh columnKey="stage" label="Stage" ctl={ctl} />
+              <SortFilterTh columnKey="actor" label="Automated / Human" ctl={ctl} />
+              <SortFilterTh columnKey="decision" label="Decision" ctl={ctl} />
+              <SortFilterTh columnKey="userModel" label="User / Model" ctl={ctl} />
               <th>Evidence</th>
-              <th>Result</th>
+              <SortFilterTh columnKey="result" label="Result" ctl={ctl} />
             </tr>
           </thead>
           <tbody>
-            {auditTrail.map((row, i) => {
+            {ctl.rows.map((row, i) => {
               const ActorIcon = row.actor === 'automated' ? Bot : User
               return (
                 <tr key={i}>

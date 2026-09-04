@@ -1,4 +1,6 @@
 import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
+import SortFilterTh from './SortFilterTh'
+import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const resultConfig = {
   passed: { icon: CheckCircle2, color: 'green', label: 'Passed' },
@@ -6,7 +8,17 @@ const resultConfig = {
   failed: { icon: XCircle, color: 'red', label: 'Failed' },
 }
 
+const COLUMNS = {
+  category: (row) => row.category,
+  rule: (row) => row.rule,
+  result: (row) => resultConfig[row.result]?.label ?? row.result,
+  confidence: (row) => row.confidence,
+  issue: (row) => row.issue,
+}
+
 export default function ValidationRuleResults({ rules = [] }) {
+  const ctl = useColumnSortFilter(rules, COLUMNS)
+
   return (
     <section className="panel pv-rules">
       <h2 className="panel-title">Validation Rule Results</h2>
@@ -21,15 +33,15 @@ export default function ValidationRuleResults({ rules = [] }) {
           </colgroup>
           <thead>
             <tr>
-              <th>Category</th>
-              <th>Rule</th>
-              <th>Result</th>
-              <th>Conf.</th>
-              <th>Issue</th>
+              <SortFilterTh columnKey="category" label="Category" ctl={ctl} />
+              <SortFilterTh columnKey="rule" label="Rule" ctl={ctl} />
+              <SortFilterTh columnKey="result" label="Result" ctl={ctl} />
+              <SortFilterTh columnKey="confidence" label="Conf." ctl={ctl} />
+              <SortFilterTh columnKey="issue" label="Issue" ctl={ctl} />
             </tr>
           </thead>
           <tbody>
-            {rules.map((r) => {
+            {ctl.rows.map((r) => {
               const cfg = resultConfig[r.result]
               const Icon = cfg.icon
               return (

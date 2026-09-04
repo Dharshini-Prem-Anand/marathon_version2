@@ -1,10 +1,27 @@
+import SortFilterTh from './SortFilterTh'
+import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
+
 function confidenceColor(pct) {
   const n = parseInt(pct, 10)
   if (n >= 65) return 'orange'
   return 'red'
 }
 
+const COLUMNS = {
+  vendor: (row) => row.vendor,
+  format: (row) => row.format,
+  failedField: (row) => row.failedField,
+  confidence: (row) => row.confidence,
+  errorType: (row) => row.errorType,
+  recurrence: (row) => row.recurrence,
+  lastCorrection: (row) => row.lastCorrection,
+  modelVersion: (row) => row.modelVersion,
+  action: (row) => row.action,
+}
+
 export default function ExtractionDiagnosticDetailsTable({ rows }) {
+  const ctl = useColumnSortFilter(rows, COLUMNS)
+
   return (
     <section className="panel extraction-diagnostic-details">
       <h2 className="panel-title">Extraction Diagnostic Details</h2>
@@ -23,26 +40,26 @@ export default function ExtractionDiagnosticDetailsTable({ rows }) {
           </colgroup>
           <thead>
             <tr>
-              <th>Vendor</th>
-              <th>Format</th>
-              <th>Failed Field</th>
-              <th>Conf.</th>
-              <th>Error Type</th>
-              <th>Recur. (30d)</th>
-              <th>Last Correction</th>
-              <th>Model</th>
-              <th>Recommended Action</th>
+              <SortFilterTh columnKey="vendor" label="Vendor" ctl={ctl} />
+              <SortFilterTh columnKey="format" label="Format" ctl={ctl} />
+              <SortFilterTh columnKey="failedField" label="Failed Field" ctl={ctl} />
+              <SortFilterTh columnKey="confidence" label="Conf." ctl={ctl} />
+              <SortFilterTh columnKey="errorType" label="Error Type" ctl={ctl} />
+              <SortFilterTh columnKey="recurrence" label="Recur. (30d)" ctl={ctl} />
+              <SortFilterTh columnKey="lastCorrection" label="Last Correction" ctl={ctl} />
+              <SortFilterTh columnKey="modelVersion" label="Model" ctl={ctl} />
+              <SortFilterTh columnKey="action" label="Recommended Action" ctl={ctl} />
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 && (
+            {ctl.rows.length === 0 && (
               <tr>
                 <td colSpan={9} className="table-empty-cell">
                   No issues match the selected filters.
                 </td>
               </tr>
             )}
-            {rows.map((row, i) => (
+            {ctl.rows.map((row, i) => (
               <tr key={i}>
                 <td className="cell-ellipsis" title={row.vendor}>
                   {row.vendor}

@@ -1,9 +1,24 @@
+import SortFilterTh from './SortFilterTh'
+import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
+
+const COLUMNS = {
+  measure: (row) => row.measure,
+  category: (row) => row.category,
+  baseline: (row) => row.baseline,
+  current: (row) => row.current,
+  target: (row) => row.target,
+  owner: (row) => row.owner,
+  status: (row) => row.status,
+}
+
 export default function MeasureDefinitionRegister({ rows }) {
+  const ctl = useColumnSortFilter(rows, COLUMNS)
+
   return (
     <section className="panel measure-register">
       <div className="panel-title-row">
         <h2 className="panel-title">Measure Definition Register</h2>
-        <span className="measure-count">{rows.length} measures</span>
+        <span className="measure-count">{ctl.rows.length} measures</span>
       </div>
 
       <div className="table-wrap">
@@ -19,24 +34,24 @@ export default function MeasureDefinitionRegister({ rows }) {
           </colgroup>
           <thead>
             <tr>
-              <th>Measure</th>
-              <th>Category</th>
-              <th>Baseline</th>
-              <th>Current</th>
-              <th>Target</th>
-              <th>Owner</th>
-              <th>Status</th>
+              <SortFilterTh columnKey="measure" label="Measure" ctl={ctl} />
+              <SortFilterTh columnKey="category" label="Category" ctl={ctl} />
+              <SortFilterTh columnKey="baseline" label="Baseline" ctl={ctl} />
+              <SortFilterTh columnKey="current" label="Current" ctl={ctl} />
+              <SortFilterTh columnKey="target" label="Target" ctl={ctl} />
+              <SortFilterTh columnKey="owner" label="Owner" ctl={ctl} />
+              <SortFilterTh columnKey="status" label="Status" ctl={ctl} />
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 && (
+            {ctl.rows.length === 0 && (
               <tr>
                 <td colSpan={7} className="table-empty-cell">
                   No measures match the selected filters.
                 </td>
               </tr>
             )}
-            {rows.map((row) => (
+            {ctl.rows.map((row) => (
               <tr key={row.measure} className={row.selected ? 'scenario-row-selected' : undefined}>
                 <td>
                   <div className="measure-name-cell cell-ellipsis" title={row.measure}>

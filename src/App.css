@@ -629,6 +629,122 @@ tbody tr:last-child td {
   border-bottom: none;
 }
 
+/* ---------- SORT / FILTER TABLE HEADER ---------- */
+.th-sortfilter {
+  padding: 0;
+}
+
+.th-sortfilter-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
+  box-sizing: border-box;
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  cursor: pointer;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  white-space: nowrap;
+}
+
+.th-sortfilter-trigger:hover,
+.th-sortfilter-trigger.active {
+  color: var(--blue);
+}
+
+.th-sortfilter-trigger svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.th-sortfilter-menu {
+  position: fixed;
+  z-index: 1000;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 6px;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.th-sortfilter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 8px;
+  font-size: 12.5px;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.th-sortfilter-item:hover {
+  background: var(--bg-app);
+}
+
+.th-sortfilter-item.selected {
+  background: var(--blue-light);
+  color: var(--blue);
+}
+
+.th-sortfilter-item svg {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.th-sortfilter-item.selected svg {
+  color: var(--blue);
+}
+
+.th-sortfilter-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 2px;
+}
+
+.th-sortfilter-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-top: 2px;
+  color: var(--text-muted);
+}
+
+.th-sortfilter-filter input {
+  border: none;
+  outline: none;
+  background: none;
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  text-transform: none;
+  letter-spacing: normal;
+  font-family: inherit;
+}
+
+.th-sortfilter-filter:focus-within {
+  border-color: var(--blue);
+}
+
 .priority-dot {
   display: inline-block;
   width: 8px;

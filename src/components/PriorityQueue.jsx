@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { priorityQueue } from '../data'
+import SortFilterTh from './SortFilterTh'
+import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const priorityColor = {
   High: 'red',
@@ -10,18 +12,29 @@ const priorityColor = {
 
 const PAGE_SIZE = 5
 
+const COLUMNS = {
+  priority: (row) => row.priority,
+  invoice: (row) => row.invoice,
+  vendor: (row) => row.vendor,
+  issue: (row) => row.issue,
+  due: (row) => row.due,
+  owner: (row) => row.owner,
+  action: (row) => row.action,
+}
+
 export default function PriorityQueue({ rows = priorityQueue }) {
+  const ctl = useColumnSortFilter(rows, COLUMNS)
   const [page, setPage] = useState(1)
-  const rowsKey = rows.map((r) => r.invoice).join('|')
+  const rowsKey = ctl.rows.map((r) => r.invoice).join('|')
 
   useEffect(() => {
     setPage(1)
   }, [rowsKey])
 
-  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(ctl.rows.length / PAGE_SIZE))
   const currentPage = Math.min(page, pageCount)
   const start = (currentPage - 1) * PAGE_SIZE
-  const pageRows = rows.slice(start, start + PAGE_SIZE)
+  const pageRows = ctl.rows.slice(start, start + PAGE_SIZE)
 
   return (
     <section className="panel priority-queue">
@@ -30,17 +43,17 @@ export default function PriorityQueue({ rows = priorityQueue }) {
         <table>
           <thead>
             <tr>
-              <th>Priority</th>
-              <th>Invoice</th>
-              <th>Vendor</th>
-              <th>Issue</th>
-              <th>Due</th>
-              <th>Owner</th>
-              <th>Recommended Action</th>
+              <SortFilterTh columnKey="priority" label="Priority" ctl={ctl} />
+              <SortFilterTh columnKey="invoice" label="Invoice" ctl={ctl} />
+              <SortFilterTh columnKey="vendor" label="Vendor" ctl={ctl} />
+              <SortFilterTh columnKey="issue" label="Issue" ctl={ctl} />
+              <SortFilterTh columnKey="due" label="Due" ctl={ctl} />
+              <SortFilterTh columnKey="owner" label="Owner" ctl={ctl} />
+              <SortFilterTh columnKey="action" label="Recommended Action" ctl={ctl} />
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 ? (
+            {ctl.rows.length === 0 ? (
               <tr>
                 <td colSpan={7} className="table-empty-cell">
                   No invoices match the selected filters.
@@ -66,10 +79,10 @@ export default function PriorityQueue({ rows = priorityQueue }) {
         </table>
       </div>
 
-      {rows.length > 0 && (
+      {ctl.rows.length > 0 && (
         <div className="table-pagination">
           <span>
-            Showing {start + 1} to {Math.min(start + PAGE_SIZE, rows.length)} of {rows.length} entries
+            Showing {start + 1} to {Math.min(start + PAGE_SIZE, ctl.rows.length)} of {ctl.rows.length} entries
           </span>
           <div className="pagination-controls">
             <button

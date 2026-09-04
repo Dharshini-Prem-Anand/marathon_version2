@@ -1,6 +1,8 @@
 import { FileText } from 'lucide-react'
 import TablePagination from './TablePagination'
+import SortFilterTh from './SortFilterTh'
 import { usePagedRows } from '../hooks/usePagedRows'
+import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const statusColor = {
   Matched: 'green',
@@ -9,9 +11,17 @@ const statusColor = {
   'Not Found': 'red',
 }
 
+const COLUMNS = {
+  invoiceNumber: (row) => row.invoiceNumber,
+  vendor: (row) => row.vendor,
+  amount: (row) => row.amount,
+  status: (row) => row.status,
+}
+
 export default function PoMatchingQueueTable({ rows = [], selectedId, onSelect }) {
   const colCount = 4
-  const paging = usePagedRows(rows)
+  const ctl = useColumnSortFilter(rows, COLUMNS)
+  const paging = usePagedRows(ctl.rows)
 
   return (
     <section className="panel document-queue">
@@ -26,10 +36,10 @@ export default function PoMatchingQueueTable({ rows = [], selectedId, onSelect }
           </colgroup>
           <thead>
             <tr>
-              <th>Invoice</th>
-              <th>Vendor</th>
-              <th>Amount</th>
-              <th>Status</th>
+              <SortFilterTh columnKey="invoiceNumber" label="Invoice" ctl={ctl} />
+              <SortFilterTh columnKey="vendor" label="Vendor" ctl={ctl} />
+              <SortFilterTh columnKey="amount" label="Amount" ctl={ctl} />
+              <SortFilterTh columnKey="status" label="Status" ctl={ctl} />
             </tr>
           </thead>
           <tbody>

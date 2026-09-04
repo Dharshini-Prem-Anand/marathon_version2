@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
 import { MoreVertical } from 'lucide-react'
 import TablePagination from './TablePagination'
+import SortFilterTh from './SortFilterTh'
 import { usePagedRows } from '../hooks/usePagedRows'
+import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 function rowDate(row) {
   return row.receivedDate instanceof Date ? row.receivedDate : new Date(row.receivedDateTime)
@@ -13,13 +14,19 @@ function formatDate(row) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+const COLUMNS = {
+  date: (row) => rowDate(row),
+  time: (row) => row.time,
+  source: (row) => row.source,
+  vendor: (row) => row.vendor,
+  subject: (row) => row.subject,
+  attachments: (row) => row.attachments,
+}
+
 export default function TriageQueueTable({ rows, selectedId, onSelect, loading, error }) {
   const colCount = 7
-  const sortedRows = useMemo(
-    () => [...rows].sort((a, b) => rowDate(b).getTime() - rowDate(a).getTime()),
-    [rows]
-  )
-  const paging = usePagedRows(sortedRows)
+  const ctl = useColumnSortFilter(rows, COLUMNS, { key: 'date', dir: 'desc' })
+  const paging = usePagedRows(ctl.rows)
 
   return (
     <section className="panel triage-queue">
@@ -37,12 +44,12 @@ export default function TriageQueueTable({ rows, selectedId, onSelect, loading, 
           </colgroup>
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Source</th>
-              <th>Sender / Vendor</th>
-              <th>Subject</th>
-              <th>Attach.</th>
+              <SortFilterTh columnKey="date" label="Date" ctl={ctl} />
+              <SortFilterTh columnKey="time" label="Time" ctl={ctl} />
+              <SortFilterTh columnKey="source" label="Source" ctl={ctl} />
+              <SortFilterTh columnKey="vendor" label="Sender / Vendor" ctl={ctl} />
+              <SortFilterTh columnKey="subject" label="Subject" ctl={ctl} />
+              <SortFilterTh columnKey="attachments" label="Attach." ctl={ctl} />
               <th></th>
             </tr>
           </thead>

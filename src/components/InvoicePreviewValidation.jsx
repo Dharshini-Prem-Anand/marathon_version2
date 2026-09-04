@@ -1,11 +1,23 @@
 import { useEffect, useState } from 'react'
 import { Globe, Pencil, Check, X } from 'lucide-react'
 import { ruleForField } from '../utils/preValidationMappers'
+import SortFilterTh from './SortFilterTh'
+import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
+
+const LINE_ITEM_COLUMNS = {
+  line: (row) => row.line,
+  description: (row) => row.description,
+  quantity: (row) => row.quantity,
+  uom: (row) => row.uom,
+  unitPrice: (row) => row.unitPrice,
+  amount: (row) => row.amount,
+}
 
 export default function InvoicePreviewValidation({ invoice, rules = [], onCorrectField }) {
   const inv = invoice
   const [editingField, setEditingField] = useState(null)
   const [draftValue, setDraftValue] = useState('')
+  const ctl = useColumnSortFilter(inv?.lineItems || [], LINE_ITEM_COLUMNS)
 
   // Switching to a different invoice (or a correction landing) should never
   // leave a stale edit box open for a field that belongs to the last one.
@@ -119,16 +131,16 @@ export default function InvoicePreviewValidation({ invoice, rules = [], onCorrec
           </colgroup>
           <thead>
             <tr>
-              <th>#</th>
-              <th>Description</th>
-              <th>Qty</th>
-              <th>UOM</th>
-              <th>Price</th>
-              <th>Amount</th>
+              <SortFilterTh columnKey="line" label="#" ctl={ctl} />
+              <SortFilterTh columnKey="description" label="Description" ctl={ctl} />
+              <SortFilterTh columnKey="quantity" label="Qty" ctl={ctl} />
+              <SortFilterTh columnKey="uom" label="UOM" ctl={ctl} />
+              <SortFilterTh columnKey="unitPrice" label="Price" ctl={ctl} />
+              <SortFilterTh columnKey="amount" label="Amount" ctl={ctl} />
             </tr>
           </thead>
           <tbody>
-            {inv.lineItems.map((li) => (
+            {ctl.rows.map((li) => (
               <tr key={li.line}>
                 <td>{li.line}</td>
                 <td className="cell-ellipsis" title={li.description}>

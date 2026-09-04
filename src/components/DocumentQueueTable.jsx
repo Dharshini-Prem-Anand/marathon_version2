@@ -1,10 +1,20 @@
 import { FileText } from 'lucide-react'
 import TablePagination from './TablePagination'
+import SortFilterTh from './SortFilterTh'
 import { usePagedRows } from '../hooks/usePagedRows'
+import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
+
+const COLUMNS = {
+  fileName: (row) => row.fileName,
+  received: (row) => row.received,
+  format: (row) => row.format,
+  size: (row) => row.size,
+}
 
 export default function DocumentQueueTable({ rows = [], selectedId, onSelect, loading, error }) {
   const colCount = 4
-  const paging = usePagedRows(rows)
+  const ctl = useColumnSortFilter(rows, COLUMNS)
+  const paging = usePagedRows(ctl.rows)
 
   return (
     <section className="panel document-queue">
@@ -19,10 +29,10 @@ export default function DocumentQueueTable({ rows = [], selectedId, onSelect, lo
           </colgroup>
           <thead>
             <tr>
-              <th>Document</th>
-              <th>Date</th>
-              <th>Format</th>
-              <th>Size</th>
+              <SortFilterTh columnKey="fileName" label="Document" ctl={ctl} />
+              <SortFilterTh columnKey="received" label="Date" ctl={ctl} />
+              <SortFilterTh columnKey="format" label="Format" ctl={ctl} />
+              <SortFilterTh columnKey="size" label="Size" ctl={ctl} />
             </tr>
           </thead>
           <tbody>

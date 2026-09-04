@@ -1,6 +1,21 @@
 import { ListOrdered } from 'lucide-react'
+import SortFilterTh from './SortFilterTh'
+import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
+
+const COLUMNS = {
+  score: (row) => row.score,
+  invoice: (row) => row.invoice,
+  vendor: (row) => row.vendor,
+  amount: (row) => row.amount,
+  due: (row) => row.due,
+  exception: (row) => row.exception,
+  owner: (row) => row.owner,
+  sla: (row) => row.sla,
+  recommendation: (row) => row.recommendation,
+}
 
 export default function PriorityWorkQueue({ rows }) {
+  const ctl = useColumnSortFilter(rows, COLUMNS)
   return (
     <section className="panel priority-work-queue">
       <div className="panel-title-row">
@@ -30,26 +45,26 @@ export default function PriorityWorkQueue({ rows }) {
           </colgroup>
           <thead>
             <tr>
-              <th>Score</th>
-              <th>Invoice</th>
-              <th>Vendor</th>
-              <th>Amt</th>
-              <th>Due</th>
-              <th>Exception</th>
-              <th>Owner</th>
-              <th>SLA</th>
-              <th>Recommendation</th>
+              <SortFilterTh columnKey="score" label="Score" ctl={ctl} />
+              <SortFilterTh columnKey="invoice" label="Invoice" ctl={ctl} />
+              <SortFilterTh columnKey="vendor" label="Vendor" ctl={ctl} />
+              <SortFilterTh columnKey="amount" label="Amt" ctl={ctl} />
+              <SortFilterTh columnKey="due" label="Due" ctl={ctl} />
+              <SortFilterTh columnKey="exception" label="Exception" ctl={ctl} />
+              <SortFilterTh columnKey="owner" label="Owner" ctl={ctl} />
+              <SortFilterTh columnKey="sla" label="SLA" ctl={ctl} />
+              <SortFilterTh columnKey="recommendation" label="Recommendation" ctl={ctl} />
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 && (
+            {ctl.rows.length === 0 && (
               <tr>
                 <td colSpan={9} className="table-empty-cell">
                   No invoices match the selected filters.
                 </td>
               </tr>
             )}
-            {rows.map((row) => (
+            {ctl.rows.map((row) => (
               <tr key={row.invoice}>
                 <td>
                   <span className={`priority-score-badge priority-score-${row.scoreColor}`}>

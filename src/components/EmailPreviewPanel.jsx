@@ -1,6 +1,16 @@
 import { FileText } from 'lucide-react'
 import { categoryColor } from '../data'
 import TriageStepper from './TriageStepper'
+import SortFilterTh from './SortFilterTh'
+import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
+
+const COLUMNS = {
+  fileName: (row) => row.fileName,
+  type: (row) => row.type,
+  size: (row) => row.size,
+  category: (row) => row.category,
+  confidence: (row) => row.confidence,
+}
 
 export default function EmailPreviewPanel({
   row,
@@ -10,6 +20,8 @@ export default function EmailPreviewPanel({
   documentId,
   onNavigateToDocument,
 }) {
+  const ctl = useColumnSortFilter(preview?.attachments || [], COLUMNS)
+
   if (!row || !preview) return null
 
   return (
@@ -49,11 +61,11 @@ export default function EmailPreviewPanel({
           </colgroup>
           <thead>
             <tr>
-              <th>File Name</th>
-              <th>Type</th>
-              <th>Size</th>
-              <th>Category</th>
-              <th>Conf.</th>
+              <SortFilterTh columnKey="fileName" label="File Name" ctl={ctl} />
+              <SortFilterTh columnKey="type" label="Type" ctl={ctl} />
+              <SortFilterTh columnKey="size" label="Size" ctl={ctl} />
+              <SortFilterTh columnKey="category" label="Category" ctl={ctl} />
+              <SortFilterTh columnKey="confidence" label="Conf." ctl={ctl} />
             </tr>
           </thead>
           <tbody>
@@ -69,14 +81,14 @@ export default function EmailPreviewPanel({
                   {attachmentsError}
                 </td>
               </tr>
-            ) : preview.attachments.length === 0 ? (
+            ) : ctl.rows.length === 0 ? (
               <tr>
                 <td colSpan={5} className="table-empty-cell">
                   No attachments on this email.
                 </td>
               </tr>
             ) : (
-              preview.attachments.map((a, i) => (
+              ctl.rows.map((a, i) => (
                 <tr key={`${a.fileName}-${i}`}>
                   <td className="attachment-file cell-ellipsis" title={a.fileName}>
                     <FileText size={13} />

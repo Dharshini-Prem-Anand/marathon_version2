@@ -1,6 +1,18 @@
 import { Users } from 'lucide-react'
+import SortFilterTh from './SortFilterTh'
+import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
+
+const COLUMNS = {
+  name: (row) => row.name,
+  role: (row) => row.role,
+  utilization: (row) => row.utilization,
+  assigned: (row) => row.assigned,
+  atRisk: (row) => row.atRisk,
+  available: (row) => row.available,
+}
 
 export default function TeamCapacityWorkload({ rows }) {
+  const ctl = useColumnSortFilter(rows, COLUMNS)
   return (
     <section className="panel team-capacity">
       <div className="panel-title-row">
@@ -26,23 +38,23 @@ export default function TeamCapacityWorkload({ rows }) {
           </colgroup>
           <thead>
             <tr>
-              <th>Team Member</th>
-              <th>Role</th>
-              <th>Utilization</th>
-              <th>Assigned</th>
-              <th>At Risk</th>
-              <th>Available</th>
+              <SortFilterTh columnKey="name" label="Team Member" ctl={ctl} />
+              <SortFilterTh columnKey="role" label="Role" ctl={ctl} />
+              <SortFilterTh columnKey="utilization" label="Utilization" ctl={ctl} />
+              <SortFilterTh columnKey="assigned" label="Assigned" ctl={ctl} />
+              <SortFilterTh columnKey="atRisk" label="At Risk" ctl={ctl} />
+              <SortFilterTh columnKey="available" label="Available" ctl={ctl} />
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 && (
+            {ctl.rows.length === 0 && (
               <tr>
                 <td colSpan={6} className="table-empty-cell">
                   No team members match the selected filters.
                 </td>
               </tr>
             )}
-            {rows.map((m) => (
+            {ctl.rows.map((m) => (
               <tr key={m.name}>
                 <td>
                   <span className="team-member-cell">

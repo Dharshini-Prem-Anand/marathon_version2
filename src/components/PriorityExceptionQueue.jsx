@@ -1,7 +1,21 @@
 import { priorityColor } from '../data'
+import SortFilterTh from './SortFilterTh'
+import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
+
+const COLUMNS = {
+  priority: (row) => row.priority,
+  invoice: (row) => row.invoice,
+  vendor: (row) => row.vendor,
+  amount: (row) => row.amount,
+  issue: (row) => row.issue,
+  due: (row) => row.due,
+  owner: (row) => row.owner,
+  sla: (row) => row.sla,
+}
 
 export default function PriorityExceptionQueue({ rows = [], totalCount, selectedId, onSelect }) {
   const colCount = 8
+  const ctl = useColumnSortFilter(rows, COLUMNS)
 
   return (
     <section className="panel priority-exception-queue">
@@ -20,25 +34,25 @@ export default function PriorityExceptionQueue({ rows = [], totalCount, selected
           </colgroup>
           <thead>
             <tr>
-              <th>Priority</th>
-              <th>Invoice</th>
-              <th>Vendor</th>
-              <th>Amount</th>
-              <th>Issue</th>
-              <th>Due</th>
-              <th>Owner</th>
-              <th>SLA</th>
+              <SortFilterTh columnKey="priority" label="Priority" ctl={ctl} />
+              <SortFilterTh columnKey="invoice" label="Invoice" ctl={ctl} />
+              <SortFilterTh columnKey="vendor" label="Vendor" ctl={ctl} />
+              <SortFilterTh columnKey="amount" label="Amount" ctl={ctl} />
+              <SortFilterTh columnKey="issue" label="Issue" ctl={ctl} />
+              <SortFilterTh columnKey="due" label="Due" ctl={ctl} />
+              <SortFilterTh columnKey="owner" label="Owner" ctl={ctl} />
+              <SortFilterTh columnKey="sla" label="SLA" ctl={ctl} />
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 ? (
+            {ctl.rows.length === 0 ? (
               <tr>
                 <td colSpan={colCount} className="table-empty-cell">
                   No exceptions match the selected filters.
                 </td>
               </tr>
             ) : (
-              rows.map((row) => (
+              ctl.rows.map((row) => (
                 <tr
                   key={row.id ?? row.invoice}
                   onClick={() => onSelect?.(row.invoice)}
@@ -68,7 +82,7 @@ export default function PriorityExceptionQueue({ rows = [], totalCount, selected
           </tbody>
         </table>
       </div>
-      <button className="btn-link view-all-link">View All Exceptions ({totalCount ?? rows.length})</button>
+      <button className="btn-link view-all-link">View All Exceptions ({totalCount ?? ctl.rows.length})</button>
     </section>
   )
 }
