@@ -1737,6 +1737,16 @@ tbody tr:last-child td {
   gap: 40px;
 }
 
+.value-delivered-row-compact {
+  flex-wrap: wrap;
+  gap: 14px 20px;
+}
+
+.value-delivered-row-compact .value-delivered-item {
+  flex: 1 1 40%;
+  min-width: 110px;
+}
+
 .value-delivered-item {
   display: flex;
   align-items: center;
@@ -1773,24 +1783,18 @@ tbody tr:last-child td {
 }
 
 /* ---------- DOCUMENT AI & EXTRACTION ---------- */
-.docai-main-grid {
+.docai-top-tiles {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, 1.3fr) minmax(0, 1fr);
   gap: 12px;
   align-items: start;
 }
 
-.doc-ai-secondary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.doc-ai-secondary-grid table {
+.docai-top-tiles table {
   font-size: 11.5px;
 }
 
-.doc-ai-secondary-grid th {
+.docai-top-tiles th {
   font-size: 10px;
 }
 
@@ -2180,6 +2184,7 @@ tbody tr:last-child td {
   display: flex;
   gap: 10px;
   height: 180px;
+  min-width: 0;
 }
 
 .bar-chart-axis {
@@ -2194,11 +2199,13 @@ tbody tr:last-child td {
 .bar-chart-plot {
   position: relative;
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: flex-end;
   justify-content: space-around;
   gap: 8px;
   border-left: 1px solid var(--border);
+  overflow: hidden;
 }
 
 .bar-chart-gridline {
@@ -2228,7 +2235,8 @@ tbody tr:last-child td {
 }
 
 .bar-chart-bar {
-  width: 28px;
+  width: 60%;
+  max-width: 28px;
   background: var(--blue);
   border-radius: 3px 3px 0 0;
 }
@@ -2239,7 +2247,9 @@ tbody tr:last-child td {
 
 .bar-chart-label {
   position: absolute;
+  left: 50%;
   bottom: 0;
+  transform: translateX(-50%);
   font-size: 10px;
   color: var(--text-secondary);
   white-space: nowrap;

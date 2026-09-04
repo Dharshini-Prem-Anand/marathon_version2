@@ -34,7 +34,7 @@ export default function DocumentQueueTable({ rows = [], selectedId, onSelect, lo
           <thead>
             <tr>
               <SortFilterTh columnKey="fileName" label="Document" ctl={ctl} />
-              <SortFilterTh columnKey="received" label="Date" ctl={ctl} />
+              <SortFilterTh columnKey="received" label="Received Date" ctl={ctl} />
               <SortFilterTh columnKey="format" label="Format" ctl={ctl} />
               <SortFilterTh columnKey="size" label="Size" ctl={ctl} />
             </tr>

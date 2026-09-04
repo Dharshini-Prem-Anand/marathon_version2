@@ -4,7 +4,6 @@ import StatsRow from '../components/StatsRow'
 import DocumentQueueTable from '../components/DocumentQueueTable'
 import InvoicePreviewPanel from '../components/InvoicePreviewPanel'
 import FormatPerformanceChart from '../components/FormatPerformanceChart'
-import LineItemExtraction from '../components/LineItemExtraction'
 import PainPointTable from '../components/PainPointTable'
 import LearningModelPerformance from '../components/LearningModelPerformance'
 import { useFilters, matchesCompanyCode, matchesOption } from '../hooks/useFilters'
@@ -235,7 +234,7 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
       />
       <StatsRow stats={stats} />
 
-      <div className="docai-main-grid">
+      <div className="docai-top-tiles">
         <DocumentQueueTable
           rows={filteredQueue}
           selectedId={selectedDoc?.id ?? null}
@@ -243,31 +242,22 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
           loading={showLive && documentsLoading}
           error={showLive ? documentsError : null}
         />
-        <InvoicePreviewPanel
-          document={selectedDoc}
-          headerFields={headerFields}
-          fieldsLoading={fieldsLoading}
-          fieldsError={fieldsError}
-          pdfUrl={pdfUrl}
-          pdfLoading={pdfLoading}
-          pdfError={pdfError}
-          onNavigate={onNavigate}
-        />
-      </div>
-
-      <div className="doc-ai-secondary-grid">
         <FormatPerformanceChart />
-        <LineItemExtraction
-          columns={lineItems.columns}
-          rows={lineItems.rows}
-          loading={fieldsLoading}
-          error={fieldsError}
-          hasDocument={Boolean(selectedDoc)}
-        />
         <PainPointTable />
+        <LearningModelPerformance compact />
       </div>
 
-      <LearningModelPerformance />
+      <InvoicePreviewPanel
+        document={selectedDoc}
+        headerFields={headerFields}
+        fieldsLoading={fieldsLoading}
+        fieldsError={fieldsError}
+        lineItems={lineItems}
+        pdfUrl={pdfUrl}
+        pdfLoading={pdfLoading}
+        pdfError={pdfError}
+        onNavigate={onNavigate}
+      />
     </>
   )
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { FileText, Maximize2, X } from 'lucide-react'
 import DocAiPipelineStepper from './DocAiPipelineStepper'
+import LineItemExtraction from './LineItemExtraction'
 
 function confidenceClass(pct) {
   const n = parseInt(pct, 10)
@@ -67,6 +68,7 @@ export default function InvoicePreviewPanel({
   headerFields = [],
   fieldsLoading,
   fieldsError,
+  lineItems = { columns: [], rows: [] },
   pdfUrl,
   pdfLoading,
   pdfError,
@@ -114,6 +116,14 @@ export default function InvoicePreviewPanel({
               ))}
             </div>
           )}
+
+          <LineItemExtraction
+            columns={lineItems.columns}
+            rows={lineItems.rows}
+            loading={fieldsLoading}
+            error={fieldsError}
+            hasDocument={Boolean(document)}
+          />
         </div>
       </div>
 

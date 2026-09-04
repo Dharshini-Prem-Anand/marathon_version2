@@ -8,11 +8,11 @@ const iconMap = {
   package: Package,
 }
 
-export default function LearningModelPerformance() {
+export default function LearningModelPerformance({ compact = false }) {
   return (
     <section className="panel">
       <h2 className="panel-title">Learning &amp; Model Performance</h2>
-      <div className="value-delivered-row">
+      <div className={`value-delivered-row${compact ? ' value-delivered-row-compact' : ''}`}>
         {learningModelPerformance.map((v) => {
           const Icon = iconMap[v.icon]
           return (
