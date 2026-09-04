@@ -73,6 +73,18 @@ export function fetchMatchExplanation(invoiceNumber) {
   )
 }
 
+// Pre-Validation. PrevalidationRules is a LargeString holding a JSON array, so
+// it comes back as text and is parsed client-side (see preValidationRules.js).
+export function fetchPreValidation() {
+  return apiGet('/PreValidation').then((res) => res?.value ?? [])
+}
+
+export function fetchPreValidationByInvoice(invoiceNumber) {
+  return apiGet('/PreValidation', {
+    $filter: `InvoiceNumber eq ${odataString(invoiceNumber)}`,
+  }).then((res) => res?.value ?? [])
+}
+
 export const isPdfServiceConfigured = () => Boolean(PDF_SERVICE_BASE_URL)
 
 // The original PDF lives in DIE, not CAP — the Python service proxies it.

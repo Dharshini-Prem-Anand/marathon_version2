@@ -45,11 +45,13 @@ export default function ValidationRuleResults({ rules = [] }) {
             </tr>
           </thead>
           <tbody>
-            {ctl.rows.map((r) => {
-              const cfg = resultConfig[r.result]
+            {ctl.rows.map((r, i) => {
+              // Real rule sets repeat categories, so the category alone isn't a
+              // stable key; an unknown result must not crash the table.
+              const cfg = resultConfig[r.result] ?? resultConfig.review
               const Icon = cfg.icon
               return (
-                <tr key={r.category}>
+                <tr key={`${r.category}-${r.rule}-${i}`}>
                   <td className="cell-ellipsis" title={r.category}>
                     {r.category}
                   </td>
