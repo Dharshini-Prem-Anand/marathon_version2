@@ -1,5 +1,6 @@
 import { Users } from 'lucide-react'
 import SortFilterTh from './SortFilterTh'
+import TableSearchInput from './TableSearchInput'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const COLUMNS = {
@@ -21,6 +22,7 @@ export default function TeamCapacityWorkload({ rows }) {
           Team Capacity &amp; Workload
         </h2>
         <div className="panel-title-actions">
+          <TableSearchInput ctl={ctl} />
           <button className="btn-outline btn-sm">Bulk Assign</button>
           <button className="btn-outline btn-sm">Balance Workload</button>
         </div>

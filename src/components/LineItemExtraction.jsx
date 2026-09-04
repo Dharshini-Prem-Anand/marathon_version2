@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import SortFilterTh from './SortFilterTh'
+import TableSearchInput from './TableSearchInput'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 function confidenceClass(pct) {
@@ -25,7 +26,10 @@ export default function LineItemExtraction({ columns = [], rows = [], loading, e
 
   return (
     <section className="panel line-item-extraction">
-      <h2 className="panel-title">Line-Item Extraction</h2>
+      <div className="panel-title-row">
+        <h2 className="panel-title">Line-Item Extraction</h2>
+        <TableSearchInput ctl={ctl} />
+      </div>
       <div className="table-wrap">
         <table>
           <thead>

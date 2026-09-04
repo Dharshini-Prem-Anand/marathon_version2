@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { priorityQueue } from '../data'
 import SortFilterTh from './SortFilterTh'
+import TableSearchInput from './TableSearchInput'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const priorityColor = {
@@ -38,7 +39,10 @@ export default function PriorityQueue({ rows = priorityQueue }) {
 
   return (
     <section className="panel priority-queue">
-      <h2 className="panel-title">Priority Action Queue</h2>
+      <div className="panel-title-row">
+        <h2 className="panel-title">Priority Action Queue</h2>
+        <TableSearchInput ctl={ctl} />
+      </div>
       <div className="table-wrap">
         <table>
           <thead>

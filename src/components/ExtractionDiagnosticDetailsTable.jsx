@@ -1,4 +1,5 @@
 import SortFilterTh from './SortFilterTh'
+import TableSearchInput from './TableSearchInput'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 function confidenceColor(pct) {
@@ -24,7 +25,10 @@ export default function ExtractionDiagnosticDetailsTable({ rows }) {
 
   return (
     <section className="panel extraction-diagnostic-details">
-      <h2 className="panel-title">Extraction Diagnostic Details</h2>
+      <div className="panel-title-row">
+        <h2 className="panel-title">Extraction Diagnostic Details</h2>
+        <TableSearchInput ctl={ctl} />
+      </div>
       <div className="table-wrap">
         <table className="table-fixed">
           <colgroup>

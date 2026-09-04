@@ -1,5 +1,6 @@
 import { FileText, Clipboard, Truck, Scale, CheckCircle2, CircleDot, XCircle } from 'lucide-react'
 import SortFilterTh from './SortFilterTh'
+import TableSearchInput from './TableSearchInput'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const iconMap = {
@@ -32,7 +33,10 @@ export default function ThreeWayMatchReview({ summaryCards = [], matchLines = []
   const ctl = useColumnSortFilter(matchLines, COLUMNS)
   return (
     <section className="panel three-way-match">
-      <h2 className="panel-title">Matching review</h2>
+      <div className="panel-title-row">
+        <h2 className="panel-title">Matching review</h2>
+        <TableSearchInput ctl={ctl} placeholder="Search line items..." />
+      </div>
 
       <div className="match-summary-grid">
         {summaryCards.map((c) => {

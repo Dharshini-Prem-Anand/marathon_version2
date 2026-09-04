@@ -1,4 +1,5 @@
 import SortFilterTh from './SortFilterTh'
+import TableSearchInput from './TableSearchInput'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const COLUMNS = {
@@ -18,7 +19,10 @@ export default function MeasureDefinitionRegister({ rows }) {
     <section className="panel measure-register">
       <div className="panel-title-row">
         <h2 className="panel-title">Measure Definition Register</h2>
-        <span className="measure-count">{ctl.rows.length} measures</span>
+        <div className="panel-title-actions">
+          <TableSearchInput ctl={ctl} />
+          <span className="measure-count">{ctl.rows.length} measures</span>
+        </div>
       </div>
 
       <div className="table-wrap">

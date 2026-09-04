@@ -2,6 +2,7 @@ import { FileText } from 'lucide-react'
 import { categoryColor } from '../data'
 import TriageStepper from './TriageStepper'
 import SortFilterTh from './SortFilterTh'
+import TableSearchInput from './TableSearchInput'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const COLUMNS = {
@@ -49,7 +50,10 @@ export default function EmailPreviewPanel({
         </div>
       </div>
 
-      <h3 className="preview-subheading">Attachments</h3>
+      <div className="panel-title-row">
+        <h3 className="preview-subheading">Attachments</h3>
+        <TableSearchInput ctl={ctl} placeholder="Search attachments..." />
+      </div>
       <div className="table-wrap">
         <table className="attachments-table table-fixed">
           <colgroup>

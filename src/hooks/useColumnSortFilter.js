@@ -8,9 +8,18 @@ export function useColumnSortFilter(rows, columns, initialSort = { key: null, di
   const [sort, setSort] = useState(initialSort)
   const [filters, setFilters] = useState({})
   const [openKey, setOpenKey] = useState(null)
+  const [search, setSearch] = useState('')
 
   const processedRows = useMemo(() => {
     let out = rows
+
+    const searchTerm = search.trim().toLowerCase()
+    if (searchTerm) {
+      const accessors = Object.values(columns)
+      out = out.filter((row) =>
+        accessors.some((accessor) => String(accessor(row) ?? '').toLowerCase().includes(searchTerm))
+      )
+    }
 
     for (const [key, term] of Object.entries(filters)) {
       if (!term) continue
@@ -38,13 +47,15 @@ export function useColumnSortFilter(rows, columns, initialSort = { key: null, di
     }
 
     return out
-  }, [rows, filters, sort, columns])
+  }, [rows, filters, sort, columns, search])
 
   return {
     rows: processedRows,
     sort,
     filters,
     openKey,
+    search,
+    setSearch,
     open: (key) => setOpenKey(key),
     close: () => setOpenKey(null),
     applySort: (key, dir) => {

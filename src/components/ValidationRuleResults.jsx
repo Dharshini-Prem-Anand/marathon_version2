@@ -1,5 +1,6 @@
 import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
 import SortFilterTh from './SortFilterTh'
+import TableSearchInput from './TableSearchInput'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const resultConfig = {
@@ -21,7 +22,10 @@ export default function ValidationRuleResults({ rules = [] }) {
 
   return (
     <section className="panel pv-rules">
-      <h2 className="panel-title">Validation Rule Results</h2>
+      <div className="panel-title-row">
+        <h2 className="panel-title">Validation Rule Results</h2>
+        <TableSearchInput ctl={ctl} />
+      </div>
       <div className="table-wrap">
         <table className="table-fixed">
           <colgroup>

@@ -1,5 +1,6 @@
 import { priorityColor } from '../data'
 import SortFilterTh from './SortFilterTh'
+import TableSearchInput from './TableSearchInput'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const COLUMNS = {
@@ -19,7 +20,10 @@ export default function PriorityExceptionQueue({ rows = [], totalCount, selected
 
   return (
     <section className="panel priority-exception-queue">
-      <h2 className="panel-title">Priority Exception Queue</h2>
+      <div className="panel-title-row">
+        <h2 className="panel-title">Priority Exception Queue</h2>
+        <TableSearchInput ctl={ctl} />
+      </div>
       <div className="table-wrap">
         <table className="table-fixed">
           <colgroup>

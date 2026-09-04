@@ -1,6 +1,7 @@
 import { Bot, User } from 'lucide-react'
 import { auditTrail, totalAuditEventsLabel } from '../data'
 import SortFilterTh from './SortFilterTh'
+import TableSearchInput from './TableSearchInput'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const COLUMNS = {
@@ -18,7 +19,10 @@ export default function AuditTrailTable() {
 
   return (
     <section className="panel audit-trail">
-      <h2 className="panel-title">Audit Trail</h2>
+      <div className="panel-title-row">
+        <h2 className="panel-title">Audit Trail</h2>
+        <TableSearchInput ctl={ctl} />
+      </div>
       <div className="table-wrap">
         <table className="table-fixed">
           <colgroup>

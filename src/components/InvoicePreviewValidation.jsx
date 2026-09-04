@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Globe, Pencil, Check, X } from 'lucide-react'
 import { ruleForField } from '../utils/preValidationMappers'
 import SortFilterTh from './SortFilterTh'
+import TableSearchInput from './TableSearchInput'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const LINE_ITEM_COLUMNS = {
@@ -119,6 +120,10 @@ export default function InvoicePreviewValidation({ invoice, rules = [], onCorrec
         {renderField('grossAmount', 'Gross Amount', inv.grossAmount)}
       </div>
 
+      <div className="panel-title-row">
+        <h3 className="preview-subheading">Line Items</h3>
+        <TableSearchInput ctl={ctl} placeholder="Search line items..." />
+      </div>
       <div className="table-wrap">
         <table className="pv-line-items table-fixed">
           <colgroup>

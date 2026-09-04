@@ -1,6 +1,7 @@
 import { FileText } from 'lucide-react'
 import TablePagination from './TablePagination'
 import SortFilterTh from './SortFilterTh'
+import TableSearchInput from './TableSearchInput'
 import { usePagedRows } from '../hooks/usePagedRows'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
@@ -24,7 +25,10 @@ export default function PreValidationQueueTable({ rows = [], selectedId, onSelec
 
   return (
     <section className="panel document-queue">
-      <h2 className="panel-title">Document Pre Validation Queue</h2>
+      <div className="panel-title-row">
+        <h2 className="panel-title">Document Pre Validation Queue</h2>
+        <TableSearchInput ctl={ctl} />
+      </div>
       <div className="table-wrap">
         <table className="table-fixed">
           <colgroup>

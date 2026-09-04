@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import SortFilterTh from './SortFilterTh'
+import TableSearchInput from './TableSearchInput'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const priorityColor = { High: 'red', Medium: 'orange', Low: 'blue' }
@@ -26,7 +27,10 @@ export default function VimWorklistTable({ rows }) {
 
   return (
     <section className="panel vim-worklist">
-      <h2 className="panel-title">VIM Worklist</h2>
+      <div className="panel-title-row">
+        <h2 className="panel-title">VIM Worklist</h2>
+        <TableSearchInput ctl={ctl} />
+      </div>
       <div className="table-wrap">
         <table className="table-fixed">
           <colgroup>
