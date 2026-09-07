@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
-import { Globe, Pencil, Check, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Globe, Pencil, Check, X, Maximize2 } from 'lucide-react'
 import { ruleForField } from '../utils/preValidationMappers'
 import SortFilterTh from './SortFilterTh'
 import TableSearchInput from './TableSearchInput'
+import TableExpandModal from './TableExpandModal'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const LINE_ITEM_COLUMNS = {
@@ -14,10 +15,53 @@ const LINE_ITEM_COLUMNS = {
   amount: (row) => row.amount,
 }
 
+function LineItemsTable({ ctl }) {
+  return (
+    <div className="table-wrap">
+      <table className="pv-line-items table-fixed">
+        <colgroup>
+          <col style={{ width: '6%' }} />
+          <col style={{ width: '34%' }} />
+          <col style={{ width: '10%' }} />
+          <col style={{ width: '8%' }} />
+          <col style={{ width: '20%' }} />
+          <col style={{ width: '22%' }} />
+        </colgroup>
+        <thead>
+          <tr>
+            <SortFilterTh columnKey="line" label="#" ctl={ctl} />
+            <SortFilterTh columnKey="description" label="Description" ctl={ctl} />
+            <SortFilterTh columnKey="quantity" label="Qty" ctl={ctl} />
+            <SortFilterTh columnKey="uom" label="UOM" ctl={ctl} />
+            <SortFilterTh columnKey="unitPrice" label="Price" ctl={ctl} />
+            <SortFilterTh columnKey="amount" label="Amount" ctl={ctl} />
+          </tr>
+        </thead>
+        <tbody>
+          {ctl.rows.map((li) => (
+            <tr key={li.line}>
+              <td>{li.line}</td>
+              <td className="cell-ellipsis" title={li.description}>
+                {li.description}
+              </td>
+              <td>{li.quantity}</td>
+              <td>{li.uom}</td>
+              <td>{li.unitPrice}</td>
+              <td>{li.amount}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 export default function InvoicePreviewValidation({ invoice, rules = [], onCorrectField }) {
   const inv = invoice
   const [editingField, setEditingField] = useState(null)
   const [draftValue, setDraftValue] = useState('')
+  const [expanded, setExpanded] = useState(false)
+  const contentAnchorRef = useRef(null)
   const ctl = useColumnSortFilter(inv?.lineItems || [], LINE_ITEM_COLUMNS)
 
   // Switching to a different invoice (or a correction landing) should never
@@ -98,13 +142,10 @@ export default function InvoicePreviewValidation({ invoice, rules = [], onCorrec
     )
   }
 
-  return (
-    <section className="panel pv-preview">
-      <div className="panel-title-row">
-        <h2 className="panel-title">Selected Invoice Preview</h2>
-        <span className="badge badge-green">{inv.confidenceBadge}</span>
-      </div>
-
+  // Everything below the panel's own header — shared between the inline
+  // card and its expanded modal so the two never drift apart.
+  const renderPreviewBody = () => (
+    <>
       <div className="pv-invoice-brand">
         <Globe size={22} className="color-blue" />
         <span>{inv.vendorName}</span>
@@ -124,47 +165,40 @@ export default function InvoicePreviewValidation({ invoice, rules = [], onCorrec
         <h3 className="preview-subheading">Line Items</h3>
         <TableSearchInput ctl={ctl} placeholder="Search line items..." />
       </div>
-      <div className="table-wrap">
-        <table className="pv-line-items table-fixed">
-          <colgroup>
-            <col style={{ width: '6%' }} />
-            <col style={{ width: '34%' }} />
-            <col style={{ width: '10%' }} />
-            <col style={{ width: '8%' }} />
-            <col style={{ width: '20%' }} />
-            <col style={{ width: '22%' }} />
-          </colgroup>
-          <thead>
-            <tr>
-              <SortFilterTh columnKey="line" label="#" ctl={ctl} />
-              <SortFilterTh columnKey="description" label="Description" ctl={ctl} />
-              <SortFilterTh columnKey="quantity" label="Qty" ctl={ctl} />
-              <SortFilterTh columnKey="uom" label="UOM" ctl={ctl} />
-              <SortFilterTh columnKey="unitPrice" label="Price" ctl={ctl} />
-              <SortFilterTh columnKey="amount" label="Amount" ctl={ctl} />
-            </tr>
-          </thead>
-          <tbody>
-            {ctl.rows.map((li) => (
-              <tr key={li.line}>
-                <td>{li.line}</td>
-                <td className="cell-ellipsis" title={li.description}>
-                  {li.description}
-                </td>
-                <td>{li.quantity}</td>
-                <td>{li.uom}</td>
-                <td>{li.unitPrice}</td>
-                <td>{li.amount}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <LineItemsTable ctl={ctl} />
 
       <div className="pv-total-row">
         <span className="pv-field-label">Total Amount Due:</span>
         <span className="pv-field-box pv-total-box">{inv.totalAmountDue}</span>
       </div>
+    </>
+  )
+
+  return (
+    <section className="panel pv-preview">
+      <div className="panel-title-row">
+        <h2 className="panel-title">Selected Invoice Preview</h2>
+        <span className="badge badge-green">{inv.confidenceBadge}</span>
+        <button
+          className="icon-btn table-expand-btn"
+          onClick={() => setExpanded(true)}
+          aria-label="Expand Selected Invoice Preview"
+        >
+          <Maximize2 size={16} />
+        </button>
+      </div>
+
+      <div ref={contentAnchorRef}>{renderPreviewBody()}</div>
+
+      {expanded && (
+        <TableExpandModal
+          title="Selected Invoice Preview"
+          anchorRef={contentAnchorRef}
+          onClose={() => setExpanded(false)}
+        >
+          {renderPreviewBody()}
+        </TableExpandModal>
+      )}
     </section>
   )
 }

@@ -2257,6 +2257,74 @@ body.is-resizing-cols iframe {
   line-height: 1.5;
 }
 
+/* ---------- TABLE EXPAND MODAL ---------- */
+/* A compact popup — deliberately much smaller than the full-screen PDF
+   modal above — that just gives a cramped table's columns more room to
+   breathe. It's anchored over the source table (see .table-modal-anchored)
+   rather than centered on the page, so it reads as that table zooming up
+   in place instead of a separate dialog appearing out of nowhere. */
+.table-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 18, 25, 0.25);
+  z-index: 1000;
+}
+
+.table-modal {
+  width: min(640px, 92vw);
+  max-height: min(70vh, 620px);
+  background: var(--bg-panel);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.table-modal-anchored {
+  position: fixed;
+}
+
+.table-modal-pop {
+  animation: table-modal-zoom-in 0.16s ease-out;
+}
+
+@keyframes table-modal-zoom-in {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.table-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.table-modal-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.table-modal-body {
+  padding: 14px;
+  overflow: auto;
+}
+
+.table-expand-btn {
+  flex-shrink: 0;
+}
+
 /* Line-item cells stack the extracted value above its confidence badge. */
 .line-item-extraction td .line-item-value {
   display: block;

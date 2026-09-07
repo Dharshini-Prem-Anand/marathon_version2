@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PanelRightOpen } from 'lucide-react'
 import TopBar from './components/TopBar'
 import Sidebar from './components/Sidebar'
@@ -35,6 +35,7 @@ import {
   kpiRoleSelector,
   apAssistantGuidance,
   exceptionsPersonaSelector,
+  sidebarItems,
 } from './data'
 import './App.css'
 
@@ -54,12 +55,13 @@ const guidanceByPage = {
   'Intelligent AP Agent': apAssistantGuidance,
 }
 
-const topbarTitleByPage = {
-  'PO & Line Matching': 'PO & Line Matching | VIM Processing',
-  'Exceptions & Recommendations': 'Exceptions & Recommendations',
-  'Operational Analytics': 'Analytics | Value Realization & Scenario Planning',
-  'Audit & Reconciliation': 'Audit & Reconciliation | Work Assignment',
-}
+// Every menu item gets "Intelligent Invoice Automation / <page name>" in the
+// topbar, except Dashboard, which keeps the plain default title below.
+const topbarTitleByPage = Object.fromEntries(
+  sidebarItems
+    .filter((item) => item.label !== 'Dashboard')
+    .map((item) => [item.label, `Intelligent Invoice Automation / ${item.label}`])
+)
 const defaultTopbarTitle = 'Accounts Payable | Intelligent Invoice Automation'
 
 const personaSelectorByPage = {
@@ -81,12 +83,32 @@ const pageFooterPlatformByPage = {
 const hidePageFooterFor = new Set(['Operational Analytics', 'KPI, Metrics & Value', 'Intelligent AP Agent'])
 const showKpiFooterFor = new Set(['KPI, Metrics & Value'])
 
+const ACTIVE_ITEM_STORAGE_KEY = 'ap-active-menu-item'
+const GUIDANCE_AUTO_COLLAPSE_MS = 5000
+
 function App() {
-  const [activeItem, setActiveItem] = useState('Dashboard')
+  const [activeItem, setActiveItem] = useState(
+    () => localStorage.getItem(ACTIVE_ITEM_STORAGE_KEY) || 'Dashboard'
+  )
   const [showGuidance, setShowGuidance] = useState(true)
   const [collapsed, setCollapsed] = useState(false)
   const [pendingDocumentId, setPendingDocumentId] = useState(null)
   const [pendingExceptionId, setPendingExceptionId] = useState(null)
+
+  // Refreshing the page should land back on whichever menu item the user
+  // was on, not reset to Dashboard.
+  useEffect(() => {
+    localStorage.setItem(ACTIVE_ITEM_STORAGE_KEY, activeItem)
+  }, [activeItem])
+
+  // The guidance panel opens by default on every page load, but should only
+  // stay open briefly — auto-collapse it once, then leave it collapsed as
+  // the user moves between menu items (an empty dep array means this timer
+  // is set up once per app load, not once per page navigation).
+  useEffect(() => {
+    const timer = setTimeout(() => setShowGuidance(false), GUIDANCE_AUTO_COLLAPSE_MS)
+    return () => clearTimeout(timer)
+  }, [])
 
   const guidance = guidanceByPage[activeItem]
 
