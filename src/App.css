@@ -1799,6 +1799,13 @@ tbody tr:last-child td {
 }
 
 /* Document Extraction Queue */
+/* Force a min-width wider than the (narrow) tile so columns keep a readable
+   size instead of being crushed by table-layout:fixed's 100% — the table
+   overflows .table-wrap instead, which scrolls horizontally. */
+.document-queue .table-fixed {
+  min-width: 480px;
+}
+
 .document-queue th {
   white-space: nowrap;
   font-size: 10px;

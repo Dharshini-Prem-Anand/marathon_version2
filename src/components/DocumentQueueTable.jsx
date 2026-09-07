@@ -8,12 +8,13 @@ import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 const COLUMNS = {
   fileName: (row) => row.fileName,
   received: (row) => row.received,
+  category: (row) => row.category,
   format: (row) => row.format,
   size: (row) => row.size,
 }
 
 export default function DocumentQueueTable({ rows = [], selectedId, onSelect, loading, error }) {
-  const colCount = 4
+  const colCount = 5
   const ctl = useColumnSortFilter(rows, COLUMNS)
   const paging = usePagedRows(ctl.rows)
 
@@ -26,15 +27,17 @@ export default function DocumentQueueTable({ rows = [], selectedId, onSelect, lo
       <div className="table-wrap">
         <table className="table-fixed">
           <colgroup>
-            <col style={{ width: '44%' }} />
-            <col style={{ width: '26%' }} />
-            <col style={{ width: '16%' }} />
-            <col style={{ width: '14%' }} />
+            <col style={{ width: '34%' }} />
+            <col style={{ width: '22%' }} />
+            <col style={{ width: '18%' }} />
+            <col style={{ width: '13%' }} />
+            <col style={{ width: '13%' }} />
           </colgroup>
           <thead>
             <tr>
               <SortFilterTh columnKey="fileName" label="Document" ctl={ctl} />
               <SortFilterTh columnKey="received" label="Received Date" ctl={ctl} />
+              <SortFilterTh columnKey="category" label="Doc Type" ctl={ctl} />
               <SortFilterTh columnKey="format" label="Format" ctl={ctl} />
               <SortFilterTh columnKey="size" label="Size" ctl={ctl} />
             </tr>
@@ -70,6 +73,9 @@ export default function DocumentQueueTable({ rows = [], selectedId, onSelect, lo
                     <span className="cell-ellipsis">{row.fileName}</span>
                   </td>
                   <td className="cell-ellipsis">{row.received}</td>
+                  <td className="cell-ellipsis" title={row.category}>
+                    {row.category}
+                  </td>
                   <td>{row.format}</td>
                   <td>{row.size}</td>
                 </tr>
