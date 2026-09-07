@@ -27,7 +27,7 @@ export default function LineItemExtraction({ columns = [], rows = [], loading, e
   return (
     <section className="panel line-item-extraction">
       <div className="panel-title-row">
-        <h2 className="panel-title">Line-Item Extraction</h2>
+        <h2 className="panel-title">Line-Items</h2>
         <TableSearchInput ctl={ctl} />
       </div>
       <div className="table-wrap">

@@ -1871,11 +1871,62 @@ tbody tr:last-child td {
 }
 
 /* Invoice Preview & Extracted Fields */
-.invoice-preview-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap: 20px;
-  align-items: start;
+.invoice-preview-split {
+  display: flex;
+  align-items: stretch;
+}
+
+.invoice-preview-pane {
+  flex-grow: 0;
+  flex-shrink: 0;
+  min-width: 220px;
+  max-width: 82%;
+}
+
+.invoice-preview-fields-col {
+  flex: 1;
+  min-width: 220px;
+}
+
+.invoice-preview-splitter {
+  flex-shrink: 0;
+  width: 14px;
+  margin: 0 -3px;
+  cursor: col-resize;
+  position: relative;
+  z-index: 1;
+}
+
+.invoice-preview-splitter::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  transform: translateX(-50%);
+  background: var(--border);
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+
+.invoice-preview-splitter:hover::after {
+  background: var(--blue);
+}
+
+body.is-resizing-cols {
+  cursor: col-resize;
+  user-select: none;
+}
+
+body.is-resizing-cols .invoice-preview-splitter::after {
+  background: var(--blue);
+}
+
+/* An iframe has its own document and otherwise swallows mousemove while
+   dragging a splitter over it, making the drag feel laggy/jumpy. */
+body.is-resizing-cols iframe {
+  pointer-events: none;
 }
 
 .invoice-mock {
@@ -2004,7 +2055,7 @@ tbody tr:last-child td {
 .extracted-fields {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 20px;
 }
 
 .extracted-fields table {
@@ -2018,9 +2069,9 @@ tbody tr:last-child td {
    side-by-side label width squeezed the value down to a few px and forced
    digit-by-digit wrapping) and the value box never truncates.  */
 .docai-field-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
 }
 
 .docai-field-row {
@@ -2084,7 +2135,7 @@ tbody tr:last-child td {
 
 .pdf-pane {
   width: 100%;
-  min-height: 420px;
+  min-height: 540px;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: #fbfbfc;
@@ -2123,6 +2174,40 @@ tbody tr:last-child td {
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.pdf-modal-split {
+  width: min(1680px, 96vw);
+  height: min(94vh, 1400px);
+}
+
+.pdf-modal-split-body {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  min-height: 0;
+  padding: 14px;
+  gap: 0;
+}
+
+.pdf-modal-pdf-pane {
+  flex-grow: 0;
+  flex-shrink: 0;
+  min-width: 280px;
+  max-width: 82%;
+}
+
+.pdf-modal-pdf-pane .pdf-modal-frame {
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.pdf-modal-fields-pane {
+  flex: 1;
+  min-width: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .pdf-modal-header {

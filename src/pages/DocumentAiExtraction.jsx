@@ -3,6 +3,7 @@ import FilterBar from '../components/FilterBar'
 import StatsRow from '../components/StatsRow'
 import DocumentQueueTable from '../components/DocumentQueueTable'
 import InvoicePreviewPanel from '../components/InvoicePreviewPanel'
+import DocAiPipelineStepper from '../components/DocAiPipelineStepper'
 import FormatPerformanceChart from '../components/FormatPerformanceChart'
 import PainPointTable from '../components/PainPointTable'
 import LearningModelPerformance from '../components/LearningModelPerformance'
@@ -256,8 +257,19 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
         pdfUrl={pdfUrl}
         pdfLoading={pdfLoading}
         pdfError={pdfError}
-        onNavigate={onNavigate}
       />
+
+      {selectedDoc && (
+        <section className="panel">
+          <h2 className="panel-title">Processing Pipeline</h2>
+          <DocAiPipelineStepper
+            document={selectedDoc}
+            headerFields={headerFields}
+            fieldsError={fieldsError}
+            onNavigate={onNavigate}
+          />
+        </section>
+      )}
     </>
   )
 }
