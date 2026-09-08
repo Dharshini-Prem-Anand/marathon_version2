@@ -59,6 +59,17 @@ const MOCK_DATA = (() => {
   return { ids, records }
 })()
 
+// record.invoice.invoiceDate is a formatted display string ("May 18, 2025")
+// for both live rows (buildPreValidationRecords) and seed rows — parseable
+// back into a real Date for chronological sorting. Unparseable/missing dates
+// sort last regardless of direction (handled by useColumnSortFilter's null check).
+function invoiceDateValue(record) {
+  const raw = record?.invoice?.invoiceDate
+  if (!raw) return null
+  const d = new Date(raw)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
 // Document Type / Confidence Band / Validation Status all come off the
 // invoice's own rule set, so the filters work the same for live and seed rows.
 function deriveAttributes(record, rules) {
@@ -121,16 +132,27 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
     )
   }, [ids, records])
 
-  const filteredQueue = ids.filter((id) => {
-    const attrs = deriveAttributes(records[id], rulesFor(id))
-    return (
-      matchesCompanyCode(applied['Company Code']) &&
-      matchesOption(applied['Vendor'], attrs.vendor) &&
-      matchesOption(applied['Document Type'], attrs.documentType) &&
-      matchesOption(applied['Confidence Band'], attrs.confidenceBand) &&
-      matchesOption(applied['Validation Status'], attrs.validationStatus)
-    )
-  })
+  const filteredQueue = ids
+    .filter((id) => {
+      const attrs = deriveAttributes(records[id], rulesFor(id))
+      return (
+        matchesCompanyCode(applied['Company Code']) &&
+        matchesOption(applied['Vendor'], attrs.vendor) &&
+        matchesOption(applied['Document Type'], attrs.documentType) &&
+        matchesOption(applied['Confidence Band'], attrs.confidenceBand) &&
+        matchesOption(applied['Validation Status'], attrs.validationStatus)
+      )
+    })
+    // Latest invoice first, by actual invoice date — same ordering the queue
+    // table defaults to, so the auto-selected invoice matches its top row.
+    .sort((a, b) => {
+      const dateA = invoiceDateValue(records[a])
+      const dateB = invoiceDateValue(records[b])
+      if (!dateA && !dateB) return 0
+      if (!dateA) return 1
+      if (!dateB) return -1
+      return dateB.getTime() - dateA.getTime()
+    })
 
   const selectedRecordId = filteredQueue.includes(selectedId) ? selectedId : filteredQueue[0] ?? null
   const selectedRecord = selectedRecordId ? records[selectedRecordId] : null
@@ -156,6 +178,7 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
       vendor: attrs.vendor,
       amount: record.amount,
       status: attrs.validationStatus,
+      date: invoiceDateValue(record),
     }
   })
 

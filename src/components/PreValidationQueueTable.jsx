@@ -16,11 +16,15 @@ const COLUMNS = {
   vendor: (row) => row.vendor,
   amount: (row) => row.amount,
   status: (row) => row.status,
+  // Not shown as its own column, but drives the default "latest first" sort
+  // below — a real Date, parsed upstream from the invoice's actual date.
+  date: (row) => row.date,
 }
 
 export default function PreValidationQueueTable({ rows = [], selectedId, onSelect }) {
   const colCount = 4
-  const ctl = useColumnSortFilter(rows, COLUMNS)
+  // Default to the latest invoice (by actual invoice date) on top.
+  const ctl = useColumnSortFilter(rows, COLUMNS, { key: 'date', dir: 'desc' })
   const paging = usePagedRows(ctl.rows)
 
   return (
