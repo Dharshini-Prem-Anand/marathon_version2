@@ -14,6 +14,7 @@ import {
   fetchDocumentQueue,
   fetchExtractedHeaderFields,
   fetchExtractedLineItemFields,
+  reprocessExtraction,
 } from '../api/invoiceAutomation'
 import { groupLineItemFields, mapDocumentRow, mapHeaderField, formatReceived } from '../utils/documentMappers'
 import { dateRangeBounds, isTodayRange, mockRowDate } from '../utils/dateRange'
@@ -39,6 +40,9 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
   const [pdfUrl, setPdfUrl] = useState(null)
   const [pdfLoading, setPdfLoading] = useState(false)
   const [pdfError, setPdfError] = useState(null)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [rerunning, setRerunning] = useState(false)
+  const [rerunError, setRerunError] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -62,7 +66,7 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [refreshKey])
 
   // A deep link from Email & Attachment Triage arrives as a documentId; once
   // that document has loaded into the queue, select it and clear the pending flag.
@@ -152,7 +156,7 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [docKey])
+  }, [docKey, refreshKey])
 
   // The PDF bytes come from the Python service, fetched as a blob so the
   // Authorization header can be attached, then bound to the iframe.
@@ -222,6 +226,21 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
     setAppliedDateRange(dateRange)
   }
 
+  // Re-runs extraction, then reloads the queue AND the field tables. The
+  // queue reload matters as much as the fields: the service issues a new DIE
+  // job and deletes the old one, so the row's DieDocumentID goes stale and the
+  // PDF pane would point at a job that no longer exists.
+  const handleRerun = () => {
+    if (!dieDocumentId) return
+    setRerunning(true)
+    setRerunError(null)
+
+    reprocessExtraction(dieDocumentId)
+      .then(() => setRefreshKey((k) => k + 1))
+      .catch((err) => setRerunError(`Could not re-run extraction — ${err.message}`))
+      .finally(() => setRerunning(false))
+  }
+
   return (
     <>
       <FilterBar
@@ -257,6 +276,10 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
         pdfUrl={pdfUrl}
         pdfLoading={pdfLoading}
         pdfError={pdfError}
+        onRerun={handleRerun}
+        rerunning={rerunning}
+        rerunError={rerunError}
+        canRerun={Boolean(dieDocumentId)}
       />
 
       {selectedDoc && (

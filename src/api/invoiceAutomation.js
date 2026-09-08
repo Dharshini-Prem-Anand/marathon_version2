@@ -85,6 +85,43 @@ export function fetchPreValidationByInvoice(invoiceNumber) {
   }).then((res) => res?.value ?? [])
 }
 
+// Document Information Extraction schema (header + line-item field
+// definitions) behind the Schema Configuration dialog. Python service, not CAP.
+export function fetchDieSchema() {
+  if (!PYTHON_SERVICE_BASE_URL) {
+    return Promise.reject(new Error('Python service URL is not configured'))
+  }
+  return apiGetJson(`${PYTHON_SERVICE_BASE_URL}/getDieSchema`)
+}
+
+// Adds or edits schema fields. Only the field being saved is sent — the
+// arrays are a delta, not the full schema, so an unrelated field can't be
+// dropped by a save. Shape:
+//   { schema_id, version, header_fields: [...], line_item_fields: [...] }
+// where each entry is { name, description, data_type, setup_type }.
+export function updateDieSchemaFields(payload) {
+  if (!PYTHON_SERVICE_BASE_URL) {
+    return Promise.reject(new Error('Python service URL is not configured'))
+  }
+  return apiPostJson(`${PYTHON_SERVICE_BASE_URL}/updateDieSchemaFields`, payload)
+}
+
+// Re-runs Document AI extraction for an already-processed document.
+//
+// DIE jobs are one-shot, so the service creates a NEW job and deletes the old
+// one on success — meaning the document's DieDocumentID changes. Callers must
+// reload the document queue afterwards, not just the extracted fields, or the
+// PDF pane will keep pointing at a deleted job.
+export function reprocessExtraction(dieDocumentId) {
+  if (!PYTHON_SERVICE_BASE_URL) {
+    return Promise.reject(new Error('Python service URL is not configured'))
+  }
+  return apiPostJson(
+    `${PYTHON_SERVICE_BASE_URL}/reprocessExtraction?document_id=${encodeURIComponent(dieDocumentId)}`,
+    {}
+  )
+}
+
 export const isPdfServiceConfigured = () => Boolean(PDF_SERVICE_BASE_URL)
 
 // The original PDF lives in DIE, not CAP — the Python service proxies it.

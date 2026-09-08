@@ -4912,3 +4912,286 @@ body.is-resizing-cols iframe {
   width: auto;
   object-fit: contain;
 }
+/* ---------- SCHEMA CONFIGURATION DIALOG ---------- */
+/* Gear sits on the panel heading row, opposite the title. */
+.panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.panel-title-row .panel-title {
+  margin-bottom: 0;
+}
+
+.panel-title-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.rerun-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  padding: 4px 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.rerun-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rerun-spin {
+  animation: rerun-spin 0.9s linear infinite;
+}
+
+@keyframes rerun-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.rerun-error {
+  margin: 6px 0 0;
+  padding: 7px 10px;
+  border-radius: 5px;
+  background: var(--red-light);
+  color: var(--red);
+  font-size: 12px;
+}
+
+.schema-config-btn {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.schema-config-btn:hover {
+  color: var(--blue);
+}
+
+.schema-modal {
+  width: min(1180px, 94vw);
+  height: min(760px, 88vh);
+  display: flex;
+  flex-direction: column;
+}
+
+.schema-modal-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.schema-modal-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.schema-modal-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* Same two-pane split as the document / extracted-fields view. */
+.schema-modal-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding: 12px;
+  gap: 0;
+}
+
+.schema-list-pane {
+  min-width: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.schema-form-pane {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding-left: 12px;
+}
+
+.schema-section + .schema-section {
+  margin-top: 18px;
+}
+
+.schema-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.schema-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Solid blue, text only — no leading icon. */
+.schema-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 18px;
+  font-size: 12px;
+  width: auto;
+}
+
+/* Edit pencil reads as the row's affordance, so it takes the accent colour. */
+.schema-edit-btn {
+  color: var(--blue);
+}
+
+.schema-edit-btn:hover {
+  color: var(--blue);
+  opacity: 0.75;
+}
+
+/* Schema state: coloured dot + word, green when active, red otherwise. */
+.schema-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.schema-state-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.schema-state-active {
+  color: var(--green);
+}
+
+.schema-state-active .schema-state-dot {
+  background: var(--green);
+}
+
+.schema-state-inactive {
+  color: var(--red);
+}
+
+.schema-state-inactive .schema-state-dot {
+  background: var(--red);
+}
+
+.schema-field-table tbody tr.selected {
+  background: var(--blue-light);
+}
+
+.schema-field-name {
+  color: var(--blue);
+  font-weight: 600;
+}
+
+/* ---- Add / Edit form pane ---- */
+.schema-form-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.schema-form-subtitle {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.schema-form-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.schema-form-actions .btn-primary,
+.schema-form-actions .btn-outline {
+  width: auto;
+  padding: 4px 14px;
+  font-size: 12px;
+}
+
+.schema-form-actions .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.schema-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+}
+
+.schema-field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.schema-required {
+  color: var(--red);
+}
+
+.schema-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg-panel);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.schema-input:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+.schema-textarea {
+  resize: vertical;
+  min-height: 68px;
+}
+
+.schema-form-note {
+  margin: 4px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.schema-form-error {
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  border-radius: 5px;
+  background: var(--red-light);
+  color: var(--red);
+  font-size: 12px;
+  line-height: 1.5;
+}
