@@ -23,7 +23,6 @@ function mapField(field, section) {
   return {
     section,
     name: field?.name ?? '',
-    label: field?.label ?? '',
     description: field?.description ?? '',
     dataType: field?.formattingType ?? 'string',
     setupType: field?.setup?.type ?? 'auto',
@@ -50,7 +49,7 @@ export function mapDieSchema(payload) {
 
 // A blank row for the Add pane.
 export function emptyField(section) {
-  return { section, name: '', label: '', description: '', dataType: 'string', setupType: 'auto', raw: null }
+  return { section, name: '', description: '', dataType: 'string', setupType: 'auto', raw: null }
 }
 
 // Builds the /updateDieSchemaFields body.

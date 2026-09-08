@@ -32,16 +32,14 @@ function FieldTable({ title, fields, onAdd, onEdit, editingField }) {
       <div className="table-wrap">
         <table className="table-fixed schema-field-table">
           <colgroup>
-            <col style={{ width: '24%' }} />
-            <col style={{ width: '16%' }} />
-            <col style={{ width: '38%' }} />
-            <col style={{ width: '14%' }} />
-            <col style={{ width: '8%' }} />
+            <col style={{ width: '26%' }} />
+            <col style={{ width: '50%' }} />
+            <col style={{ width: '15%' }} />
+            <col style={{ width: '9%' }} />
           </colgroup>
           <thead>
             <tr>
               <th>Name</th>
-              <th>Label</th>
               <th>Description</th>
               <th>Data Type</th>
               <th>Action</th>
@@ -50,7 +48,7 @@ function FieldTable({ title, fields, onAdd, onEdit, editingField }) {
           <tbody>
             {fields.length === 0 ? (
               <tr>
-                <td colSpan={5} className="table-empty-cell">
+                <td colSpan={4} className="table-empty-cell">
                   No fields defined.
                 </td>
               </tr>
@@ -62,9 +60,6 @@ function FieldTable({ title, fields, onAdd, onEdit, editingField }) {
                 >
                   <td className="cell-ellipsis schema-field-name" title={f.name}>
                     {f.name}
-                  </td>
-                  <td className="cell-ellipsis" title={f.label}>
-                    {f.label || '—'}
                   </td>
                   <td className="cell-ellipsis" title={f.description}>
                     {f.description || '—'}
