@@ -15,25 +15,37 @@ const LINE_ITEM_COLUMNS = {
   amount: (row) => row.amount,
 }
 
-function LineItemsTable({ ctl }) {
+// `compact` shows just Description and Amount — Qty, UOM and Price only
+// appear in the expanded modal, where there's room to read them.
+function LineItemsTable({ ctl, compact }) {
   return (
     <div className="table-wrap">
       <table className="pv-line-items table-fixed">
         <colgroup>
-          <col style={{ width: '6%' }} />
-          <col style={{ width: '34%' }} />
-          <col style={{ width: '10%' }} />
-          <col style={{ width: '8%' }} />
-          <col style={{ width: '20%' }} />
-          <col style={{ width: '22%' }} />
+          {compact ? (
+            <>
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '52%' }} />
+              <col style={{ width: '40%' }} />
+            </>
+          ) : (
+            <>
+              <col style={{ width: '6%' }} />
+              <col style={{ width: '34%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '22%' }} />
+            </>
+          )}
         </colgroup>
         <thead>
           <tr>
             <SortFilterTh columnKey="line" label="#" ctl={ctl} />
             <SortFilterTh columnKey="description" label="Description" ctl={ctl} />
-            <SortFilterTh columnKey="quantity" label="Qty" ctl={ctl} />
-            <SortFilterTh columnKey="uom" label="UOM" ctl={ctl} />
-            <SortFilterTh columnKey="unitPrice" label="Price" ctl={ctl} />
+            {!compact && <SortFilterTh columnKey="quantity" label="Qty" ctl={ctl} />}
+            {!compact && <SortFilterTh columnKey="uom" label="UOM" ctl={ctl} />}
+            {!compact && <SortFilterTh columnKey="unitPrice" label="Price" ctl={ctl} />}
             <SortFilterTh columnKey="amount" label="Amount" ctl={ctl} />
           </tr>
         </thead>
@@ -41,13 +53,13 @@ function LineItemsTable({ ctl }) {
           {ctl.rows.map((li) => (
             <tr key={li.line}>
               <td>{li.line}</td>
-              <td className="cell-ellipsis" title={li.description}>
-                {li.description}
+              <td title={li.description}>
+                <span className={compact ? 'cell-clamp-2' : 'cell-ellipsis'}>{li.description}</span>
               </td>
-              <td>{li.quantity}</td>
-              <td>{li.uom}</td>
-              <td>{li.unitPrice}</td>
-              <td>{li.amount}</td>
+              {!compact && <td>{li.quantity}</td>}
+              {!compact && <td>{li.uom}</td>}
+              {!compact && <td>{li.unitPrice}</td>}
+              <td>{compact ? <span className="cell-clamp-2">{li.amount}</span> : li.amount}</td>
             </tr>
           ))}
         </tbody>
@@ -129,11 +141,17 @@ export default function InvoicePreviewValidation({ invoice, rules = [], onCorrec
           </span>
         ) : (
           <>
-            <span className="pv-field-box">{value}</span>
+            <span className="pv-field-box" title={value}>
+              {value}
+            </span>
             {needsCorrection && (
-              <button className="pv-correct-field-btn" onClick={() => startEdit(fieldKey, value)}>
+              <button
+                className="pv-correct-field-btn"
+                onClick={() => startEdit(fieldKey, value)}
+                title="Correct field"
+                aria-label={`Correct ${label}`}
+              >
                 <Pencil size={12} />
-                Correct Field
               </button>
             )}
           </>
@@ -143,8 +161,9 @@ export default function InvoicePreviewValidation({ invoice, rules = [], onCorrec
   }
 
   // Everything below the panel's own header — shared between the inline
-  // card and its expanded modal so the two never drift apart.
-  const renderPreviewBody = () => (
+  // card and its expanded modal so the two never drift apart. Only the line
+  // items table itself switches to its full column set when expanded.
+  const renderPreviewBody = (compact) => (
     <>
       <div className="pv-invoice-brand">
         <Globe size={22} className="color-blue" />
@@ -165,7 +184,7 @@ export default function InvoicePreviewValidation({ invoice, rules = [], onCorrec
         <h3 className="preview-subheading">Line Items</h3>
         <TableSearchInput ctl={ctl} placeholder="Search line items..." />
       </div>
-      <LineItemsTable ctl={ctl} />
+      <LineItemsTable ctl={ctl} compact={compact} />
 
       <div className="pv-total-row">
         <span className="pv-field-label">Total Amount Due:</span>
@@ -188,7 +207,7 @@ export default function InvoicePreviewValidation({ invoice, rules = [], onCorrec
         </button>
       </div>
 
-      <div ref={contentAnchorRef}>{renderPreviewBody()}</div>
+      <div ref={contentAnchorRef}>{renderPreviewBody(true)}</div>
 
       {expanded && (
         <TableExpandModal
@@ -196,7 +215,7 @@ export default function InvoicePreviewValidation({ invoice, rules = [], onCorrec
           anchorRef={contentAnchorRef}
           onClose={() => setExpanded(false)}
         >
-          {renderPreviewBody()}
+          {renderPreviewBody(false)}
         </TableExpandModal>
       )}
     </section>

@@ -2,19 +2,30 @@ import { useRef, useState } from 'react'
 import { Maximize2 } from 'lucide-react'
 import TableExpandModal from './TableExpandModal'
 
-function VendorPayeeTable({ vendorPayee }) {
+// `compact` shows just Type and Confidence — Name / ID only appears in the
+// expanded modal, where there's room to read it.
+function VendorPayeeTable({ vendorPayee, compact }) {
   return (
     <div className="table-wrap">
       <table className="table-fixed">
         <colgroup>
-          <col style={{ width: '30%' }} />
-          <col style={{ width: '46%' }} />
-          <col style={{ width: '24%' }} />
+          {compact ? (
+            <>
+              <col style={{ width: '60%' }} />
+              <col style={{ width: '40%' }} />
+            </>
+          ) : (
+            <>
+              <col style={{ width: '30%' }} />
+              <col style={{ width: '46%' }} />
+              <col style={{ width: '24%' }} />
+            </>
+          )}
         </colgroup>
         <thead>
           <tr>
             <th>Type</th>
-            <th>Name / ID</th>
+            {!compact && <th>Name / ID</th>}
             <th>Confidence</th>
           </tr>
         </thead>
@@ -24,9 +35,11 @@ function VendorPayeeTable({ vendorPayee }) {
               <td className="cell-ellipsis" title={v.type}>
                 {v.type}
               </td>
-              <td className={`cell-ellipsis${v.nameColor ? ` color-${v.nameColor}` : ''}`} title={v.name}>
-                {v.name}
-              </td>
+              {!compact && (
+                <td className={`cell-ellipsis${v.nameColor ? ` color-${v.nameColor}` : ''}`} title={v.name}>
+                  {v.name}
+                </td>
+              )}
               <td>
                 <span className={`badge badge-${v.badgeColor}`}>{v.confidence}</span>
               </td>
@@ -56,7 +69,7 @@ export default function VendorPayeePanel({ vendorPayee = [] }) {
           </button>
         </div>
         <div ref={tableAnchorRef}>
-          <VendorPayeeTable vendorPayee={vendorPayee} />
+          <VendorPayeeTable vendorPayee={vendorPayee} compact />
         </div>
 
         {expanded && (

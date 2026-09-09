@@ -19,24 +19,35 @@ const COLUMNS = {
   issue: (row) => row.issue,
 }
 
-function RulesTable({ ctl }) {
+// `compact` shows just Rule and Result — the rest (Category, Confidence,
+// Issue) only appears in the expanded modal, where there's room to read it.
+function RulesTable({ ctl, compact }) {
   return (
     <div className="table-wrap">
       <table className="table-fixed">
         <colgroup>
-          <col style={{ width: '22%' }} />
-          <col style={{ width: '28%' }} />
-          <col style={{ width: '16%' }} />
-          <col style={{ width: '14%' }} />
-          <col style={{ width: '20%' }} />
+          {compact ? (
+            <>
+              <col style={{ width: '60%' }} />
+              <col style={{ width: '40%' }} />
+            </>
+          ) : (
+            <>
+              <col style={{ width: '22%' }} />
+              <col style={{ width: '28%' }} />
+              <col style={{ width: '16%' }} />
+              <col style={{ width: '14%' }} />
+              <col style={{ width: '20%' }} />
+            </>
+          )}
         </colgroup>
         <thead>
           <tr>
-            <SortFilterTh columnKey="category" label="Category" ctl={ctl} />
+            {!compact && <SortFilterTh columnKey="category" label="Category" ctl={ctl} />}
             <SortFilterTh columnKey="rule" label="Rule" ctl={ctl} />
             <SortFilterTh columnKey="result" label="Result" ctl={ctl} />
-            <SortFilterTh columnKey="confidence" label="Conf." ctl={ctl} />
-            <SortFilterTh columnKey="issue" label="Issue" ctl={ctl} />
+            {!compact && <SortFilterTh columnKey="confidence" label="Conf." ctl={ctl} />}
+            {!compact && <SortFilterTh columnKey="issue" label="Issue" ctl={ctl} />}
           </tr>
         </thead>
         <tbody>
@@ -47,9 +58,11 @@ function RulesTable({ ctl }) {
             const Icon = cfg.icon
             return (
               <tr key={`${r.category}-${r.rule}-${i}`}>
-                <td className="cell-ellipsis" title={r.category}>
-                  {r.category}
-                </td>
+                {!compact && (
+                  <td className="cell-ellipsis" title={r.category}>
+                    {r.category}
+                  </td>
+                )}
                 <td className="cell-ellipsis" title={r.rule}>
                   {r.rule}
                 </td>
@@ -59,10 +72,12 @@ function RulesTable({ ctl }) {
                     {cfg.label}
                   </span>
                 </td>
-                <td>{r.confidence}</td>
-                <td className={`cell-ellipsis${r.issue !== '—' ? ' color-red' : ''}`} title={r.issue}>
-                  {r.issue}
-                </td>
+                {!compact && <td>{r.confidence}</td>}
+                {!compact && (
+                  <td className={`cell-ellipsis${r.issue !== '—' ? ' color-red' : ''}`} title={r.issue}>
+                    {r.issue}
+                  </td>
+                )}
               </tr>
             )
           })}
@@ -91,7 +106,7 @@ export default function ValidationRuleResults({ rules = [] }) {
         </button>
       </div>
       <div ref={tableAnchorRef}>
-        <RulesTable ctl={ctl} />
+        <RulesTable ctl={ctl} compact />
       </div>
 
       {expanded && (

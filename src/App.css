@@ -1285,6 +1285,22 @@ tbody tr:last-child td {
   white-space: nowrap;
 }
 
+/* Two-line clamp for a value that should stay visible in a compact row
+   instead of truncating to a single ellipsized line. Apply to an inner
+   <span>, never directly to a <td> — `display: -webkit-box` there strips
+   the cell's `display: table-cell` and corrupts the column layout. Higher
+   specificity than `.table-fixed td` so it isn't overridden. */
+.table-fixed .cell-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: unset;
+  white-space: normal;
+  word-break: break-word;
+  min-width: 0;
+}
+
 .attachment-file.cell-ellipsis {
   display: flex;
   align-items: center;
@@ -2541,6 +2557,14 @@ body.is-resizing-cols iframe {
   font-size: 12px;
 }
 
+.pv-field-row {
+  /* Safety net for extreme cases — normally the value box shrinks (see
+     .pv-field-box below) to keep the correct-field icon on the same line
+     as the label instead of wrapping under it. */
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
 .pv-field-label {
   color: var(--text-secondary);
   min-width: 100px;
@@ -2554,20 +2578,27 @@ body.is-resizing-cols iframe {
   color: var(--text-primary);
   background: var(--bg-app);
   flex: 1;
+  /* A narrow panel doesn't have room for both a full value and the
+     correct-field icon button on one line — let the value shrink and
+     truncate (with a title tooltip for the full text) so the button
+     never has to. min-width: 0 overrides the flex-item default of `auto`,
+     which would otherwise floor this at the value's own content width. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pv-correct-field-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
   border: 1px solid var(--orange);
   color: var(--orange);
   background: var(--orange-light);
   border-radius: 6px;
-  padding: 5px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
   flex-shrink: 0;
 }
 
