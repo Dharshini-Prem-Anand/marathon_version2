@@ -18,8 +18,8 @@ import {
   preValidationQueue,
   preValidationRecords,
 } from '../data'
-import { FIELD_RULE_CATEGORY } from '../utils/preValidationMappers'
-import { fetchPreValidation } from '../api/invoiceAutomation'
+import { FIELD_RULE_CATEGORY, buildInvoicePreviewFromExtractedFields } from '../utils/preValidationMappers'
+import { fetchPreValidation, fetchExtractedHeaderFieldsByInvoice } from '../api/invoiceAutomation'
 import { buildPreValidationRecords } from '../utils/preValidationRules'
 import { isTodayRange } from '../utils/dateRange'
 
@@ -158,6 +158,42 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
   const selectedRecord = selectedRecordId ? records[selectedRecordId] : null
   const selectedRules = selectedRecordId ? rulesFor(selectedRecordId) : []
 
+  // The Selected Invoice Preview panel prefers the DIE-extracted header/line
+  // fields over /PreValidation's own (which for some invoices carries no
+  // vendor name and no line-item description or UOM — see
+  // preValidationRules.js). Falls back to selectedRecord.invoice untouched
+  // when this fetch fails or the invoice has no extracted fields yet.
+  const [extractedPreview, setExtractedPreview] = useState(null)
+
+  useEffect(() => {
+    if (!showLive || !selectedRecordId) {
+      setExtractedPreview(null)
+      return
+    }
+
+    let cancelled = false
+    fetchExtractedHeaderFieldsByInvoice(selectedRecordId)
+      .then((rows) => {
+        if (cancelled) return
+        setExtractedPreview(buildInvoicePreviewFromExtractedFields(rows, selectedRecordId))
+      })
+      .catch(() => {
+        if (cancelled) return
+        setExtractedPreview(null)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [showLive, selectedRecordId])
+
+  // confidenceBadge isn't part of the extracted-fields shape (it comes from
+  // validation rules, already on selectedRecord.invoice) — spreading
+  // extractedPreview on top only overrides the fields it actually carries.
+  const previewInvoice = selectedRecord
+    ? { ...selectedRecord.invoice, ...(extractedPreview ?? {}) }
+    : null
+
   const handleCorrectField = (fieldKey) => {
     const category = FIELD_RULE_CATEGORY[fieldKey]
     if (!category || !selectedRecordId) return
@@ -221,7 +257,7 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
             <div className="pv-detail-col">
               <div className="pv-main-grid">
                 <InvoicePreviewValidation
-                  invoice={selectedRecord.invoice}
+                  invoice={previewInvoice}
                   rules={selectedRules}
                   onCorrectField={(fieldKey) => handleCorrectField(fieldKey)}
                 />
@@ -230,7 +266,7 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
               </div>
 
               <PreValidationPipelinePanel
-                invoice={selectedRecord.invoice}
+                invoice={previewInvoice}
                 validationRuleResults={selectedRules}
                 invoiceId={selectedRecordId}
                 onNavigate={onNavigate}

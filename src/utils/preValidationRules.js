@@ -1,3 +1,5 @@
+import { vendorName } from './vendorNames'
+
 // Parses PreValidation.PrevalidationRules into rows for the Validation Rule
 // Results table.
 //
@@ -109,6 +111,14 @@ function formatDate(value) {
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 }
 
+// PreValidation.VendorName is often blank, leaving only the vendor code
+// (VendorNo, e.g. "USSU-FFC10"). Resolve that through the same code->name
+// lookup the other live pages (PO & Line Matching, Exceptions) already use,
+// instead of showing the raw code.
+function resolveVendorName(head) {
+  return head.VendorName || vendorName(head.VendorNo)
+}
+
 // The badge mirrors the mock wording so the existing styling still applies.
 function confidenceBadge(rules) {
   const values = rules
@@ -131,7 +141,7 @@ function buildVendorPayee(head) {
   return [
     {
       type: 'Proposed Vendor',
-      name: head.VendorName || head.VendorNo || '—',
+      name: resolveVendorName(head),
       confidence: '—',
       badgeColor: 'gray',
     },
@@ -187,7 +197,7 @@ export function buildPreValidationRecords(rows) {
     ids.push(invoiceNumber)
     records[invoiceNumber] = {
       invoice: {
-        vendorName: (head.VendorName || head.VendorNo || '—').toUpperCase(),
+        vendorName: resolveVendorName(head).toUpperCase(),
         confidenceBadge: confidenceBadge(validationRuleResults),
         invoiceNumber,
         invoiceDate: formatDate(head.CreationDate),
@@ -208,7 +218,7 @@ export function buildPreValidationRecords(rows) {
       vendorPayeeValidation: buildVendorPayee(head),
       documentClassification: DEFAULT_DOCUMENT_CLASSIFICATION,
       // Kept for the queue row.
-      vendor: head.VendorName || head.VendorNo || '—',
+      vendor: resolveVendorName(head),
       amount: money(gross, currency),
     }
   }

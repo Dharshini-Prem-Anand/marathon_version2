@@ -85,6 +85,19 @@ export function fetchPreValidationByInvoice(invoiceNumber) {
   }).then((res) => res?.value ?? [])
 }
 
+// DIE-extracted header + line-item fields for one invoice — richer than
+// /PreValidation (which carries no vendor name or line-item description for
+// some invoices). Used to fill in the Selected Invoice Preview panel.
+// Every returned header row carries the same expanded lineItemFields array
+// (the association is keyed by MessageID+FileName, not by field), so callers
+// only need lineItemFields off any one row.
+export function fetchExtractedHeaderFieldsByInvoice(invoiceNumber) {
+  return apiGet('/ExtractedHeaderFields', {
+    $filter: `InvoiceNumber eq ${odataString(invoiceNumber)}`,
+    $expand: 'lineItemFields',
+  }).then((res) => res?.value ?? [])
+}
+
 // Document Information Extraction schema (header + line-item field
 // definitions) behind the Schema Configuration dialog. Python service, not CAP.
 export function fetchDieSchema() {
