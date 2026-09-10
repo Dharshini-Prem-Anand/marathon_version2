@@ -4,11 +4,15 @@ import StatsRow from '../components/StatsRow'
 import TriageQueueTable from '../components/TriageQueueTable'
 import EmailPreviewPanel from '../components/EmailPreviewPanel'
 import IntakeByChannel from '../components/IntakeByChannel'
-import PreprocessingMetrics from '../components/PreprocessingMetrics'
 import ValueDeliveredRow from '../components/ValueDeliveredRow'
-import { useFilters, matchesOption } from '../hooks/useFilters'
+import { useFilters, matchesOption, withLiveOptions } from '../hooks/useFilters'
 import { emailTriageFilters, emailTriageStats } from '../data'
-import { fetchEmailAttachments, fetchEmailMetadata, fetchTriageKpis } from '../api/invoiceAutomation'
+import {
+  fetchAttachmentCategories,
+  fetchEmailAttachments,
+  fetchEmailMetadata,
+  fetchTriageKpis,
+} from '../api/invoiceAutomation'
 import { ALL_DATES_RANGE, dateRangeFilter } from '../utils/dateRange'
 import {
   KPI_UNAVAILABLE,
@@ -17,15 +21,22 @@ import {
   mergeKpiStats,
   TRIAGE_KPI_FIELDS,
 } from '../utils/kpiTiles'
+import { mapIntakeByChannel, mapValueDelivered } from '../utils/kpiPanels'
 import { buildRemotePreview, mapEmailAttachment, mapEmailMetadata } from '../utils/triageMappers'
 
 const DEFAULT_DATE_RANGE = 'Today'
 
-// Category / Priority aren't known for live rows until their attachments load,
-// so those filters only constrain rows that actually carry the value.
+// Priority isn't set on any live row, so that filter only constrains rows that
+// actually carry a value.
 function matchesWhenKnown(selected, actual) {
   if (actual == null) return true
   return matchesOption(selected, actual)
+}
+
+// An email matches a category when any of its attachments was classified as
+// that category — an email can carry several documents.
+function matchesCategory(selected, categories) {
+  return selected === 'All' || (categories ?? []).includes(selected)
 }
 
 export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onPendingSelectConsumed }) {
@@ -37,6 +48,11 @@ export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onP
   const [emails, setEmails] = useState([])
   const [emailsLoading, setEmailsLoading] = useState(true)
   const [emailsError, setEmailsError] = useState(null)
+
+  // MessageID -> the categories its attachments were classified as. Fetched
+  // for the whole queue because the Proposed Category filter has to offer
+  // every value in the data, not just the selected email's.
+  const [categoriesByEmail, setCategoriesByEmail] = useState({})
 
   const [attachments, setAttachments] = useState([])
   const [attachmentsLoading, setAttachmentsLoading] = useState(false)
@@ -66,6 +82,46 @@ export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onP
     }
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+
+    fetchAttachmentCategories()
+      .then((records) => {
+        if (cancelled) return
+        const byEmail = {}
+        for (const record of records) {
+          const category = String(record.ProposedCategory ?? '').trim()
+          if (!category) continue
+          const list = (byEmail[record.MessageID] ??= [])
+          if (!list.includes(category)) list.push(category)
+        }
+        setCategoriesByEmail(byEmail)
+      })
+      // The queue itself doesn't depend on this; a failure just leaves the
+      // Proposed Category filter with nothing to offer.
+      .catch(() => {
+        if (!cancelled) setCategoriesByEmail({})
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Every dropdown is filled from what came back: Source, Sender and Priority
+  // from the emails, Proposed Category from their attachments' classification.
+  // Priority is null on every live row today, so that one offers just 'All'.
+  const filterFields = useMemo(
+    () =>
+      withLiveOptions(emailTriageFilters, {
+        Source: emails.map((row) => row.source),
+        Sender: emails.map((row) => row.vendor),
+        'Proposed Category': Object.values(categoriesByEmail),
+        Priority: emails.map((row) => row.priority),
+      }),
+    [emails, categoriesByEmail]
+  )
+
   // Every row is live; the Date Range filter narrows them by when the email
   // was received rather than switching the page to a different data source.
   const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
@@ -75,8 +131,8 @@ export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onP
       (row) =>
         inDateRange(row.receivedDateTime) &&
         matchesOption(applied['Source'], row.source) &&
-        matchesWhenKnown(applied['Sender / Vendor'], row.vendor) &&
-        matchesWhenKnown(applied['Proposed Category'], row.category) &&
+        matchesWhenKnown(applied['Sender'], row.vendor) &&
+        matchesCategory(applied['Proposed Category'], categoriesByEmail[row.id]) &&
         matchesWhenKnown(applied['Priority'], row.priority)
     )
     // Newest first — the order the queue table opens in, so the email
@@ -182,6 +238,11 @@ export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onP
     }
   }, [appliedDateRange])
 
+  // The same response carries the three panels below the queue.
+  const intake = useMemo(() => mapIntakeByChannel(kpis), [kpis])
+  const valueDelivered = useMemo(() => mapValueDelivered(kpis), [kpis])
+  const rangeSubtitle = kpiRangeSubtitle(appliedDateRange)
+
   const stats = useMemo(() => {
     const merged = mergeKpiStats(emailTriageStats, TRIAGE_KPI_FIELDS, kpis)
     // This tile counts arrivals over the applied window, so it says which
@@ -199,7 +260,7 @@ export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onP
   return (
     <>
       <FilterBar
-        fields={emailTriageFilters}
+        fields={filterFields}
         values={draft}
         onFieldChange={setField}
         dateRangeLabel={DEFAULT_DATE_RANGE}
@@ -230,11 +291,10 @@ export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onP
       </div>
 
       <div className="triage-secondary-grid">
-        <IntakeByChannel />
-        <PreprocessingMetrics />
+        <IntakeByChannel channels={intake?.channels} total={intake?.total} rangeLabel={rangeSubtitle} />
+        <ValueDeliveredRow items={valueDelivered} rangeLabel={rangeSubtitle} />
       </div>
 
-      <ValueDeliveredRow />
     </>
   )
 }

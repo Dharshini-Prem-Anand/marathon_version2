@@ -67,6 +67,25 @@ export const EXCEPTION_KPI_FIELDS = {
   'Average Resolution': { key: 'averageResolutionHours', format: (n) => `${decimal(n)} Hours` },
 }
 
+export const DOCUMENT_AI_KPI_FIELDS = {
+  'Overall Extraction Accuracy': { key: 'overallExtractionAccuracy', format: percent },
+  'Header Accuracy': { key: 'headerAccuracy', format: percent },
+  'Line Accuracy': { key: 'lineAccuracy', format: percent },
+  // A share of documents, not a count — the tile's "< 80% confidence" subtitle
+  // still reads correctly against a percentage.
+  'Low Confidence': { key: 'lowConfidencePercent', format: percent },
+  'Average Extraction Time': { key: 'averageExtractionTimeMinutes', format: (n) => `${decimal(n)} Min` },
+}
+
+export const MATCHING_KPI_FIELDS = {
+  'PO Invoices': { key: 'poInvoices', format: count },
+  'Fully Matched': { key: 'fullyMatched', format: count },
+  'Partial Match': { key: 'partialMatch', format: count },
+  'PO Not Found': { key: 'poNotFound', format: count },
+  'Tolerance Exceptions': { key: 'toleranceExceptions', format: count },
+  'Ready for VIM': { key: 'readyForVIM', format: count },
+}
+
 // Shown while the call is in flight. The tile definitions carry sample numbers
 // for the tiles that still have no live source, and those must never appear on
 // a bound tile — a number the service hasn't returned yet reads as real data.
@@ -99,6 +118,28 @@ export function mergeKpiStats(stats, fields, payload) {
     if (pending) return { ...stat, value: LOADING }
     const value = Number(payload[field.key])
     if (!Number.isFinite(value)) return { ...stat, value: NO_VALUE }
+    return { ...stat, value: field.format(value) }
+  })
+}
+
+// What a tile with no local source should read while the service hasn't
+// answered ('…') or can't ('—').
+export function kpiPlaceholder(payload) {
+  return payload == null || typeof payload !== 'object' ? LOADING : NO_VALUE
+}
+
+// Like mergeKpiStats, but for a row whose tiles were already computed from
+// loaded rows: a field the response doesn't carry leaves the computed value
+// alone instead of blanking it. Used where the endpoint isn't deployed yet and
+// the page can still count for itself.
+export function overlayKpiStats(stats, fields, payload) {
+  if (!payload || typeof payload !== 'object') return stats
+
+  return stats.map((stat) => {
+    const field = fields[stat.label]
+    if (!field) return stat
+    const value = Number(payload[field.key])
+    if (!Number.isFinite(value)) return stat
     return { ...stat, value: field.format(value) }
   })
 }

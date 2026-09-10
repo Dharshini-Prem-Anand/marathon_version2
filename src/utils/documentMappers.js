@@ -81,8 +81,12 @@ export function mapDocumentRow(record) {
     classificationReason: record.ClassificationReason || null,
     classificationStatus: record.ClassificationStatus || null,
     objectStoreKey: record.ObjectStoreKey || null,
-    vendor: email.SenderName || email.SenderAddress || '—',
+    // Who mailed the document in — not the vendor. The vendor is the name the
+    // extraction read off the invoice, which the page fills in from
+    // ExtractedHeaderFields; a document nobody has extracted yet has none.
+    senderName: email.SenderName || email.SenderAddress || '—',
     senderAddress: email.SenderAddress || null,
+    vendor: null,
     subject: email.Subject || '(no subject)',
     received: formatReceived(email.ReceivedDateTime),
     receivedDateTime: email.ReceivedDateTime ?? null,

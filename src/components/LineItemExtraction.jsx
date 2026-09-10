@@ -3,19 +3,12 @@ import SortFilterTh from './SortFilterTh'
 import TableSearchInput from './TableSearchInput'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 import { useColumnOrder } from '../hooks/useColumnOrder'
+import { confidenceTone } from '../utils/confidenceBands'
 
 // Item is the grouping key rather than an extracted field, but as far as the
 // table is concerned it's a column like any other — sortable, filterable and
 // draggable along with the rest.
 const ITEM_COLUMN = { key: 'itemNumber', label: 'Item' }
-
-function confidenceClass(pct) {
-  const n = parseInt(pct, 10)
-  if (Number.isNaN(n)) return 'gray'
-  if (n >= 95) return 'green'
-  if (n >= 85) return 'blue'
-  return 'orange'
-}
 
 export default function LineItemExtraction({ columns = [], rows = [], loading, error, hasDocument }) {
   const allColumns = useMemo(() => [ITEM_COLUMN, ...columns], [columns])
@@ -91,7 +84,7 @@ export default function LineItemExtraction({ columns = [], rows = [], loading, e
                         <span className="line-item-value" title={cell.value}>
                           {cell.value}
                         </span>
-                        <span className={`confidence-badge confidence-${confidenceClass(cell.confidence)}`}>
+                        <span className={`confidence-badge confidence-${confidenceTone(cell.confidence)}`}>
                           {cell.confidence}
                         </span>
                       </td>

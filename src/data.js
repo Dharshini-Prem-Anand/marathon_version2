@@ -232,15 +232,15 @@ export const dashboardGuidance = {
   footerButton: 'View KPI Definitions',
 }
 
+// Options are filled from the loaded rows (see withLiveOptions); 'All' on its
+// own is what a dropdown shows until the service answers, and all it shows for
+// a column the service returns empty. The same goes for every other page whose
+// data is live.
 export const emailTriageFilters = [
-  { label: 'Source', value: 'All', options: ['All', 'Email', 'Vendor Portal', 'EDI 810', 'Upload'] },
-  { label: 'Sender / Vendor', value: 'All', options: vendorOptions },
-  {
-    label: 'Proposed Category',
-    value: 'All',
-    options: ['All', 'Invoice', 'Credit Memo', 'Statement', 'Inquiry', 'Duplicate', 'Non-Invoice'],
-  },
-  { label: 'Priority', value: 'All', options: ['All', 'High', 'Medium', 'Low'] },
+  { label: 'Source', value: 'All', options: ['All'] },
+  { label: 'Sender', value: 'All', options: ['All'] },
+  { label: 'Proposed Category', value: 'All', options: ['All'] },
+  { label: 'Priority', value: 'All', options: ['All'] },
 ]
 
 export const emailTriageStats = [
@@ -645,11 +645,13 @@ export const emailTriageGuidance = {
   footerButton: 'View KPI Definitions',
 }
 
+// Company Code keeps its list: no entity carries one, so there is nothing live
+// to fill it from. Vendor is the extracted vendor name, not the email sender.
 export const documentAiFilters = [
   { label: 'Company Code', value: 'All', options: companyCodeOptions },
-  { label: 'Invoice Channel', value: 'All', options: invoiceChannelOptions },
-  { label: 'Vendor', value: 'All', options: vendorOptions },
-  { label: 'Status', value: 'All', options: ['All', 'Processed', 'Pending', 'Failed'] },
+  { label: 'Invoice Channel', value: 'All', options: ['All'] },
+  { label: 'Vendor', value: 'All', options: ['All'] },
+  { label: 'Status', value: 'All', options: ['All'] },
 ]
 
 export const documentAiStats = [
@@ -1159,14 +1161,10 @@ export const documentAiGuidance = {
 
 export const preValidationFilters = [
   { label: 'Company Code', value: '1000 - Marathon US', options: companyCodeOptions },
-  { label: 'Vendor', value: 'All', options: vendorOptions },
-  { label: 'Document Type', value: 'All', options: ['All', 'Invoice', 'Credit Memo', 'Debit Memo'] },
-  {
-    label: 'Confidence Band',
-    value: 'All',
-    options: ['All', 'High (90-100%)', 'Medium (70-89%)', 'Low (< 70%)'],
-  },
-  { label: 'Validation Status', value: 'All', options: ['All', 'Passed', 'Review', 'Failed'] },
+  { label: 'Vendor', value: 'All', options: ['All'] },
+  { label: 'Document Type', value: 'All', options: ['All'] },
+  { label: 'Confidence Band', value: 'All', options: ['All'] },
+  { label: 'Validation Status', value: 'All', options: ['All'] },
 ]
 
 export const preValidationStats = [
@@ -1463,9 +1461,9 @@ export const preValidationGuidance = {
 
 export const poMatchingFilters = [
   { label: 'Company Code', value: 'All', options: companyCodeOptions },
-  { label: 'Invoice Channel', value: 'All', options: invoiceChannelOptions },
-  { label: 'Vendor', value: 'All', options: vendorOptions },
-  { label: 'Status', value: 'All', options: ['All', 'Matched', 'Partial Match', 'Mismatch', 'Not Found'] },
+  { label: 'Invoice Channel', value: 'All', options: ['All'] },
+  { label: 'Vendor', value: 'All', options: ['All'] },
+  { label: 'Status', value: 'All', options: ['All'] },
 ]
 
 export const poMatchingContext = {
@@ -1744,8 +1742,8 @@ export const poMatchingGuidance = {
 
 export const exceptionsFilters = [
   { label: 'Company Code', value: '1000 - Marathon US', options: companyCodeOptions },
-  { label: 'Vendor', value: 'All', options: vendorOptions },
-  { label: 'Priority', value: 'All', options: ['All', 'High', 'Medium', 'Low'] },
+  { label: 'Vendor', value: 'All', options: ['All'] },
+  { label: 'Priority', value: 'All', options: ['All'] },
 ]
 
 export const exceptionsStats = [

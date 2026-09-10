@@ -1800,7 +1800,8 @@ tbody tr:last-child td {
 /* ---------- VALUE DELIVERED ROW ---------- */
 .value-delivered-row {
   display: flex;
-  gap: 40px;
+  flex-wrap: wrap;
+  gap: 16px 40px;
 }
 
 .value-delivered-row-compact {
@@ -1849,16 +1850,19 @@ tbody tr:last-child td {
 }
 
 /* ---------- DOCUMENT AI & EXTRACTION ---------- */
+/* Document Extraction Queue beside the format chart, which is opened from the
+   Overall Extraction Accuracy tile. */
 .docai-top-tiles {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, 1.3fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   gap: 12px;
   align-items: start;
 }
 
-/* Format performance chart hidden — the queue table takes its place. */
+/* Format performance chart hidden — the queue table takes the whole row and
+   shows every column inline. */
 .docai-top-tiles.docai-top-tiles-no-chart {
-  grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.3fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .docai-top-tiles table {
@@ -2191,21 +2195,92 @@ body.is-resizing-cols iframe {
   font-weight: 700;
 }
 
+/* Badge colours follow the bands in utils/confidenceBands.js, which the
+   legend above the fields is printed from. */
 .confidence-green {
   background: var(--green-light);
   color: var(--green);
-}
-.confidence-blue {
-  background: var(--blue-light);
-  color: var(--blue);
 }
 .confidence-orange {
   background: var(--orange-light);
   color: var(--orange);
 }
+.confidence-red {
+  background: var(--red-light);
+  color: var(--red);
+}
 .confidence-gray {
   background: #f2f4f7;
   color: var(--text-secondary);
+}
+
+/* Key for those badges: one solid chip per band, so a colour on a field can
+   be read back to the range it means. */
+.confidence-legend {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.confidence-legend-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.confidence-legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.confidence-legend-chip:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 1px;
+}
+
+.confidence-legend-red {
+  background: var(--red);
+}
+.confidence-legend-orange {
+  background: var(--orange);
+}
+.confidence-legend-green {
+  background: var(--green);
+}
+
+/* Hangs below the legend without moving the fields underneath. Anchored to
+   the legend's left edge so it can never widen the scrolling fields pane. */
+.confidence-legend-tip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--text-primary);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.45;
+  font-weight: 400;
+  box-shadow: 0 6px 16px rgb(16 24 40 / 22%);
+}
+
+.confidence-legend-tip strong {
+  font-size: 11px;
+  font-weight: 700;
 }
 
 /* ---------- PDF PREVIEW PANE ---------- */
@@ -2447,6 +2522,17 @@ body.is-resizing-cols iframe {
   overflow: hidden;
 }
 
+/* The bars and the axis labels both leave 22px at the bottom for the format
+   labels, so the grid has to as well — otherwise the lines are measured
+   against the taller plot and every bar reads a few percent high. */
+.bar-chart-grid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 22px;
+}
+
 .bar-chart-gridline {
   position: absolute;
   left: 0;
@@ -2482,6 +2568,19 @@ body.is-resizing-cols iframe {
 
 .bar-chart-bar-warn {
   background: var(--orange);
+}
+
+/* Stands in for the plot while the KPI call is in flight, or when it came
+   back with no formats — same height, so opening the panel doesn't make the
+   row jump once the numbers land. */
+.bar-chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 180px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
 }
 
 .bar-chart-label {

@@ -20,10 +20,27 @@ export function fetchEmailAttachments(messageId) {
   }).then((res) => res?.value ?? [])
 }
 
+// Proposed categories for the triage filter. Only the classification is
+// needed, not the whole attachment with its parent email, so the row is cut
+// down to the key plus that one column.
+export function fetchAttachmentCategories() {
+  return apiGet('/EmailAttachments', { $select: 'MessageID,ProposedCategory' }).then((res) => res?.value ?? [])
+}
+
 // Document AI queue: one row per received document, with its parent email
 // joined in so the sender / subject / received time come back in one call.
 export function fetchDocumentQueue() {
   return apiGet('/EmailAttachments', { $expand: 'email' }).then((res) => res?.value ?? [])
+}
+
+// Pipeline run record for one email. Narrowed to the MessageID because the
+// same file name arrives under different emails with different outcomes; the
+// rows are then matched to the document by file name / invoice number (see
+// utils/pipelineStatus).
+export function fetchPipelineStatus(messageId) {
+  return apiGet('/PipelineStatus', {
+    $filter: `MessageID eq ${odataString(messageId)}`,
+  }).then((res) => res?.value ?? [])
 }
 
 export function fetchExtractedHeaderFields(messageId, fileName) {
@@ -140,6 +157,20 @@ function kpiQuery(path, { dateFrom, dateTo }) {
 
 export function fetchTriageKpis(range) {
   return kpiQuery('/triageKpis', range)
+}
+
+// Document AI & Extraction's tile row and its Format Performance chart.
+export function fetchExtractionKpis(range) {
+  return kpiQuery('/getExtractionKpis', range)
+}
+
+// PO & Line Matching's tile row and its Matching Performance panel.
+//
+// NOT deployed yet: the service's route list has no matching-KPI route in
+// either casing, so this 404s today and the page falls back to the counts it
+// computes from the loaded invoices. Confirm the spelling when it ships.
+export function fetchMatchingKpis(range) {
+  return kpiQuery('/matchingkpis', range)
 }
 
 export function fetchPreValidationKpis(range) {

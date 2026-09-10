@@ -51,7 +51,7 @@ export default function TriageQueueTable({ rows, selectedId, onSelect, loading, 
               <SortFilterTh columnKey="date" label="Date" ctl={ctl} />
               <SortFilterTh columnKey="time" label="Time" ctl={ctl} />
               <SortFilterTh columnKey="source" label="Source" ctl={ctl} />
-              <SortFilterTh columnKey="vendor" label="Sender / Vendor" ctl={ctl} />
+              <SortFilterTh columnKey="vendor" label="Sender" ctl={ctl} />
               <SortFilterTh columnKey="subject" label="Subject" ctl={ctl} />
               <SortFilterTh columnKey="attachments" label="Attach." ctl={ctl} />
               <th></th>

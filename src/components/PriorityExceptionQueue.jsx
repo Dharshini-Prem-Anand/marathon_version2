@@ -1,7 +1,9 @@
 import { priorityColor } from '../data'
 import SortFilterTh from './SortFilterTh'
 import TableSearchInput from './TableSearchInput'
+import TablePagination from './TablePagination'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
+import { usePagedRows } from '../hooks/usePagedRows'
 
 const COLUMNS = {
   priority: (row) => row.priority,
@@ -14,9 +16,15 @@ const COLUMNS = {
   sla: (row) => row.sla,
 }
 
-export default function PriorityExceptionQueue({ rows = [], totalCount, selectedId, onSelect }) {
+// A page's worth of rows, rather than every exception: the queue sits beside
+// the AI Review panel and a hundred rows stretched the whole page. Ten fills
+// roughly the height of that panel; the rest are a page away.
+const PAGE_SIZE = 10
+
+export default function PriorityExceptionQueue({ rows = [], selectedId, onSelect }) {
   const colCount = 8
   const ctl = useColumnSortFilter(rows, COLUMNS)
+  const paging = usePagedRows(ctl.rows, PAGE_SIZE)
 
   return (
     <section className="panel priority-exception-queue">
@@ -49,14 +57,14 @@ export default function PriorityExceptionQueue({ rows = [], totalCount, selected
             </tr>
           </thead>
           <tbody>
-            {ctl.rows.length === 0 ? (
+            {paging.visibleRows.length === 0 ? (
               <tr>
                 <td colSpan={colCount} className="table-empty-cell">
                   No exceptions match the selected filters.
                 </td>
               </tr>
             ) : (
-              ctl.rows.map((row) => (
+              paging.visibleRows.map((row) => (
                 <tr
                   key={row.id ?? row.invoice}
                   onClick={() => onSelect?.(row.invoice)}
@@ -86,7 +94,12 @@ export default function PriorityExceptionQueue({ rows = [], totalCount, selected
           </tbody>
         </table>
       </div>
-      <button className="btn-link view-all-link">View All Exceptions ({totalCount ?? ctl.rows.length})</button>
+      {paging.showViewAll && (
+        <button className="btn-link view-all-link" onClick={paging.expand}>
+          View All Exceptions ({paging.total})
+        </button>
+      )}
+      {paging.expanded && <TablePagination paging={paging} />}
     </section>
   )
 }

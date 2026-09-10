@@ -51,9 +51,12 @@ export function buildExceptionRows(exceptions, vendorNamesByInvoice = {}) {
         issue: row.Reason || '—',
         issueColor: null,
         due: formatDue(row.Due),
-        // Raw, unformatted — what the Date Range filter reads. Due is the only
-        // date this entity carries.
+        // Raw, unformatted. Due is the exception's own deadline — often in the
+        // future, so it can't drive a backward-looking Date Range.
         dueDate: row.Due ?? null,
+        // When the pipeline raised the exception (managed aspect) — what the
+        // Date Range filter reads.
+        createdAt: row.createdAt ?? null,
         dueColor: color,
         owner: row.Owner || '—',
         sla: Number.isFinite(sla) ? `${sla}h` : '—',

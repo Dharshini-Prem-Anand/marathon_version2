@@ -6,13 +6,14 @@ import AiReviewRecommendation from '../components/AiReviewRecommendation'
 import WhatIfResolutionScenarios from '../components/WhatIfResolutionScenarios'
 import InfoBanner from '../components/InfoBanner'
 import FilterEmptyState from '../components/FilterEmptyState'
-import { useFilters, matchesCompanyCode, matchesOption } from '../hooks/useFilters'
-import { exceptionsFilters, exceptionsStats, scenarioInfoText } from '../data'
+import { useFilters, matchesCompanyCode, matchesOption, withLiveOptions } from '../hooks/useFilters'
+import { exceptionsFilters, exceptionsStats } from '../data'
 import { fetchExceptionKpis, fetchExceptions, fetchVendorNameFields } from '../api/invoiceAutomation'
 import { buildExceptionRows } from '../utils/exceptionsMappers'
 import { buildVendorNamesByInvoice } from '../utils/vendorNames'
 import { ALL_DATES_RANGE, dateRangeFilter } from '../utils/dateRange'
 import { EXCEPTION_KPI_FIELDS, KPI_UNAVAILABLE, kpiDateParams, mergeKpiStats } from '../utils/kpiTiles'
+import { mapRecommendationSummary, mapWhatIfScenarios } from '../utils/kpiPanels'
 
 const DEFAULT_DATE_RANGE = 'Today'
 
@@ -72,18 +73,30 @@ export default function ExceptionsRecommendations({ pendingSelectId, onPendingSe
 
   const stats = useMemo(() => mergeKpiStats(exceptionsStats, EXCEPTION_KPI_FIELDS, kpis), [kpis])
 
-  // Every row is live; the Date Range filter narrows them by due date — the
-  // only date the Exceptions entity carries — rather than switching the page
-  // to a different data source.
-  const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
-  const sourceRows = useMemo(() => liveRows.filter((row) => inDateRange(row.dueDate)), [liveRows, inDateRange])
+  // The same response also carries the What-If table and the summary under it.
+  const scenarios = useMemo(() => mapWhatIfScenarios(kpis), [kpis])
+  const scenarioSummary = useMemo(() => mapRecommendationSummary(kpis), [kpis])
 
-  // Vendor options come from the loaded data — a static dropdown would offer
-  // names that can never match a live exception.
-  const filterFields = useMemo(() => {
-    const vendors = [...new Set(sourceRows.map((row) => row.vendor))].sort()
-    return exceptionsFilters.map((f) => (f.label === 'Vendor' ? { ...f, options: ['All', ...vendors] } : f))
-  }, [sourceRows])
+  // Every row is live; the Date Range filter narrows them by when the pipeline
+  // raised the exception (managed createdAt). Due is the deadline, often in the
+  // future, so filtering on it hid today's exceptions from every past window.
+  const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
+  const sourceRows = useMemo(
+    () => liveRows.filter((row) => inDateRange(row.createdAt ?? row.dueDate)),
+    [liveRows, inDateRange]
+  )
+
+  // Dropdowns are filled from the loaded rows, not the current window, so
+  // changing the Date Range doesn't make a selected value disappear. Company
+  // Code is left alone: Exceptions carries no company code.
+  const filterFields = useMemo(
+    () =>
+      withLiveOptions(exceptionsFilters, {
+        Vendor: liveRows.map((row) => row.vendor),
+        Priority: liveRows.map((row) => row.priority),
+      }),
+    [liveRows]
+  )
 
   const filteredRows = sourceRows.filter(
     (row) =>
@@ -138,7 +151,6 @@ export default function ExceptionsRecommendations({ pendingSelectId, onPendingSe
         <div className="exceptions-main-grid">
           <PriorityExceptionQueue
             rows={filteredRows}
-            totalCount={filteredRows.length}
             selectedId={selectedRecordId}
             onSelect={setSelectedInvoice}
           />
@@ -152,8 +164,8 @@ export default function ExceptionsRecommendations({ pendingSelectId, onPendingSe
         </div>
       )}
 
-      <WhatIfResolutionScenarios />
-      <InfoBanner text={scenarioInfoText} />
+      <WhatIfResolutionScenarios rows={scenarios} />
+      {scenarioSummary && <InfoBanner text={scenarioSummary} />}
     </>
   )
 }

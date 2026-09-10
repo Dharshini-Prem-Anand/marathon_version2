@@ -220,9 +220,13 @@ export function buildPreValidationRecords(rows, vendorNamesByInvoice = {}) {
       // Kept for the queue row.
       vendor: resolveVendorName(head, vendorNamesByInvoice),
       amount: money(gross, currency),
-      // Raw, unformatted — what the Date Range filter and the queue's date
-      // sort read, so neither depends on parsing a display string back.
+      // Raw, unformatted — what the queue's date sort reads, so it doesn't
+      // depend on parsing a display string back.
       creationDate: head.CreationDate ?? null,
+      // When the pipeline wrote this row (managed aspect). The Date Range
+      // filter uses this rather than CreationDate: the invoice's own date can
+      // be weeks old, so "Today" would hide work that arrived today.
+      createdAt: head.createdAt ?? null,
     }
   }
 

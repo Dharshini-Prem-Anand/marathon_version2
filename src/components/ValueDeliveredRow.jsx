@@ -1,5 +1,4 @@
 import { Users, Clock, CheckCircle2 } from 'lucide-react'
-import { valueDeliveredTriage } from '../data'
 
 const iconMap = {
   users: Users,
@@ -7,12 +6,15 @@ const iconMap = {
   checkCircle: CheckCircle2,
 }
 
-export default function ValueDeliveredRow() {
+// Data comes from /triageKpis (valueDelivered).
+export default function ValueDeliveredRow({ items, rangeLabel }) {
+  const rows = items ?? []
+
   return (
     <section className="panel">
-      <h2 className="panel-title">Value Delivered (Last 7 Days)</h2>
+      <h2 className="panel-title">Value Delivered{rangeLabel ? ` (${rangeLabel})` : ''}</h2>
       <div className="value-delivered-row">
-        {valueDeliveredTriage.map((v) => {
+        {rows.map((v) => {
           const Icon = iconMap[v.icon]
           return (
             <div className="value-delivered-item" key={v.label}>

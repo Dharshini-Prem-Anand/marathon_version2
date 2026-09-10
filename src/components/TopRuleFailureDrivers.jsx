@@ -1,9 +1,11 @@
-import { topRuleFailureDrivers } from '../data'
-
-export default function TopRuleFailureDrivers() {
+// Rows come from /preValidationKpis (topRuleFailureDrivers). `rows` is null
+// until it answers.
+export default function TopRuleFailureDrivers({ rows, rangeLabel }) {
   return (
     <section className="panel">
-      <h2 className="panel-title">Top Rule Failure Drivers (This Period)</h2>
+      <h2 className="panel-title">
+        Top Rule Failure Drivers{rangeLabel ? ` (${rangeLabel})` : ''}
+      </h2>
       <div className="table-wrap">
         <table className="table-fixed">
           <colgroup>
@@ -19,22 +21,36 @@ export default function TopRuleFailureDrivers() {
             </tr>
           </thead>
           <tbody>
-            {topRuleFailureDrivers.map((d) => (
-              <tr key={d.driver}>
-                <td className="cell-ellipsis" title={d.driver}>
-                  {d.driver}
-                </td>
-                <td>{d.invoices}</td>
-                <td>
-                  <div className="inline-bar-cell">
-                    <div className="inline-bar-track">
-                      <div className={`inline-bar-fill inline-bar-${d.color}`} style={{ width: `${d.percent}%` }} />
-                    </div>
-                    <span>{d.percent}%</span>
-                  </div>
+            {!rows ? (
+              <tr>
+                <td colSpan={3} className="table-empty-cell">
+                  Loading rule failures…
                 </td>
               </tr>
-            ))}
+            ) : rows.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="table-empty-cell">
+                  No rule failures in this period.
+                </td>
+              </tr>
+            ) : (
+              rows.map((d) => (
+                <tr key={d.driver}>
+                  <td className="cell-ellipsis" title={d.driver}>
+                    {d.driver}
+                  </td>
+                  <td>{d.invoices}</td>
+                  <td>
+                    <div className="inline-bar-cell">
+                      <div className="inline-bar-track">
+                        <div className={`inline-bar-fill inline-bar-${d.color}`} style={{ width: `${d.percent}%` }} />
+                      </div>
+                      <span>{d.percent}%</span>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

@@ -1,12 +1,12 @@
 import { Star, Ban } from 'lucide-react'
-import { whatIfScenarios } from '../data'
 
 const tagConfig = {
   recommended: { icon: Star, label: 'Recommended', color: 'green' },
   'not-allowed': { icon: Ban, label: 'Not Allowed', color: 'red' },
 }
 
-export default function WhatIfResolutionScenarios() {
+// Rows come from /exceptionKpis (whatIfResolutionScenarios).
+export default function WhatIfResolutionScenarios({ rows }) {
   return (
     <section className="panel">
       <h2 className="panel-title">What-If Resolution Scenarios</h2>
@@ -25,28 +25,42 @@ export default function WhatIfResolutionScenarios() {
             </tr>
           </thead>
           <tbody>
-            {whatIfScenarios.map((s) => {
-              const tag = tagConfig[s.tag]
-              return (
-                <tr key={s.scenario} className={s.rowStyle ? `scenario-row-${s.rowStyle}` : undefined}>
-                  <td>
-                    {tag && (
-                      <span className={`scenario-tag scenario-tag-${tag.color}`}>
-                        <tag.icon size={12} />
-                        {tag.label}
-                      </span>
-                    )}
-                  </td>
-                  <td>{s.scenario}</td>
-                  <td>{s.action}</td>
-                  <td className={s.valueColor ? `color-${s.valueColor}` : undefined}>{s.cycleTime}</td>
-                  <td className={s.valueColor ? `color-${s.valueColor}` : undefined}>{s.manualMinutes}</td>
-                  <td className={`color-${s.latePaymentRiskColor}`}>{s.latePaymentRisk}</td>
-                  <td className={s.valueColor ? `color-${s.valueColor}` : undefined}>{s.estimatedCost}</td>
-                  <td className={s.valueColor ? `color-${s.valueColor}` : undefined}>{s.controlStatus}</td>
-                </tr>
-              )
-            })}
+            {!rows ? (
+              <tr>
+                <td colSpan={8} className="table-empty-cell">
+                  Loading scenarios…
+                </td>
+              </tr>
+            ) : rows.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="table-empty-cell">
+                  No resolution scenarios for this period.
+                </td>
+              </tr>
+            ) : (
+              rows.map((s) => {
+                const tag = tagConfig[s.tag]
+                return (
+                  <tr key={s.scenario} className={s.rowStyle ? `scenario-row-${s.rowStyle}` : undefined}>
+                    <td>
+                      {tag && (
+                        <span className={`scenario-tag scenario-tag-${tag.color}`}>
+                          <tag.icon size={12} />
+                          {tag.label}
+                        </span>
+                      )}
+                    </td>
+                    <td>{s.scenario}</td>
+                    <td>{s.action}</td>
+                    <td className={s.valueColor ? `color-${s.valueColor}` : undefined}>{s.cycleTime}</td>
+                    <td className={s.valueColor ? `color-${s.valueColor}` : undefined}>{s.manualMinutes}</td>
+                    <td className={`color-${s.latePaymentRiskColor}`}>{s.latePaymentRisk}</td>
+                    <td className={s.valueColor ? `color-${s.valueColor}` : undefined}>{s.estimatedCost}</td>
+                    <td className={s.valueColor ? `color-${s.valueColor}` : undefined}>{s.controlStatus}</td>
+                  </tr>
+                )
+              })
+            )}
           </tbody>
         </table>
       </div>

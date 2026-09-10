@@ -5,21 +5,25 @@ import DocumentQueueTable from '../components/DocumentQueueTable'
 import InvoicePreviewPanel from '../components/InvoicePreviewPanel'
 import DocAiPipelineStepper from '../components/DocAiPipelineStepper'
 import FormatPerformanceChart from '../components/FormatPerformanceChart'
-import PainPointTable from '../components/PainPointTable'
-import LearningModelPerformance from '../components/LearningModelPerformance'
-import { useFilters, matchesCompanyCode, matchesOption } from '../hooks/useFilters'
+import { useFilters, matchesCompanyCode, matchesOption, withLiveOptions } from '../hooks/useFilters'
 import { documentAiFilters, documentAiStats } from '../data'
 import {
   fetchDocumentPdf,
   fetchDocumentQueue,
+  fetchExtractionKpis,
   fetchExtractedHeaderFields,
   fetchExtractedLineItemFields,
+  fetchPipelineStatus,
+  fetchVendorNameFields,
   reprocessExtraction,
 } from '../api/invoiceAutomation'
 import { groupLineItemFields, mapDocumentRow, mapHeaderField } from '../utils/documentMappers'
+import { buildVendorNamesByDocument } from '../utils/vendorNames'
+import { pipelineOutcome, pipelineRowsForDocument } from '../utils/pipelineStatus'
 import { ALL_DATES_RANGE, dateRangeFilter } from '../utils/dateRange'
+import { DOCUMENT_AI_KPI_FIELDS, KPI_UNAVAILABLE, kpiDateParams, mergeKpiStats } from '../utils/kpiTiles'
+import { mapFormatPerformance } from '../utils/kpiPanels'
 
-const LOW_CONFIDENCE_THRESHOLD = 80
 const DEFAULT_DATE_RANGE = 'Today'
 
 export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectConsumed, onNavigate, onNavigateToEmail }) {
@@ -33,6 +37,9 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
   const [documentsError, setDocumentsError] = useState(null)
 
   const [headerFields, setHeaderFields] = useState([])
+  // PipelineStatus rows for the selected document's email, narrowed to the
+  // document itself once its invoice number is known.
+  const [pipelineRows, setPipelineRows] = useState([])
   const [lineItems, setLineItems] = useState({ columns: [], rows: [] })
   const [fieldsLoading, setFieldsLoading] = useState(false)
   const [fieldsError, setFieldsError] = useState(null)
@@ -60,10 +67,17 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
     setDocumentsLoading(true)
     setDocumentsError(null)
 
-    fetchDocumentQueue()
-      .then((records) => {
+    // The vendor on a row is the name the extraction read off the invoice, not
+    // whoever mailed it in, so the queue and the extracted vendor-name fields
+    // are fetched together and joined on (MessageID, FileName). A document
+    // with no extraction yet simply has no vendor.
+    Promise.all([fetchDocumentQueue(), fetchVendorNameFields().catch(() => [])])
+      .then(([records, vendorFields]) => {
         if (cancelled) return
-        setDocuments(records.map(mapDocumentRow))
+        const vendorByDocument = buildVendorNamesByDocument(vendorFields)
+        setDocuments(
+          records.map(mapDocumentRow).map((row) => ({ ...row, vendor: vendorByDocument[row.id] ?? '—' }))
+        )
       })
       .catch((err) => {
         if (cancelled) return
@@ -78,6 +92,21 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
       cancelled = true
     }
   }, [refreshKey])
+
+  // Invoice Channel, Vendor and Status are filled from the loaded documents —
+  // Status especially: the live value is "Pending Review", which no hardcoded
+  // list had, so that dropdown could never match a row. Vendor lists the
+  // extracted vendor names. Company Code is left as defined; neither
+  // EmailAttachments nor EmailMetadata carries one.
+  const filterFields = useMemo(
+    () =>
+      withLiveOptions(documentAiFilters, {
+        'Invoice Channel': documents.map((row) => row.channel),
+        Vendor: documents.map((row) => row.vendor),
+        Status: documents.map((row) => row.status),
+      }),
+    [documents]
+  )
 
   // Every row is live; the Date Range filter narrows them by when the email
   // carrying the document was received, rather than switching the page to a
@@ -121,6 +150,7 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
     if (!selectedDoc) {
       setHeaderFields([])
       setLineItems({ columns: [], rows: [] })
+      setPipelineRows([])
       setFieldsError(null)
       setFieldsLoading(false)
       return
@@ -134,16 +164,21 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
     Promise.all([
       fetchExtractedHeaderFields(messageId, fileName),
       fetchExtractedLineItemFields(messageId, fileName),
+      // The pipeline record only decides whether the two actions are offered;
+      // a failure to read it must not blank the fields.
+      fetchPipelineStatus(messageId).catch(() => []),
     ])
-      .then(([header, lines]) => {
+      .then(([header, lines, pipeline]) => {
         if (cancelled) return
         setHeaderFields(header.map(mapHeaderField))
         setLineItems(groupLineItemFields(lines))
+        setPipelineRows(pipeline)
       })
       .catch((err) => {
         if (cancelled) return
         setHeaderFields([])
         setLineItems({ columns: [], rows: [] })
+        setPipelineRows([])
         setFieldsError(`Could not load extracted fields — ${err.message}`)
       })
       .finally(() => {
@@ -155,6 +190,25 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [docKey, refreshKey])
+
+  // Re-run Extraction and Schema Configuration are the two ways to correct a
+  // document, so they're only offered while there's something to correct: a
+  // document whose whole pipeline succeeded is done, and both are hidden. They
+  // stay visible while the pipeline outcome is unknown — nothing has run yet,
+  // or PipelineStatus couldn't be read.
+  const extractedInvoiceNumber = useMemo(
+    () => headerFields.find((field) => String(field.key ?? '').toLowerCase() === 'invoicenumber')?.value ?? null,
+    [headerFields]
+  )
+
+  const pipelineDone = useMemo(() => {
+    if (!selectedDoc) return false
+    const rows = pipelineRowsForDocument(pipelineRows, {
+      fileName: selectedDoc.fileName,
+      invoiceNumber: extractedInvoiceNumber,
+    })
+    return pipelineOutcome(rows) === 'success'
+  }, [pipelineRows, selectedDoc, extractedInvoiceNumber])
 
   // The PDF bytes come from the Python service, fetched as a blob so the
   // Authorization header can be attached, then bound to the iframe.
@@ -202,24 +256,39 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
 
   const statsLoading = documentsLoading
 
-  // The tiles count the queue as filtered, so the Date Range and the other
-  // filters visibly move them.
-  const stats = useMemo(() => {
-    const total = filteredQueue.length
-    const lowConfidence = filteredQueue.filter(
-      (d) => Number.isFinite(d.confidenceValue) && d.confidenceValue < LOW_CONFIDENCE_THRESHOLD
-    ).length
+  // Accuracy and timing come from /getExtractionKpis, over the applied window.
+  const [kpis, setKpis] = useState(null)
 
-    return documentAiStats.map((stat) => {
-      if (stat.label === 'Documents Processed') {
-        return { ...stat, value: statsLoading ? '…' : total.toLocaleString(), target: null }
-      }
-      if (stat.label === 'Low Confidence') {
-        return { ...stat, value: statsLoading ? '…' : String(lowConfidence) }
-      }
-      return stat
-    })
-  }, [filteredQueue, statsLoading])
+  useEffect(() => {
+    let cancelled = false
+
+    fetchExtractionKpis(kpiDateParams(appliedDateRange))
+      .then((res) => {
+        if (!cancelled) setKpis(res)
+      })
+      .catch(() => {
+        if (!cancelled) setKpis(KPI_UNAVAILABLE)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [appliedDateRange])
+
+  const formatPerformance = useMemo(() => mapFormatPerformance(kpis), [kpis])
+
+  // Documents Processed is the one tile the page can count for itself — it
+  // tracks the queue as filtered. Every other tile comes from the service.
+  const stats = useMemo(() => {
+    const local = documentAiStats.map((stat) =>
+      stat.label === 'Documents Processed'
+        ? { ...stat, value: statsLoading ? '…' : filteredQueue.length.toLocaleString(), target: null }
+        : // "-0.4 min vs prior 7 days" is a sample trend the service doesn't
+          // return, so it goes with the sample number.
+          { ...stat, target: stat.label === 'Average Extraction Time' ? null : stat.target }
+    )
+    return mergeKpiStats(local, DOCUMENT_AI_KPI_FIELDS, kpis)
+  }, [filteredQueue, statsLoading, kpis])
 
   const handleGo = () => {
     apply()
@@ -244,7 +313,7 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
   return (
     <>
       <FilterBar
-        fields={documentAiFilters}
+        fields={filterFields}
         values={draft}
         onFieldChange={setField}
         dateRangeLabel={DEFAULT_DATE_RANGE}
@@ -265,10 +334,12 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
           wide={!showFormatDiagnostics}
         />
         {showFormatDiagnostics && (
-          <FormatPerformanceChart onClose={() => setShowFormatDiagnostics(false)} />
+          <FormatPerformanceChart
+            rows={formatPerformance}
+            loading={kpis == null}
+            onClose={() => setShowFormatDiagnostics(false)}
+          />
         )}
-        <PainPointTable />
-        <LearningModelPerformance compact />
       </div>
 
       <InvoicePreviewPanel
@@ -284,6 +355,7 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
         rerunning={rerunning}
         rerunError={rerunError}
         canRerun={Boolean(dieDocumentId)}
+        showActions={!pipelineDone}
       />
 
       {selectedDoc && (

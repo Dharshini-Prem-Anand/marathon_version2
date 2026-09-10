@@ -52,7 +52,6 @@ export function buildInvoicePreviewFromExtractedFields(headerRows, fallbackInvoi
   if (!headerRows || headerRows.length === 0) return null
 
   const currency = fieldValue(headerRows, 'DocumentCurrency') || 'USD'
-  const gross = fieldValue(headerRows, 'GrossAmount')
   // The extracted name, falling back to the extracted code when the document
   // only yielded one (e.g. "USSU-FFC10").
   const vendorLabel =
@@ -60,10 +59,22 @@ export function buildInvoicePreviewFromExtractedFields(headerRows, fallbackInvoi
     fieldValue(headerRows, 'VendorName') ||
     fieldValue(headerRows, 'VendorNO') ||
     '—'
-  const grossFormatted = gross != null ? `${money(gross, currency)} ${currency}` : '—'
-
   const lineItemRows = headerRows[0]?.lineItemFields ?? []
   const { rows: groupedLines } = groupLineItemFields(lineItemRows)
+
+  // Gross Amount and Total Amount Due are the sum of the line-item amounts.
+  // The extracted HeaderAmount is only the fallback, for a document whose
+  // line items carried no amount at all (it also isn't always extracted —
+  // there is no GrossAmount field in the schema, which is what this used to
+  // read, so the panel showed a dash).
+  const amounts = groupedLines
+    .map((row) => Number(row.cells.AmountInDocCurrency?.value))
+    .filter((n) => Number.isFinite(n))
+  const total = amounts.length
+    ? amounts.reduce((sum, n) => sum + n, 0)
+    : Number(fieldValue(headerRows, 'HeaderAmount'))
+  const grossFormatted = Number.isFinite(total) ? `${money(total, currency)} ${currency}` : '—'
+
   const lineItems = groupedLines.map((row, i) => ({
     line: row.itemNumber || i + 1,
     description: row.cells.MaterialDescription?.value ?? '—',

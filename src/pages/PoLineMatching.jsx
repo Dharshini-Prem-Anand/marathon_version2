@@ -8,24 +8,29 @@ import PoMatchingPipelinePanel from '../components/PoMatchingPipelinePanel'
 import MatchingPerformance from '../components/MatchingPerformance'
 import VimProcessingTimeline from '../components/VimProcessingTimeline'
 import FilterEmptyState from '../components/FilterEmptyState'
-import { useFilters, matchesCompanyCode, matchesOption } from '../hooks/useFilters'
+import { useFilters, matchesCompanyCode, matchesOption, withLiveOptions } from '../hooks/useFilters'
 import { poMatchingFilters, poMatchingStats } from '../data'
 import {
   fetchGoodsReceipts,
   fetchInvoices,
   fetchMatchExplanation,
+  fetchMatchingKpis,
   fetchPurchaseOrders,
   fetchVendorNameFields,
 } from '../api/invoiceAutomation'
 import { buildMatchingRecords, matchingStatCounts } from '../utils/matchingMappers'
 import { buildVendorNamesByInvoice } from '../utils/vendorNames'
 import { dateRangeFilter } from '../utils/dateRange'
+import {
+  KPI_UNAVAILABLE,
+  kpiDateParams,
+  kpiPlaceholder,
+  MATCHING_KPI_FIELDS,
+  overlayKpiStats,
+} from '../utils/kpiTiles'
+import { mapMatchingPerformance } from '../utils/kpiPanels'
 
 const DEFAULT_DATE_RANGE = 'Today'
-
-// The service has no tolerance data and no VIM-readiness flag, so these two
-// tiles stay on their mock values.
-const STATIC_STAT_LABELS = ['Tolerance Exceptions', 'Ready for VIM']
 
 // Shown whenever /matchExplanation is unavailable, errors, or returns nothing.
 // The route is still being built on the Python service, so this is the normal
@@ -74,31 +79,50 @@ export default function PoLineMatching({ onNavigateToException }) {
     }
   }, [])
 
+  const [kpis, setKpis] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetchMatchingKpis(kpiDateParams(appliedDateRange))
+      .then((res) => {
+        if (!cancelled) setKpis(res)
+      })
+      .catch(() => {
+        if (!cancelled) setKpis(KPI_UNAVAILABLE)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [appliedDateRange])
+
   const [explanation, setExplanation] = useState(null)
 
   const { ids, records } = liveData
 
-  // Every row is live; the Date Range filter narrows them by invoice creation
-  // date rather than switching the page to a different data source.
+  // Every row is live; the Date Range filter narrows them by when the pipeline
+  // wrote the invoice (managed createdAt), falling back to the invoice's own
+  // date where that's missing.
   const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
 
-  // Vendor and Invoice Channel options come from the loaded data — a static
-  // dropdown would offer choices (e.g. EDI) that never match a live invoice,
-  // since Invoices carries no channel and always reports 'Email'.
-  const filterFields = useMemo(() => {
-    const vendors = [...new Set(ids.map((id) => records[id].context.vendor))].sort()
-    const channels = [...new Set(ids.map((id) => records[id].context.channel))].sort()
-    return poMatchingFilters.map((f) => {
-      if (f.label === 'Vendor') return { ...f, options: ['All', ...vendors] }
-      if (f.label === 'Invoice Channel') return { ...f, options: ['All', ...channels] }
-      return f
-    })
-  }, [ids, records])
+  // Every dropdown is filled from the loaded rows — a static list would offer
+  // choices (e.g. EDI) that never match a live invoice, since Invoices carries
+  // no channel and always reports 'Email'. Company Code is left alone.
+  const filterFields = useMemo(
+    () =>
+      withLiveOptions(poMatchingFilters, {
+        'Invoice Channel': ids.map((id) => records[id].context.channel),
+        Vendor: ids.map((id) => records[id].context.vendor),
+        Status: ids.map((id) => records[id].context.status),
+      }),
+    [ids, records]
+  )
 
   const filteredQueue = ids.filter((id) => {
     const { context } = records[id]
     return (
-      inDateRange(records[id].creationDate) &&
+      inDateRange(records[id].createdAt ?? records[id].creationDate) &&
       matchesCompanyCode(applied['Company Code']) &&
       matchesOption(applied['Invoice Channel'], context.channel) &&
       matchesOption(applied['Vendor'], context.vendor) &&
@@ -164,25 +188,30 @@ export default function PoLineMatching({ onNavigateToException }) {
     }
   })
 
-  // Both the stat tiles and the Matching Performance panel reflect the
-  // filtered queue, not the full dataset, so every filter visibly changes
-  // what's on screen.
+  // Tiles and the Matching Performance panel come from /matchingkpis. That
+  // route isn't deployed yet, so the four count tiles keep the counts this
+  // page derives from the filtered queue until it answers; Tolerance
+  // Exceptions and Ready for VIM have no local equivalent and show a
+  // placeholder rather than the sample numbers they were defined with.
   const stats = useMemo(() => {
     const counts = matchingStatCounts(filteredQueue, records)
-    return poMatchingStats.map((stat) => {
-      if (STATIC_STAT_LABELS.includes(stat.label)) return stat
+    const local = poMatchingStats.map((stat) => {
       const value = {
         'PO Invoices': counts.total,
         'Fully Matched': counts.matched,
         'Partial Match': counts.partial,
         'PO Not Found': counts.notFound,
       }[stat.label]
-      if (value === undefined) return stat
-      return { ...stat, value: value.toLocaleString() }
+      return { ...stat, value: value === undefined ? kpiPlaceholder(kpis) : value.toLocaleString() }
     })
-  }, [filteredQueue, records])
+    return overlayKpiStats(local, MATCHING_KPI_FIELDS, kpis)
+  }, [filteredQueue, records, kpis])
 
   const performanceMetrics = useMemo(() => {
+    // The service's rates win once /matchingkpis is deployed.
+    const fromService = mapMatchingPerformance(kpis)
+    if (fromService) return fromService
+
     const lines = filteredQueue.flatMap((id) => records[id].matchLines)
     const totalLines = lines.length
     const matchedLines = lines.filter((l) => l.matchStatus === 'matched').length
@@ -203,7 +232,7 @@ export default function PoLineMatching({ onNavigateToException }) {
         fraction: `(${matchedLines.toLocaleString()} / ${totalLines.toLocaleString()})`,
       },
     ]
-  }, [filteredQueue, records])
+  }, [filteredQueue, records, kpis])
 
   const handleGo = () => {
     apply()

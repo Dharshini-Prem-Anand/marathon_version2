@@ -19,7 +19,7 @@ const COLUMNS = {
 // The email a document arrived on. The row carries the MessageID the triage
 // queue is keyed by, so it opens straight in Email & Attachment Triage.
 function SourceEmailCell({ row, onOpenEmail }) {
-  const title = [row.vendor, row.senderAddress && `<${row.senderAddress}>`, row.subject]
+  const title = [row.senderName, row.senderAddress && `<${row.senderAddress}>`, row.subject]
     .filter(Boolean)
     .join(' ')
 

@@ -4,20 +4,15 @@ import LineItemExtraction from './LineItemExtraction'
 import PaneSplitter from './PaneSplitter'
 import { useSplitRatio } from '../hooks/useSplitRatio'
 import SchemaConfigurationDialog from './SchemaConfigurationDialog'
-
-function confidenceClass(pct) {
-  const n = parseInt(pct, 10)
-  if (Number.isNaN(n)) return 'gray'
-  if (n >= 95) return 'green'
-  if (n >= 85) return 'blue'
-  return 'orange'
-}
+import ConfidenceLegend from './ConfidenceLegend'
+import { confidenceTone } from '../utils/confidenceBands'
 
 // Header field cards + Line-Item Extraction table — shared between the inline
 // panel and the full-screen split view so the two never drift apart.
 function ExtractedFieldsContent({ document, headerFields, fieldsLoading, fieldsError, lineItems }) {
   return (
     <div className="extracted-fields">
+      <ConfidenceLegend />
       {!document ? (
         <div className="table-empty-cell">Select a document.</div>
       ) : fieldsLoading ? (
@@ -32,7 +27,7 @@ function ExtractedFieldsContent({ document, headerFields, fieldsLoading, fieldsE
             <div className="docai-field-row" key={`${f.key}-${i}`}>
               <div className="docai-field-row-head">
                 <span className="docai-field-label">{f.field}</span>
-                <span className={`confidence-badge confidence-${confidenceClass(f.confidence)}`}>
+                <span className={`confidence-badge confidence-${confidenceTone(f.confidence)}`}>
                   {f.confidence}
                 </span>
               </div>
@@ -136,6 +131,9 @@ export default function InvoicePreviewPanel({
   rerunning,
   rerunError,
   canRerun,
+  // Both correction actions are hidden for a document whose pipeline ran
+  // clean end to end — there's nothing left to re-run or re-map.
+  showActions = true,
 }) {
   const [expanded, setExpanded] = useState(false)
   const { ratio: splitRatio, paneRef, containerRef: splitRef, startResize } = useSplitRatio(0.56)
@@ -149,29 +147,31 @@ export default function InvoicePreviewPanel({
     <section className="panel invoice-preview">
       <div className="panel-title-row">
         <h2 className="panel-title">Invoice Preview &amp; Extracted Fields</h2>
-        <div className="panel-title-actions">
-          <button
-            className="btn-outline rerun-btn"
-            onClick={onRerun}
-            disabled={!canRerun || rerunning}
-            title={
-              canRerun
-                ? 'Re-run Document AI extraction for this document'
-                : 'Select a document with an extraction job first'
-            }
-          >
-            <RefreshCw size={13} className={rerunning ? 'rerun-spin' : undefined} />
-            {rerunning ? 'Re-running…' : 'Re-run Extraction'}
-          </button>
-          <button
-            className="icon-btn schema-config-btn"
-            onClick={() => setSchemaOpen(true)}
-            aria-label="Schema Configuration"
-            title="Schema Configuration"
-          >
-            <Settings size={16} />
-          </button>
-        </div>
+        {showActions && (
+          <div className="panel-title-actions">
+            <button
+              className="btn-outline rerun-btn"
+              onClick={onRerun}
+              disabled={!canRerun || rerunning}
+              title={
+                canRerun
+                  ? 'Re-run Document AI extraction for this document'
+                  : 'Select a document with an extraction job first'
+              }
+            >
+              <RefreshCw size={13} className={rerunning ? 'rerun-spin' : undefined} />
+              {rerunning ? 'Re-running…' : 'Re-run Extraction'}
+            </button>
+            <button
+              className="icon-btn schema-config-btn"
+              onClick={() => setSchemaOpen(true)}
+              aria-label="Schema Configuration"
+              title="Schema Configuration"
+            >
+              <Settings size={16} />
+            </button>
+          </div>
+        )}
       </div>
       {rerunError && <div className="rerun-error">{rerunError}</div>}
       <div className="invoice-preview-split" ref={splitRef}>
@@ -198,7 +198,9 @@ export default function InvoicePreviewPanel({
         </div>
       </div>
 
-      {schemaOpen && <SchemaConfigurationDialog onClose={() => setSchemaOpen(false)} />}
+      {/* Guarded by showActions too, so switching to a clean document while
+          the dialog is open closes it with its button. */}
+      {showActions && schemaOpen && <SchemaConfigurationDialog onClose={() => setSchemaOpen(false)} />}
 
       {expanded && document && pdfUrl && (
         <PdfExpandModal

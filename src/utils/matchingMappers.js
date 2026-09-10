@@ -156,8 +156,11 @@ export function buildMatchingRecords(invoices, purchaseOrders, goodsReceipts, ve
       // HeaderAmount is null on most invoices, so the queue amount is the
       // sum of the line amounts.
       amount: money(invTotal, currency),
-      // Raw, unformatted — what the Date Range filter reads.
+      // Raw, unformatted business date.
       creationDate: head.CreationDate ?? null,
+      // When the pipeline wrote the invoice (managed aspect) — what the Date
+      // Range filter reads, so an older invoice ingested today counts as today.
+      createdAt: head.createdAt ?? null,
     }
   }
 

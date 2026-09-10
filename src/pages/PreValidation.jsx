@@ -8,10 +8,9 @@ import VendorPayeePanel from '../components/VendorPayeePanel'
 import PreValidationPipelinePanel from '../components/PreValidationPipelinePanel'
 import TopRuleFailureDrivers from '../components/TopRuleFailureDrivers'
 import PreventedExceptionsByType from '../components/PreventedExceptionsByType'
-import CorrectionHistoryModelLearning from '../components/CorrectionHistoryModelLearning'
 import ApprovalBanner from '../components/ApprovalBanner'
 import FilterEmptyState from '../components/FilterEmptyState'
-import { useFilters, matchesCompanyCode, matchesOption } from '../hooks/useFilters'
+import { useFilters, matchesCompanyCode, matchesOption, withLiveOptions } from '../hooks/useFilters'
 import { preValidationFilters, preValidationStats } from '../data'
 import { buildInvoicePreviewFromExtractedFields, FIELD_RULE_CATEGORY } from '../utils/preValidationMappers'
 import {
@@ -22,7 +21,18 @@ import {
 } from '../api/invoiceAutomation'
 import { buildPreValidationRecords } from '../utils/preValidationRules'
 import { buildVendorNamesByInvoice } from '../utils/vendorNames'
-import { KPI_UNAVAILABLE, kpiDateParams, mergeKpiStats, PRE_VALIDATION_KPI_FIELDS } from '../utils/kpiTiles'
+import {
+  KPI_UNAVAILABLE,
+  kpiDateParams,
+  kpiRangeSubtitle,
+  mergeKpiStats,
+  PRE_VALIDATION_KPI_FIELDS,
+} from '../utils/kpiTiles'
+import {
+  mapPreventedExceptions,
+  mapRuleFailureDrivers,
+  preValidationTilePayload,
+} from '../utils/kpiPanels'
 import { dateRangeFilter, parseRowDate } from '../utils/dateRange'
 
 const DEFAULT_DATE_RANGE = 'Today'
@@ -114,26 +124,32 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
 
   const { ids, records } = liveData
 
-  // Every row is live; the Date Range filter narrows them by invoice creation
-  // date rather than switching the page to a different data source.
+  // Every row is live; the Date Range filter narrows them by when the pipeline
+  // wrote the row (managed createdAt), falling back to the invoice's own date
+  // where that's missing.
   const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
 
   const rulesFor = (id) => ruleOverrides[id] ?? records[id]?.validationRuleResults ?? []
 
-  // Vendor options come from the loaded data — the seed list holds different
-  // names, so a static dropdown would filter every live row out.
+  // Every dropdown is filled from the loaded rows — a static list would offer
+  // choices no live row can match. Company Code is left alone: PreValidation
+  // carries no company code (null on every row).
   const filterFields = useMemo(() => {
-    const vendors = [...new Set(ids.map((id) => records[id].vendor))].sort()
-    return preValidationFilters.map((f) =>
-      f.label === 'Vendor' ? { ...f, options: ['All', ...vendors] } : f
-    )
-  }, [ids, records])
+    const attrs = ids.map((id) => deriveAttributes(records[id], rulesFor(id)))
+    return withLiveOptions(preValidationFilters, {
+      Vendor: attrs.map((a) => a.vendor),
+      'Document Type': attrs.map((a) => a.documentType),
+      'Confidence Band': attrs.map((a) => a.confidenceBand),
+      'Validation Status': attrs.map((a) => a.validationStatus),
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ids, records, ruleOverrides])
 
   const filteredQueue = ids
     .filter((id) => {
       const attrs = deriveAttributes(records[id], rulesFor(id))
       return (
-        inDateRange(records[id].creationDate) &&
+        inDateRange(records[id].createdAt ?? records[id].creationDate) &&
         matchesCompanyCode(applied['Company Code']) &&
         matchesOption(applied['Vendor'], attrs.vendor) &&
         matchesOption(applied['Document Type'], attrs.documentType) &&
@@ -221,10 +237,15 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
     setAppliedDateRange(dateRange)
   }
 
+  // The tile numbers arrive nested under `preValidationKpis`; the same
+  // response also carries the three panels at the bottom of the page.
   const stats = useMemo(
-    () => mergeKpiStats(preValidationStats, PRE_VALIDATION_KPI_FIELDS, kpis),
+    () => mergeKpiStats(preValidationStats, PRE_VALIDATION_KPI_FIELDS, preValidationTilePayload(kpis)),
     [kpis]
   )
+  const rangeSubtitle = kpiRangeSubtitle(appliedDateRange)
+  const ruleFailureDrivers = useMemo(() => mapRuleFailureDrivers(kpis), [kpis])
+  const preventedExceptions = useMemo(() => mapPreventedExceptions(kpis), [kpis])
 
   return (
     <>
@@ -267,9 +288,8 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
           </div>
 
           <div className="doc-ai-secondary-grid">
-            <TopRuleFailureDrivers />
-            <PreventedExceptionsByType />
-            <CorrectionHistoryModelLearning />
+            <TopRuleFailureDrivers rows={ruleFailureDrivers} rangeLabel={rangeSubtitle} />
+            <PreventedExceptionsByType rows={preventedExceptions} rangeLabel={rangeSubtitle} />
           </div>
 
           <ApprovalBanner />
