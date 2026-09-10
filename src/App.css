@@ -1288,6 +1288,12 @@ tbody tr:last-child td {
   color: var(--text-muted);
 }
 
+.stat-action-link {
+  align-self: flex-start;
+  font-size: 11px;
+  padding: 2px 0 0;
+}
+
 /* ---------- EMAIL TRIAGE MAIN GRID ---------- */
 .triage-main-grid {
   display: grid;
@@ -1848,6 +1854,11 @@ tbody tr:last-child td {
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, 1.3fr) minmax(0, 1fr);
   gap: 12px;
   align-items: start;
+}
+
+/* Format performance chart hidden — the queue table takes its place. */
+.docai-top-tiles.docai-top-tiles-no-chart {
+  grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.3fr) minmax(0, 1fr);
 }
 
 .docai-top-tiles table {

@@ -42,11 +42,12 @@ const iconMap = {
   users: Users,
 }
 
-export default function StatsRow({ stats }) {
+export default function StatsRow({ stats, actions }) {
   return (
     <div className="stats-row">
       {stats.map((s) => {
         const Icon = iconMap[s.icon]
+        const action = actions?.[s.label]
         return (
           <div className="stat-card" key={s.label}>
             <div className="stat-card-header">
@@ -57,6 +58,11 @@ export default function StatsRow({ stats }) {
             </div>
             <div className={`stat-value color-${s.valueColor}`}>{s.value}</div>
             {s.target && <div className="stat-target">{s.target}</div>}
+            {action && (
+              <button className="btn-link stat-action-link" onClick={action.onClick}>
+                {action.label}
+              </button>
+            )}
           </div>
         )
       })}

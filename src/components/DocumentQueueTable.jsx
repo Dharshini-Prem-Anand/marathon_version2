@@ -147,7 +147,7 @@ function QueueFooter({ paging }) {
   )
 }
 
-export default function DocumentQueueTable({ rows = [], selectedId, onSelect, loading, error, onOpenEmail }) {
+export default function DocumentQueueTable({ rows = [], selectedId, onSelect, loading, error, onOpenEmail, wide }) {
   const ctl = useColumnSortFilter(rows, COLUMNS)
   const paging = usePagedRows(ctl.rows)
   const [expanded, setExpanded] = useState(false)
@@ -155,27 +155,31 @@ export default function DocumentQueueTable({ rows = [], selectedId, onSelect, lo
 
   const tableProps = { ctl, paging, selectedId, onSelect, onOpenEmail, loading, error }
 
+  // When there's room (the format performance chart is hidden), the table
+  // shows all six columns inline and the modal-expand affordance is redundant.
   return (
     <section className="panel document-queue">
       <div className="panel-title-row">
         <h2 className="panel-title">Document Extraction Queue</h2>
         <TableSearchInput ctl={ctl} />
-        <button
-          className="icon-btn table-expand-btn"
-          onClick={() => setExpanded(true)}
-          aria-label="Expand Document Extraction Queue table"
-          title="Expand table"
-        >
-          <Maximize2 size={16} />
-        </button>
+        {!wide && (
+          <button
+            className="icon-btn table-expand-btn"
+            onClick={() => setExpanded(true)}
+            aria-label="Expand Document Extraction Queue table"
+            title="Expand table"
+          >
+            <Maximize2 size={16} />
+          </button>
+        )}
       </div>
 
       <div ref={tableAnchorRef}>
-        <QueueTable {...tableProps} compact />
+        <QueueTable {...tableProps} compact={!wide} />
       </div>
       <QueueFooter paging={paging} />
 
-      {expanded && (
+      {!wide && expanded && (
         <TableExpandModal
           title="Document Extraction Queue"
           anchorRef={tableAnchorRef}

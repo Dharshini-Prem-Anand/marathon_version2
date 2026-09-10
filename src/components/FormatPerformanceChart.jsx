@@ -2,10 +2,17 @@ import { formatPerformance } from '../data'
 
 const gridLines = [100, 75, 50, 25, 0]
 
-export default function FormatPerformanceChart() {
+export default function FormatPerformanceChart({ onClose }) {
   return (
     <section className="panel format-performance">
-      <h2 className="panel-title">Format Performance (Accuracy %)</h2>
+      <div className="panel-title-row">
+        <h2 className="panel-title">Format Performance (Accuracy %)</h2>
+        {onClose && (
+          <button className="btn-link" onClick={onClose}>
+            Hide
+          </button>
+        )}
+      </div>
       <div className="bar-chart">
         <div className="bar-chart-axis">
           {gridLines.map((g) => (
@@ -28,7 +35,6 @@ export default function FormatPerformanceChart() {
           ))}
         </div>
       </div>
-      <button className="btn-link view-all-link">View Format Diagnostics</button>
     </section>
   )
 }

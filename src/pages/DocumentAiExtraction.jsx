@@ -43,6 +43,17 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
   const [refreshKey, setRefreshKey] = useState(0)
   const [rerunning, setRerunning] = useState(false)
   const [rerunError, setRerunError] = useState(null)
+  const [showFormatDiagnostics, setShowFormatDiagnostics] = useState(false)
+
+  const statsActions = useMemo(
+    () => ({
+      'Overall Extraction Accuracy': {
+        label: showFormatDiagnostics ? 'Hide Format Diagnostics' : 'View Format Diagnostics',
+        onClick: () => setShowFormatDiagnostics((v) => !v),
+      },
+    }),
+    [showFormatDiagnostics]
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -241,9 +252,9 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
         onDateRangeChange={setDateRange}
         onGo={handleGo}
       />
-      <StatsRow stats={stats} />
+      <StatsRow stats={stats} actions={statsActions} />
 
-      <div className="docai-top-tiles">
+      <div className={`docai-top-tiles${showFormatDiagnostics ? '' : ' docai-top-tiles-no-chart'}`}>
         <DocumentQueueTable
           rows={filteredQueue}
           selectedId={selectedDoc?.id ?? null}
@@ -251,8 +262,11 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
           loading={documentsLoading}
           error={documentsError}
           onOpenEmail={onNavigateToEmail}
+          wide={!showFormatDiagnostics}
         />
-        <FormatPerformanceChart />
+        {showFormatDiagnostics && (
+          <FormatPerformanceChart onClose={() => setShowFormatDiagnostics(false)} />
+        )}
         <PainPointTable />
         <LearningModelPerformance compact />
       </div>
