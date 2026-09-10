@@ -7,8 +7,8 @@ import {
   mapDieSchema,
   emptyField,
   buildSchemaFieldPayload,
+  validateFieldName,
   DATA_TYPES,
-  SETUP_TYPES,
 } from '../utils/schemaMappers'
 
 const SECTION_LABEL = { header: 'Header Field', lineItem: 'Line Item Field' }
@@ -85,8 +85,9 @@ function FieldTable({ title, fields, onAdd, onEdit, editingField }) {
   )
 }
 
-function FieldForm({ field, isNew, onChange, onSave, onCancel, saving, saveError }) {
-  const canSave = field.name.trim().length > 0 && !saving
+function FieldForm({ field, isNew, onChange, onSave, onCancel, saving, saveError, existingNames }) {
+  const nameError = validateFieldName(field.name, existingNames)
+  const canSave = field.name.trim().length > 0 && !nameError && !saving
 
   return (
     <div className="schema-form">
@@ -109,11 +110,20 @@ function FieldForm({ field, isNew, onChange, onSave, onCancel, saving, saveError
         <label className="schema-field-label">
           Name <span className="schema-required">*</span>
           <input
-            className="schema-input"
+            className={`schema-input${nameError ? ' schema-input-invalid' : ''}`}
             value={field.name}
             onChange={(e) => onChange({ ...field, name: e.target.value })}
-            placeholder="e.g. TaxAmount"
+            placeholder="e.g. VendorName"
+            aria-invalid={Boolean(nameError)}
+            aria-describedby="schema-name-hint"
+            autoComplete="off"
+            spellCheck={false}
           />
+          <span id="schema-name-hint" className="schema-field-hint">
+            No spaces. For more than one word, join them and capitalise each — e.g.{' '}
+            <code>VendorName</code>, not <code>vendor name</code>.
+          </span>
+          {nameError && <span className="schema-field-invalid">{nameError}</span>}
         </label>
 
         <label className="schema-field-label">
@@ -135,19 +145,6 @@ function FieldForm({ field, isNew, onChange, onSave, onCancel, saving, saveError
             onChange={(e) => onChange({ ...field, dataType: e.target.value })}
           >
             {DATA_TYPES.map((t) => (
-              <option key={t}>{t}</option>
-            ))}
-          </select>
-        </label>
-
-        <label className="schema-field-label">
-          Setup Type <span className="schema-required">*</span>
-          <select
-            className="schema-input"
-            value={field.setupType}
-            onChange={(e) => onChange({ ...field, setupType: e.target.value })}
-          >
-            {SETUP_TYPES.map((t) => (
               <option key={t}>{t}</option>
             ))}
           </select>
@@ -209,6 +206,15 @@ export default function SchemaConfigurationDialog({ onClose }) {
     setIsNew(false)
     setSaveError(null)
   }
+
+  // Names already taken in the section being edited. The row's own original
+  // name is excluded so re-saving an unchanged field isn't flagged a duplicate.
+  const existingNamesForEditing = (() => {
+    if (!schema || !editing) return []
+    const list = editing.section === 'header' ? schema.headerFields : schema.lineItemFields
+    const ownName = editing.raw?.name ?? (isNew ? null : editing.name)
+    return list.map((f) => f.name).filter((n) => n !== ownName)
+  })()
 
   // Persist, then re-read the schema so the list shows what the service
   // actually stored rather than what we hoped it stored.
@@ -285,6 +291,7 @@ export default function SchemaConfigurationDialog({ onClose }) {
               <PaneSplitter onMouseDown={startResize} />
               <div className="schema-form-pane">
                 <FieldForm
+                  existingNames={existingNamesForEditing}
                   field={editing}
                   isNew={isNew}
                   onChange={setEditing}

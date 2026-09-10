@@ -94,6 +94,7 @@ function App() {
   const [collapsed, setCollapsed] = useState(false)
   const [pendingDocumentId, setPendingDocumentId] = useState(null)
   const [pendingExceptionId, setPendingExceptionId] = useState(null)
+  const [pendingEmailId, setPendingEmailId] = useState(null)
 
   // Refreshing the page should land back on whichever menu item the user
   // was on, not reset to Dashboard.
@@ -117,6 +118,12 @@ function App() {
     setActiveItem('Document AI & Extraction')
   }
 
+  // Document AI's queue links each document back to the email it arrived on.
+  function handleNavigateToEmail(messageId) {
+    setPendingEmailId(messageId)
+    setActiveItem('Email & Attachment Triage')
+  }
+
   function handleNavigateToException(invoiceId) {
     setPendingExceptionId(invoiceId)
     setActiveItem('Exceptions & Recommendations')
@@ -124,13 +131,21 @@ function App() {
 
   function renderPage() {
     if (activeItem === 'Dashboard') return <Dashboard onNavigate={setActiveItem} />
-    if (activeItem === 'Email & Attachment Triage') return <EmailTriage onNavigateToDocument={handleNavigateToDocument} />
+    if (activeItem === 'Email & Attachment Triage')
+      return (
+        <EmailTriage
+          onNavigateToDocument={handleNavigateToDocument}
+          pendingSelectId={pendingEmailId}
+          onPendingSelectConsumed={() => setPendingEmailId(null)}
+        />
+      )
     if (activeItem === 'Document AI & Extraction')
       return (
         <DocumentAiExtraction
           pendingSelectId={pendingDocumentId}
           onPendingSelectConsumed={() => setPendingDocumentId(null)}
           onNavigate={setActiveItem}
+          onNavigateToEmail={handleNavigateToEmail}
         />
       )
     if (activeItem === 'Pre-Validation')

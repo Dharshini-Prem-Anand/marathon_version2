@@ -7,10 +7,17 @@ import IntakeByChannel from '../components/IntakeByChannel'
 import PreprocessingMetrics from '../components/PreprocessingMetrics'
 import ValueDeliveredRow from '../components/ValueDeliveredRow'
 import { useFilters, matchesOption } from '../hooks/useFilters'
-import { emailTriageFilters, emailTriageStats, triageQueue } from '../data'
-import { fetchEmailAttachments, fetchEmailMetadata } from '../api/invoiceAutomation'
-import { dateRangeBounds, isTodayRange, mockRowDate } from '../utils/dateRange'
-import { buildMockPreview, buildRemotePreview, mapEmailAttachment, mapEmailMetadata } from '../utils/triageMappers'
+import { emailTriageFilters, emailTriageStats } from '../data'
+import { fetchEmailAttachments, fetchEmailMetadata, fetchTriageKpis } from '../api/invoiceAutomation'
+import { ALL_DATES_RANGE, dateRangeFilter } from '../utils/dateRange'
+import {
+  KPI_UNAVAILABLE,
+  kpiDateParams,
+  kpiRangeSubtitle,
+  mergeKpiStats,
+  TRIAGE_KPI_FIELDS,
+} from '../utils/kpiTiles'
+import { buildRemotePreview, mapEmailAttachment, mapEmailMetadata } from '../utils/triageMappers'
 
 const DEFAULT_DATE_RANGE = 'Today'
 
@@ -21,7 +28,7 @@ function matchesWhenKnown(selected, actual) {
   return matchesOption(selected, actual)
 }
 
-export default function EmailTriage({ onNavigateToDocument }) {
+export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onPendingSelectConsumed }) {
   const { draft, applied, setField, apply } = useFilters(emailTriageFilters)
   const [dateRange, setDateRange] = useState(DEFAULT_DATE_RANGE)
   const [appliedDateRange, setAppliedDateRange] = useState(DEFAULT_DATE_RANGE)
@@ -34,8 +41,6 @@ export default function EmailTriage({ onNavigateToDocument }) {
   const [attachments, setAttachments] = useState([])
   const [attachmentsLoading, setAttachmentsLoading] = useState(false)
   const [attachmentsError, setAttachmentsError] = useState(null)
-
-  const showLive = isTodayRange(appliedDateRange)
 
   useEffect(() => {
     let cancelled = false
@@ -61,27 +66,44 @@ export default function EmailTriage({ onNavigateToDocument }) {
     }
   }, [])
 
-  // Mock rows for every range other than Today, narrowed to the chosen window.
-  const mockRows = useMemo(() => {
-    const { start, end } = dateRangeBounds(appliedDateRange)
-    return triageQueue
-      .map((row, index) => ({ ...row, receivedDate: mockRowDate(row, index) }))
-      .filter((row) => row.receivedDate >= start && row.receivedDate < end)
-  }, [appliedDateRange])
+  // Every row is live; the Date Range filter narrows them by when the email
+  // was received rather than switching the page to a different data source.
+  const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
 
-  const sourceRows = showLive ? emails : mockRows
+  const filteredRows = emails
+    .filter(
+      (row) =>
+        inDateRange(row.receivedDateTime) &&
+        matchesOption(applied['Source'], row.source) &&
+        matchesWhenKnown(applied['Sender / Vendor'], row.vendor) &&
+        matchesWhenKnown(applied['Proposed Category'], row.category) &&
+        matchesWhenKnown(applied['Priority'], row.priority)
+    )
+    // Newest first — the order the queue table opens in, so the email
+    // previewed by default is its top row and not whichever one the service
+    // happened to return first.
+    .sort((a, b) => new Date(b.receivedDateTime ?? 0) - new Date(a.receivedDateTime ?? 0))
 
-  const filteredRows = sourceRows.filter(
-    (row) =>
-      matchesOption(applied['Source'], row.source) &&
-      matchesWhenKnown(applied['Sender / Vendor'], row.vendor) &&
-      matchesWhenKnown(applied['Proposed Category'], row.category) &&
-      matchesWhenKnown(applied['Priority'], row.priority)
-  )
+  // Arriving from a document's "Source Email" link: select that email once its
+  // row has loaded. Rows are keyed by MessageID, which is what the link sends.
+  // Each page keeps its own Date Range, so the linked email can sit outside
+  // this one's window — drop the constraint rather than land on another email.
+  useEffect(() => {
+    if (!pendingSelectId) return
+    const target = emails.find((r) => r.id === pendingSelectId)
+    if (!target) return
+    setSelectedId(pendingSelectId)
+    if (!inDateRange(target.receivedDateTime)) {
+      setDateRange(ALL_DATES_RANGE)
+      setAppliedDateRange(ALL_DATES_RANGE)
+    }
+    onPendingSelectConsumed?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingSelectId, emails])
 
   const selectedRow = filteredRows.find((r) => r.id === selectedId) ?? filteredRows[0] ?? null
   const previewId = selectedRow?.id ?? null
-  const selectedMessageId = selectedRow?.isRemote ? selectedRow.messageId : null
+  const selectedMessageId = selectedRow?.messageId ?? null
 
   useEffect(() => {
     if (!selectedMessageId) {
@@ -114,25 +136,24 @@ export default function EmailTriage({ onNavigateToDocument }) {
     }
   }, [selectedMessageId])
 
-  const preview = useMemo(() => {
-    if (!selectedRow) return null
-    return selectedRow.isRemote ? buildRemotePreview(selectedRow, attachments) : buildMockPreview(selectedRow)
-  }, [selectedRow, attachments])
+  const preview = useMemo(
+    () => (selectedRow ? buildRemotePreview(selectedRow, attachments) : null),
+    [selectedRow, attachments]
+  )
 
   // Document AI & Extraction keys its queue by (MessageID, FileName), so a
-  // direct link only resolves for live rows whose attachments have loaded.
+  // direct link only resolves once the attachments have loaded.
   const documentId = useMemo(() => {
-    if (!selectedRow?.isRemote) return null
+    if (!selectedRow) return null
     const primary = attachments[0]
     if (!primary) return null
     return `${selectedRow.messageId}::${primary.fileName}`
   }, [selectedRow, attachments])
 
-  // The stepper reads category / confidence off the row; for live rows those
-  // come from the leading attachment.
+  // The stepper reads category / confidence off the row; those come from the
+  // leading attachment.
   const stepperRow = useMemo(() => {
     if (!selectedRow) return null
-    if (!selectedRow.isRemote) return selectedRow
     return {
       ...selectedRow,
       category: attachments[0]?.category ?? '—',
@@ -140,15 +161,35 @@ export default function EmailTriage({ onNavigateToDocument }) {
     }
   }, [selectedRow, attachments])
 
-  const stats = useMemo(
-    () =>
-      emailTriageStats.map((stat) =>
-        stat.label === 'Emails Received Today'
-          ? { ...stat, value: emailsLoading ? '…' : emails.length.toLocaleString() }
-          : stat
-      ),
-    [emails.length, emailsLoading]
-  )
+  // The tile row comes from /triageKpis, over whatever window the Date Range
+  // filter has applied. null until it answers, so the tiles show a placeholder
+  // instead of the sample numbers they're defined with.
+  const [kpis, setKpis] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetchTriageKpis(kpiDateParams(appliedDateRange))
+      .then((res) => {
+        if (!cancelled) setKpis(res)
+      })
+      .catch(() => {
+        if (!cancelled) setKpis(KPI_UNAVAILABLE)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [appliedDateRange])
+
+  const stats = useMemo(() => {
+    const merged = mergeKpiStats(emailTriageStats, TRIAGE_KPI_FIELDS, kpis)
+    // This tile counts arrivals over the applied window, so it says which
+    // window under the number instead of hard-coding "Today" in the label.
+    return merged.map((stat) =>
+      stat.label === 'Emails Received' ? { ...stat, target: kpiRangeSubtitle(appliedDateRange) } : stat
+    )
+  }, [kpis, appliedDateRange])
 
   const handleGo = () => {
     apply()
@@ -173,15 +214,15 @@ export default function EmailTriage({ onNavigateToDocument }) {
           rows={filteredRows}
           selectedId={previewId}
           onSelect={setSelectedId}
-          loading={showLive && emailsLoading}
-          error={showLive ? emailsError : null}
+          loading={emailsLoading}
+          error={emailsError}
         />
         {previewId && (
           <EmailPreviewPanel
             row={stepperRow}
             preview={preview}
             loadingAttachments={Boolean(selectedMessageId) && attachmentsLoading}
-            attachmentsError={selectedRow?.isRemote ? attachmentsError : null}
+            attachmentsError={attachmentsError}
             documentId={documentId}
             onNavigateToDocument={onNavigateToDocument}
           />

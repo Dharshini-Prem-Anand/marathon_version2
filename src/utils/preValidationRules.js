@@ -1,4 +1,4 @@
-import { vendorName } from './vendorNames'
+import { vendorLabel } from './vendorNames'
 
 // Parses PreValidation.PrevalidationRules into rows for the Validation Rule
 // Results table.
@@ -111,12 +111,12 @@ function formatDate(value) {
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 }
 
-// PreValidation.VendorName is often blank, leaving only the vendor code
-// (VendorNo, e.g. "USSU-FFC10"). Resolve that through the same code->name
-// lookup the other live pages (PO & Line Matching, Exceptions) already use,
-// instead of showing the raw code.
-function resolveVendorName(head) {
-  return head.VendorName || vendorName(head.VendorNo)
+// PreValidation.VendorName is null on every row, leaving only the vendor code
+// (VendorNo, e.g. "USSU-FFC10"). The readable name comes from the extraction,
+// keyed by invoice number; the code is the fallback when the document had no
+// vendor name extracted.
+function resolveVendorName(head, vendorNamesByInvoice) {
+  return head.VendorName || vendorLabel(vendorNamesByInvoice, head.InvoiceNumber, head.VendorNo)
 }
 
 // The badge mirrors the mock wording so the existing styling still applies.
@@ -136,12 +136,12 @@ const DEFAULT_DOCUMENT_CLASSIFICATION = [
   { label: 'Invoice', confidence: '—', badgeColor: 'green', selected: true },
 ]
 
-function buildVendorPayee(head) {
+function buildVendorPayee(head, vendorNamesByInvoice) {
   const active = head.IsActive === true || String(head.VendorStatus ?? '').toLowerCase() === 'active'
   return [
     {
       type: 'Proposed Vendor',
-      name: resolveVendorName(head),
+      name: resolveVendorName(head, vendorNamesByInvoice),
       confidence: '—',
       badgeColor: 'gray',
     },
@@ -174,7 +174,7 @@ function buildVendorPayee(head) {
   ]
 }
 
-export function buildPreValidationRecords(rows) {
+export function buildPreValidationRecords(rows, vendorNamesByInvoice = {}) {
   const grouped = new Map()
   for (const row of rows) {
     const key = row.InvoiceNumber
@@ -197,7 +197,7 @@ export function buildPreValidationRecords(rows) {
     ids.push(invoiceNumber)
     records[invoiceNumber] = {
       invoice: {
-        vendorName: resolveVendorName(head).toUpperCase(),
+        vendorName: resolveVendorName(head, vendorNamesByInvoice).toUpperCase(),
         confidenceBadge: confidenceBadge(validationRuleResults),
         invoiceNumber,
         invoiceDate: formatDate(head.CreationDate),
@@ -215,11 +215,14 @@ export function buildPreValidationRecords(rows) {
         totalAmountDue: `${money(gross, currency)} ${currency}`,
       },
       validationRuleResults,
-      vendorPayeeValidation: buildVendorPayee(head),
+      vendorPayeeValidation: buildVendorPayee(head, vendorNamesByInvoice),
       documentClassification: DEFAULT_DOCUMENT_CLASSIFICATION,
       // Kept for the queue row.
-      vendor: resolveVendorName(head),
+      vendor: resolveVendorName(head, vendorNamesByInvoice),
       amount: money(gross, currency),
+      // Raw, unformatted — what the Date Range filter and the queue's date
+      // sort read, so neither depends on parsing a display string back.
+      creationDate: head.CreationDate ?? null,
     }
   }
 

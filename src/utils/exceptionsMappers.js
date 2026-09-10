@@ -4,7 +4,7 @@
 // can show when they're available.
 
 import { money } from './matchingMappers.js'
-import { vendorName } from './vendorNames.js'
+import { vendorLabel } from './vendorNames.js'
 import { priorityColor } from '../data.js'
 
 function normalizePriority(value) {
@@ -24,7 +24,7 @@ function formatDue(value) {
 
 const PRIORITY_RANK = { High: 0, Medium: 1, Low: 2 }
 
-export function buildExceptionRows(exceptions) {
+export function buildExceptionRows(exceptions, vendorNamesByInvoice = {}) {
   return [...exceptions]
     .sort((a, b) => {
       const rankA = PRIORITY_RANK[normalizePriority(a.Priority)]
@@ -45,12 +45,15 @@ export function buildExceptionRows(exceptions) {
         invoice: row.InvoiceNumber,
         priority,
         // Vendor comes back as a code (e.g. "USSU-LSF01"), same as Invoices —
-        // map it through the same display-name table.
-        vendor: vendorName(row.Vendor),
+        // the readable name comes from the extraction, keyed by invoice number.
+        vendor: vendorLabel(vendorNamesByInvoice, row.InvoiceNumber, row.Vendor),
         amount: money(row.Amount),
         issue: row.Reason || '—',
         issueColor: null,
         due: formatDue(row.Due),
+        // Raw, unformatted — what the Date Range filter reads. Due is the only
+        // date this entity carries.
+        dueDate: row.Due ?? null,
         dueColor: color,
         owner: row.Owner || '—',
         sla: Number.isFinite(sla) ? `${sla}h` : '—',

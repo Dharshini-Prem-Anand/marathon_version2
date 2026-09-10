@@ -9,15 +9,17 @@ import MatchingPerformance from '../components/MatchingPerformance'
 import VimProcessingTimeline from '../components/VimProcessingTimeline'
 import FilterEmptyState from '../components/FilterEmptyState'
 import { useFilters, matchesCompanyCode, matchesOption } from '../hooks/useFilters'
-import { poMatchingFilters, poMatchingStats, poMatchingQueue, poMatchingRecords } from '../data'
+import { poMatchingFilters, poMatchingStats } from '../data'
 import {
   fetchGoodsReceipts,
   fetchInvoices,
   fetchMatchExplanation,
   fetchPurchaseOrders,
+  fetchVendorNameFields,
 } from '../api/invoiceAutomation'
 import { buildMatchingRecords, matchingStatCounts } from '../utils/matchingMappers'
-import { isTodayRange } from '../utils/dateRange'
+import { buildVendorNamesByInvoice } from '../utils/vendorNames'
+import { dateRangeFilter } from '../utils/dateRange'
 
 const DEFAULT_DATE_RANGE = 'Today'
 
@@ -34,26 +36,6 @@ const EXPLANATION_NOT_READY = {
   evidence: 'The explanation service has not returned a result for this invoice.',
 }
 
-// Seed data shown for any date range other than Today — the CAP
-// Invoices/PurchaseOrders/GoodsReceipts data has no historical window to
-// page through yet, same reasoning as Document AI & Extraction's mock queue.
-const MOCK_DATA = (() => {
-  const ids = [...poMatchingQueue]
-  const records = {}
-  for (const id of ids) {
-    const r = poMatchingRecords[id]
-    records[id] = {
-      invoiceNumber: id,
-      context: r.context,
-      summaryCards: r.summaryCards,
-      matchLines: r.matchLines,
-      amount: r.summaryCards[0]?.value ?? '—',
-      explanation: r.explanation,
-    }
-  }
-  return { ids, records }
-})()
-
 export default function PoLineMatching({ onNavigateToException }) {
   const { draft, applied, setField, apply } = useFilters(poMatchingFilters)
   const [selectedId, setSelectedId] = useState(null)
@@ -67,10 +49,19 @@ export default function PoLineMatching({ onNavigateToException }) {
     let cancelled = false
     setError(null)
 
-    Promise.all([fetchInvoices(), fetchPurchaseOrders(), fetchGoodsReceipts()])
-      .then(([invoices, purchaseOrders, goodsReceipts]) => {
+    // Invoices carries only a vendor code; the readable name comes from the
+    // extraction, fetched alongside the three matching sets.
+    Promise.all([
+      fetchInvoices(),
+      fetchPurchaseOrders(),
+      fetchGoodsReceipts(),
+      fetchVendorNameFields().catch(() => []),
+    ])
+      .then(([invoices, purchaseOrders, goodsReceipts, vendorFields]) => {
         if (cancelled) return
-        setLiveData(buildMatchingRecords(invoices, purchaseOrders, goodsReceipts))
+        setLiveData(
+          buildMatchingRecords(invoices, purchaseOrders, goodsReceipts, buildVendorNamesByInvoice(vendorFields))
+        )
       })
       .catch((err) => {
         if (cancelled) return
@@ -85,8 +76,11 @@ export default function PoLineMatching({ onNavigateToException }) {
 
   const [explanation, setExplanation] = useState(null)
 
-  const showLive = isTodayRange(appliedDateRange)
-  const { ids, records } = showLive ? liveData : MOCK_DATA
+  const { ids, records } = liveData
+
+  // Every row is live; the Date Range filter narrows them by invoice creation
+  // date rather than switching the page to a different data source.
+  const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
 
   // Vendor and Invoice Channel options come from the loaded data — a static
   // dropdown would offer choices (e.g. EDI) that never match a live invoice,
@@ -104,6 +98,7 @@ export default function PoLineMatching({ onNavigateToException }) {
   const filteredQueue = ids.filter((id) => {
     const { context } = records[id]
     return (
+      inDateRange(records[id].creationDate) &&
       matchesCompanyCode(applied['Company Code']) &&
       matchesOption(applied['Invoice Channel'], context.channel) &&
       matchesOption(applied['Vendor'], context.vendor) &&
@@ -120,8 +115,6 @@ export default function PoLineMatching({ onNavigateToException }) {
 
   // One call per invoice selection. Any failure (route missing, network, empty
   // body) degrades to the "not ready" copy — it must never surface as an error.
-  // Seed invoices (any range other than Today) aren't known to the Python
-  // service, so they use their own canned explanation instead of calling it.
   // The previous invoice's explanation is cleared up front so a slow request
   // shows a busy indicator instead of briefly leaving stale content on screen.
   useEffect(() => {
@@ -129,11 +122,6 @@ export default function PoLineMatching({ onNavigateToException }) {
     setExplanationLoading(false)
 
     if (!selectedInvoiceNumber) {
-      return
-    }
-
-    if (!showLive) {
-      setExplanation(selectedRecord?.explanation ?? EXPLANATION_NOT_READY)
       return
     }
 
@@ -163,7 +151,7 @@ export default function PoLineMatching({ onNavigateToException }) {
     return () => {
       cancelled = true
     }
-  }, [selectedInvoiceNumber, showLive, selectedRecord])
+  }, [selectedInvoiceNumber])
 
   const queueRows = filteredQueue.map((id) => {
     const record = records[id]
@@ -259,7 +247,7 @@ export default function PoLineMatching({ onNavigateToException }) {
           <VimProcessingTimeline />
         </>
       ) : (
-        <FilterEmptyState message={(showLive && error) || 'No PO match record matches the selected filters.'} />
+        <FilterEmptyState message={error || 'No PO match record matches the selected filters.'} />
       )}
     </>
   )

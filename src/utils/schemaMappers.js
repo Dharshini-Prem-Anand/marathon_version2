@@ -17,7 +17,8 @@ export const DATA_TYPES = [
   'country/region',
   'list of values',
 ]
-export const SETUP_TYPES = ['auto', 'manual']
+// Every field is created with DIE's automatic extractor; not user-selectable.
+export const SETUP_TYPE = 'auto'
 
 function mapField(field, section) {
   return {
@@ -25,7 +26,6 @@ function mapField(field, section) {
     name: field?.name ?? '',
     description: field?.description ?? '',
     dataType: field?.formattingType ?? 'string',
-    setupType: field?.setup?.type ?? 'auto',
     raw: field,
   }
 }
@@ -49,7 +49,7 @@ export function mapDieSchema(payload) {
 
 // A blank row for the Add pane.
 export function emptyField(section) {
-  return { section, name: '', description: '', dataType: 'string', setupType: 'auto', raw: null }
+  return { section, name: '', description: '', dataType: 'string', raw: null }
 }
 
 // Builds the /updateDieSchemaFields body.
@@ -70,7 +70,7 @@ function toEntry(field) {
     name: (field.name ?? '').trim(),
     description: (field.description ?? '').trim(),
     data_type: field.dataType,
-    setup_type: field.setupType,
+    setup_type: SETUP_TYPE,
   }
 }
 
@@ -94,4 +94,26 @@ export function buildSchemaFieldPayload(schema, field, isNew) {
     header_fields: merge(schema.headerFields, 'header'),
     line_item_fields: merge(schema.lineItemFields, 'lineItem'),
   }
+}
+
+// DIE field names are used verbatim as extraction keys and as the FieldName in
+// ExtractedHeaderFields / ExtractedLineItemFields, so they can't contain
+// spaces or punctuation. Returns null when valid, otherwise the reason.
+export function validateFieldName(name, existingNames = []) {
+  const value = (name ?? '').trim()
+  if (!value) return null // nothing typed yet — not an error, just can't save
+
+  if (/\s/.test(value)) {
+    return 'No spaces allowed. Join the words and capitalise each one, e.g. VendorName.'
+  }
+  if (!/^[A-Za-z]/.test(value)) {
+    return 'Must start with a letter.'
+  }
+  if (!/^[A-Za-z0-9]+$/.test(value)) {
+    return 'Letters and numbers only — no spaces, hyphens, underscores or symbols.'
+  }
+  if (existingNames.some((n) => n.toLowerCase() === value.toLowerCase())) {
+    return `A field called "${value}" already exists in this section.`
+  }
+  return null
 }

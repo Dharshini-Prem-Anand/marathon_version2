@@ -1,5 +1,4 @@
 import { groupLineItemFields } from './documentMappers'
-import { vendorName as resolveVendorCode } from './vendorNames'
 
 // Maps an editable header field on the Selected Invoice Preview to the
 // Validation Rule Results category it stands for. When that rule's result
@@ -54,9 +53,13 @@ export function buildInvoicePreviewFromExtractedFields(headerRows, fallbackInvoi
 
   const currency = fieldValue(headerRows, 'DocumentCurrency') || 'USD'
   const gross = fieldValue(headerRows, 'GrossAmount')
-  // Falls back through the same code->name lookup used elsewhere when the
-  // extraction only resolved a vendor code (e.g. "USSU-FFC10"), not a name.
-  const vendorLabel = fieldValue(headerRows, 'VendorName') || resolveVendorCode(fieldValue(headerRows, 'VendorNO'))
+  // The extracted name, falling back to the extracted code when the document
+  // only yielded one (e.g. "USSU-FFC10").
+  const vendorLabel =
+    fieldValue(headerRows, 'vendorName') ||
+    fieldValue(headerRows, 'VendorName') ||
+    fieldValue(headerRows, 'VendorNO') ||
+    '—'
   const grossFormatted = gross != null ? `${money(gross, currency)} ${currency}` : '—'
 
   const lineItemRows = headerRows[0]?.lineItemFields ?? []

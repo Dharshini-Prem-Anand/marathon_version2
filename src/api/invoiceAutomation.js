@@ -38,6 +38,48 @@ export function fetchExtractedLineItemFields(messageId, fileName) {
   }).then((res) => res?.value ?? [])
 }
 
+// Extracted header fields for one invoice, with their line items — the source
+// for Pre-Validation's Selected Invoice Preview.
+//
+// The deployed service rejects both halves of this today: "Property
+// InvoiceNumber does not exist in ExtractedHeaderFields" and "Navigation
+// property lineItemFields is not defined". Callers must therefore treat a
+// failure as "no extracted preview" and fall back, not as a page error. It
+// starts working as soon as the service exposes the denormalized
+// InvoiceNumber column and the lineItemFields association.
+export function fetchExtractedHeaderFieldsByInvoice(invoiceNumber) {
+  return apiGet('/ExtractedHeaderFields', {
+    $filter: `InvoiceNumber eq ${odataString(invoiceNumber)}`,
+    $expand: 'lineItemFields',
+  }).then((res) => res?.value ?? [])
+}
+
+// Vendor names for the queues, from the extraction rather than the invoice
+// tables (which carry only vendor codes).
+//
+// NOT the documented shape — ?$filter=InvoiceNumber eq '<no>'&$expand=lineItemFields
+// is rejected by the deployed service, which has neither the denormalized
+// InvoiceNumber column ("Property InvoiceNumber does not exist") nor the
+// lineItemFields navigation. Until those ship, the invoice number is itself an
+// extracted field, so both rows are pulled in one call and paired up by
+// document (see buildVendorNamesByInvoice).
+//
+// Both casings of each field name are requested: the live schema spells them
+// "vendorName" and "VendorNO", and Schema Configuration lets them be renamed.
+const VENDOR_NAME_FILTER = [
+  'InvoiceNumber',
+  'vendorName',
+  'VendorName',
+  'VendorNO',
+  'VendorNo',
+]
+  .map((name) => `FieldName eq ${odataString(name)}`)
+  .join(' or ')
+
+export function fetchVendorNameFields() {
+  return apiGet('/ExtractedHeaderFields', { $filter: VENDOR_NAME_FILTER }).then((res) => res?.value ?? [])
+}
+
 // PO & Line Matching. The CAP associations Invoices.purchaseOrder /
 // Invoices.goodsReceipt resolve to null (PurchaseOrderItem, GRNumber,
 // MaterialDocYear and MaterialDocItem are empty on every invoice row), so
@@ -85,17 +127,27 @@ export function fetchPreValidationByInvoice(invoiceNumber) {
   }).then((res) => res?.value ?? [])
 }
 
-// DIE-extracted header + line-item fields for one invoice — richer than
-// /PreValidation (which carries no vendor name or line-item description for
-// some invoices). Used to fill in the Selected Invoice Preview panel.
-// Every returned header row carries the same expanded lineItemFields array
-// (the association is keyed by MessageID+FileName, not by field), so callers
-// only need lineItemFields off any one row.
-export function fetchExtractedHeaderFieldsByInvoice(invoiceNumber) {
-  return apiGet('/ExtractedHeaderFields', {
-    $filter: `InvoiceNumber eq ${odataString(invoiceNumber)}`,
-    $expand: 'lineItemFields',
-  }).then((res) => res?.value ?? [])
+// KPI tiles for Email Triage, Pre-Validation and Exceptions. One call per
+// page, from the Python service; the window is inclusive on both ends and the
+// service falls back to today when it's omitted, so both params are always sent.
+function kpiQuery(path, { dateFrom, dateTo }) {
+  if (!PYTHON_SERVICE_BASE_URL) {
+    return Promise.reject(new Error('Python service URL is not configured'))
+  }
+  const query = `dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`
+  return apiGetJson(`${PYTHON_SERVICE_BASE_URL}${path}?${query}`)
+}
+
+export function fetchTriageKpis(range) {
+  return kpiQuery('/triageKpis', range)
+}
+
+export function fetchPreValidationKpis(range) {
+  return kpiQuery('/preValidationKpis', range)
+}
+
+export function fetchExceptionKpis(range) {
+  return kpiQuery('/exceptionKpis', range)
 }
 
 // Document Information Extraction schema (header + line-item field

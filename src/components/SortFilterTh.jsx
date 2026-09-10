@@ -5,7 +5,11 @@ import { ArrowUpNarrowWide, ArrowDownNarrowWide, Filter, ChevronDown } from 'luc
 // A <th> whose label opens a menu with Sort Ascending / Sort Descending / Filter,
 // backed by a useColumnSortFilter() controller (`ctl`). Menu renders in a portal
 // so it never gets clipped by a scrollable .table-wrap.
-export default function SortFilterTh({ columnKey, label, ctl, className }) {
+//
+// `dragProps` / `dragState` are optional and come from useColumnOrder() when a
+// table lets the user rearrange its columns; without them the header behaves
+// exactly as before.
+export default function SortFilterTh({ columnKey, label, ctl, className, dragProps, dragState }) {
   const triggerRef = useRef(null)
   const menuRef = useRef(null)
   const [pos, setPos] = useState(null)
@@ -42,13 +46,23 @@ export default function SortFilterTh({ columnKey, label, ctl, className }) {
     }
   }, [open, ctl])
 
+  const classes = [
+    'th-sortfilter',
+    className,
+    dragProps ? 'th-draggable' : null,
+    dragState ? `th-drag-${dragState}` : null,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <th className={`th-sortfilter${className ? ` ${className}` : ''}`}>
+    <th className={classes} {...dragProps}>
       <button
         type="button"
         ref={triggerRef}
         className={`th-sortfilter-trigger${active ? ' active' : ''}`}
         onClick={handleTriggerClick}
+        title={dragProps ? 'Drag to move this column' : undefined}
       >
         <span>{label}</span>
         <ChevronDown size={12} />

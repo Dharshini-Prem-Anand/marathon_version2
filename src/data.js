@@ -244,7 +244,8 @@ export const emailTriageFilters = [
 ]
 
 export const emailTriageStats = [
-  { icon: 'mail', label: 'Emails Received Today', value: '2,600', valueColor: 'blue', target: null },
+  // Label stays range-neutral; the page fills `target` with the applied window.
+  { icon: 'mail', label: 'Emails Received', value: '2,600', valueColor: 'blue', target: null },
   { icon: 'checkCircle', label: 'Auto-Triaged', value: '89%', valueColor: 'green', target: 'Target: 95%' },
   { icon: 'fileText', label: 'Attachments Downloaded', value: '2,314', valueColor: 'blue', target: null },
   { icon: 'user', label: 'Manual Reviews', value: '42', valueColor: 'red', target: 'Target: < 20' },
@@ -615,7 +616,7 @@ export const emailTriageGuidance = {
       icon: 'barChart',
       type: 'table',
       rows: [
-        { label: 'Emails Received Today', current: '2,600', target: '—' },
+        { label: 'Emails Received', current: '2,600', target: '—' },
         { label: 'Auto-Triaged', current: '89%', target: '95%' },
         { label: 'Attachments Downloaded', current: '2,314', target: '—' },
         { label: 'Manual Reviews', current: '42', target: '< 20' },
@@ -660,12 +661,9 @@ export const documentAiStats = [
   { icon: 'clock', label: 'Average Extraction Time', value: '3.8 Min', valueColor: 'blue', target: '-0.4 min vs prior 7 days' },
 ]
 
-// Seed queue shown for any Date Range other than "Today" — same convention
-// as Email Triage's triageQueue: mockRowDate() spreads these across recent
-// days at render time, keyed off `time` the same way triageQueue rows are.
-// Reuses the same vendors / invoice numbers as triageQueue and priorityQueue
-// so a document opened here matches the Email Triage inbox and the
-// Dashboard's Priority Action Queue exceptions.
+// UNUSED: every screen now binds to the backend for every date range, so no
+// page renders this. Kept only as a reference for the row shape
+// mapDocumentRow() produces.
 export const documentAiQueue = [
   {
     id: 'DEMO-10456::INV-2025-10456.pdf',

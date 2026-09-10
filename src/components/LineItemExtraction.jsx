@@ -2,6 +2,12 @@ import { useMemo } from 'react'
 import SortFilterTh from './SortFilterTh'
 import TableSearchInput from './TableSearchInput'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
+import { useColumnOrder } from '../hooks/useColumnOrder'
+
+// Item is the grouping key rather than an extracted field, but as far as the
+// table is concerned it's a column like any other — sortable, filterable and
+// draggable along with the rest.
+const ITEM_COLUMN = { key: 'itemNumber', label: 'Item' }
 
 function confidenceClass(pct) {
   const n = parseInt(pct, 10)
@@ -12,10 +18,12 @@ function confidenceClass(pct) {
 }
 
 export default function LineItemExtraction({ columns = [], rows = [], loading, error, hasDocument }) {
-  const colCount = columns.length + 1
+  const allColumns = useMemo(() => [ITEM_COLUMN, ...columns], [columns])
+  const { columns: orderedColumns, dragPropsFor, dragStateFor, scrollRef } = useColumnOrder(allColumns)
+  const colCount = allColumns.length
 
   const COLUMNS = useMemo(() => {
-    const cols = { itemNumber: (row) => row.itemNumber }
+    const cols = { [ITEM_COLUMN.key]: (row) => row.itemNumber }
     for (const c of columns) {
       cols[c.key] = (row) => row.cells[c.key]?.value
     }
@@ -30,13 +38,19 @@ export default function LineItemExtraction({ columns = [], rows = [], loading, e
         <h2 className="panel-title">Line-Items</h2>
         <TableSearchInput ctl={ctl} />
       </div>
-      <div className="table-wrap">
+      <div className="table-wrap" ref={scrollRef}>
         <table>
           <thead>
             <tr>
-              <SortFilterTh columnKey="itemNumber" label="Item" ctl={ctl} />
-              {columns.map((c) => (
-                <SortFilterTh key={c.key} columnKey={c.key} label={c.label} ctl={ctl} />
+              {orderedColumns.map((c) => (
+                <SortFilterTh
+                  key={c.key}
+                  columnKey={c.key}
+                  label={c.label}
+                  ctl={ctl}
+                  dragProps={dragPropsFor(c.key)}
+                  dragState={dragStateFor(c.key)}
+                />
               ))}
             </tr>
           </thead>
@@ -68,8 +82,8 @@ export default function LineItemExtraction({ columns = [], rows = [], loading, e
             ) : (
               ctl.rows.map((row) => (
                 <tr key={row.itemNumber}>
-                  <td>{row.itemNumber}</td>
-                  {columns.map((c) => {
+                  {orderedColumns.map((c) => {
+                    if (c.key === ITEM_COLUMN.key) return <td key={c.key}>{row.itemNumber}</td>
                     const cell = row.cells[c.key]
                     if (!cell) return <td key={c.key}>—</td>
                     return (
@@ -92,4 +106,3 @@ export default function LineItemExtraction({ columns = [], rows = [], loading, e
     </section>
   )
 }
-

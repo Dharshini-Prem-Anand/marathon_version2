@@ -63,38 +63,22 @@ export function mapEmailAttachment(record) {
   }
 }
 
+// EmailMetadata carries no recipient, so the preview shows the mailbox the
+// email agent polls — every row in the queue was fetched from it. Change this
+// if the agent is pointed at a different inbox (or drop it once the service
+// returns the actual To address).
+const POLLED_MAILBOX = 'alerts@sierradigitalinc.com'
+
 // The preview panel needs a header block plus the attachment rows.
 export function buildRemotePreview(row, attachments) {
   const primary = attachments[0]
   return {
     from: row.senderAddress ? `${row.vendor} <${row.senderAddress}>` : row.vendor,
-    to: 'apinvoices@marathon.com',
+    to: POLLED_MAILBOX,
     receivedFull: formatDateTime(row.receivedDateTime),
     source: row.source,
     attachments,
     proposedCategory: primary?.category ?? '—',
     proposedConfidence: primary?.confidence ?? '—',
-  }
-}
-
-// Mock rows only carry a count of attachments, so synthesise the file rows.
-export function buildMockPreview(row) {
-  if (row.preview) return row.preview
-
-  const slug = row.subject.replace(/[^a-zA-Z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-  return {
-    from: row.vendor === '—' ? 'Unknown Sender' : `${row.vendor} <info@${row.vendor.split(' ')[0].toLowerCase()}.com>`,
-    to: 'apinvoices@marathon.com',
-    receivedFull: `May 18, 2025 ${row.time}`,
-    source: row.source,
-    attachments: Array.from({ length: row.attachments }).map((_, i) => ({
-      fileName: `${slug}${i > 0 ? `_${i + 1}` : ''}.pdf`,
-      type: 'PDF',
-      size: '204 KB',
-      category: row.category,
-      confidence: row.confidence,
-    })),
-    proposedCategory: row.category,
-    proposedConfidence: row.confidence,
   }
 }

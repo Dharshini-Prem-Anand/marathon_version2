@@ -36,19 +36,42 @@ export function dateRangeBounds(label, now = new Date()) {
   }
 }
 
-export function isTodayRange(label) {
-  return label === 'Today'
+// The FilterBar option whose window is unbounded (see dateRangeBounds' default
+// branch). A cross-page link selects a row the current window may exclude, so
+// the target page switches to this rather than landing on the wrong row.
+export const ALL_DATES_RANGE = 'Custom Range'
+
+// Live rows carry dates in three shapes: an ISO timestamp
+// (EmailMetadata.ReceivedDateTime), an ISO date (Invoices.CreationDate,
+// "2025-01-06") and, on a few invoice rows, DD/MM/YYYY ("22/08/2026").
+//
+// A date-only string is deliberately NOT handed to `new Date()`, which reads
+// it as UTC midnight — west of Greenwich that lands on the previous local day
+// and would shift the row into the wrong window. Anything unrecognised
+// returns null.
+export function parseRowDate(value) {
+  if (!value) return null
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value
+
+  const text = String(value).trim()
+
+  const isoDate = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text)
+  if (isoDate) return new Date(Number(isoDate[1]), Number(isoDate[2]) - 1, Number(isoDate[3]))
+
+  const dmy = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(text)
+  if (dmy) return new Date(Number(dmy[3]), Number(dmy[2]) - 1, Number(dmy[1]))
+
+  const parsed = new Date(text)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
-// Mock rows carry a clock time but no date. Spread them deterministically over
-// the recent past so the date-range filter has something meaningful to act on.
-const MOCK_DAY_OFFSETS = [0, 0, 1, 2, 3, 5, 6, 8, 11, 14, 18, 22, 27, 33, 40, 48, 57, 66, 74, 88, 100, 130, 200, 300]
-
-export function mockRowDate(row, index, now = new Date()) {
-  const offset = MOCK_DAY_OFFSETS[index % MOCK_DAY_OFFSETS.length]
-  const [clock, meridiem] = String(row.time).split(' ')
-  const [rawHour, minute] = clock.split(':').map(Number)
-  let hour = rawHour % 12
-  if (meridiem === 'PM') hour += 12
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset, hour, minute || 0, 0)
+// Builds the predicate a queue filters its rows by. A row whose date is
+// missing or unparseable can't be placed in the window, so it's excluded
+// rather than shown in every range.
+export function dateRangeFilter(rangeLabel, now = new Date()) {
+  const { start, end } = dateRangeBounds(rangeLabel, now)
+  return (value) => {
+    const date = parseRowDate(value)
+    return Boolean(date) && date >= start && date < end
+  }
 }

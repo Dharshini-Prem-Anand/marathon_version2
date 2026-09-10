@@ -7,10 +7,12 @@ import WhatIfResolutionScenarios from '../components/WhatIfResolutionScenarios'
 import InfoBanner from '../components/InfoBanner'
 import FilterEmptyState from '../components/FilterEmptyState'
 import { useFilters, matchesCompanyCode, matchesOption } from '../hooks/useFilters'
-import { exceptionsFilters, exceptionsStats, scenarioInfoText, priorityExceptionQueue, totalExceptionsCount } from '../data'
-import { fetchExceptions } from '../api/invoiceAutomation'
+import { exceptionsFilters, exceptionsStats, scenarioInfoText } from '../data'
+import { fetchExceptionKpis, fetchExceptions, fetchVendorNameFields } from '../api/invoiceAutomation'
 import { buildExceptionRows } from '../utils/exceptionsMappers'
-import { isTodayRange } from '../utils/dateRange'
+import { buildVendorNamesByInvoice } from '../utils/vendorNames'
+import { ALL_DATES_RANGE, dateRangeFilter } from '../utils/dateRange'
+import { EXCEPTION_KPI_FIELDS, KPI_UNAVAILABLE, kpiDateParams, mergeKpiStats } from '../utils/kpiTiles'
 
 const DEFAULT_DATE_RANGE = 'Today'
 
@@ -21,9 +23,7 @@ export default function ExceptionsRecommendations({ pendingSelectId, onPendingSe
   const [dateRange, setDateRange] = useState(DEFAULT_DATE_RANGE)
   const [appliedDateRange, setAppliedDateRange] = useState(DEFAULT_DATE_RANGE)
 
-  // The Priority Exception Queue binds to the live CAP /Exceptions data for
-  // Today, same as the other pages — any other range falls back to the seed
-  // queue, since there's no historical window to page through yet.
+  // The Priority Exception Queue binds to the live CAP /Exceptions data.
   const [liveRows, setLiveRows] = useState([])
   const [liveError, setLiveError] = useState(null)
 
@@ -31,10 +31,12 @@ export default function ExceptionsRecommendations({ pendingSelectId, onPendingSe
     let cancelled = false
     setLiveError(null)
 
-    fetchExceptions()
-      .then((exceptions) => {
+    // Exceptions.Vendor is a code; the readable name comes from the extraction,
+    // fetched alongside so the queue renders once with names resolved.
+    Promise.all([fetchExceptions(), fetchVendorNameFields().catch(() => [])])
+      .then(([exceptions, vendorFields]) => {
         if (cancelled) return
-        setLiveRows(buildExceptionRows(exceptions))
+        setLiveRows(buildExceptionRows(exceptions, buildVendorNamesByInvoice(vendorFields)))
       })
       .catch((err) => {
         if (cancelled) return
@@ -47,8 +49,34 @@ export default function ExceptionsRecommendations({ pendingSelectId, onPendingSe
     }
   }, [])
 
-  const showLive = isTodayRange(appliedDateRange)
-  const sourceRows = showLive ? liveRows : priorityExceptionQueue
+  // The tile row comes from /exceptionKpis, over whatever window the Date
+  // Range filter has applied. null until it answers, so the tiles show a
+  // placeholder instead of the sample numbers they're defined with.
+  const [kpis, setKpis] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetchExceptionKpis(kpiDateParams(appliedDateRange))
+      .then((res) => {
+        if (!cancelled) setKpis(res)
+      })
+      .catch(() => {
+        if (!cancelled) setKpis(KPI_UNAVAILABLE)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [appliedDateRange])
+
+  const stats = useMemo(() => mergeKpiStats(exceptionsStats, EXCEPTION_KPI_FIELDS, kpis), [kpis])
+
+  // Every row is live; the Date Range filter narrows them by due date — the
+  // only date the Exceptions entity carries — rather than switching the page
+  // to a different data source.
+  const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
+  const sourceRows = useMemo(() => liveRows.filter((row) => inDateRange(row.dueDate)), [liveRows, inDateRange])
 
   // Vendor options come from the loaded data — a static dropdown would offer
   // names that can never match a live exception.
@@ -65,14 +93,21 @@ export default function ExceptionsRecommendations({ pendingSelectId, onPendingSe
   )
 
   // A deep link from Pre-Validation / PO & Line Matching's "Exception —
-  // routed for..." link arrives as an invoice id — select that row.
+  // routed for..." link arrives as an invoice id — select that row. Each page
+  // keeps its own Date Range, so the linked exception can sit outside this
+  // one's window — drop the constraint rather than land on another exception.
   useEffect(() => {
     if (!pendingSelectId) return
-    if (!sourceRows.some((row) => row.invoice === pendingSelectId)) return
+    const target = liveRows.find((row) => row.invoice === pendingSelectId)
+    if (!target) return
     setSelectedInvoice(pendingSelectId)
+    if (!inDateRange(target.dueDate)) {
+      setDateRange(ALL_DATES_RANGE)
+      setAppliedDateRange(ALL_DATES_RANGE)
+    }
     onPendingSelectConsumed?.()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingSelectId, sourceRows])
+  }, [pendingSelectId, liveRows])
 
   const selectedRecordId = filteredRows.some((row) => row.invoice === selectedInvoice)
     ? selectedInvoice
@@ -95,15 +130,15 @@ export default function ExceptionsRecommendations({ pendingSelectId, onPendingSe
         onDateRangeChange={setDateRange}
         onGo={handleGo}
       />
-      <StatsRow stats={exceptionsStats} />
+      <StatsRow stats={stats} />
 
       {filteredRows.length === 0 ? (
-        <FilterEmptyState message={(showLive && liveError) || 'No exceptions match the selected filters.'} />
+        <FilterEmptyState message={liveError || 'No exceptions match the selected filters.'} />
       ) : (
         <div className="exceptions-main-grid">
           <PriorityExceptionQueue
             rows={filteredRows}
-            totalCount={showLive ? filteredRows.length : totalExceptionsCount}
+            totalCount={filteredRows.length}
             selectedId={selectedRecordId}
             onSelect={setSelectedInvoice}
           />

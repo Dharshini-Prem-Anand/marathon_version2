@@ -43,28 +43,26 @@ export function fileFormat(contentType, fileName) {
   return ext ? ext.toUpperCase() : '—'
 }
 
-// FieldName values come straight from the DIE schema. Give the known ones a
-// readable label and fall back to splitting camel case for anything new.
-const FIELD_LABELS = {
-  VendorNO: 'Vendor No.',
-  VendorName: 'Vendor',
-  InvoiceNumber: 'Invoice Number',
-  CreationDate: 'Invoice Date',
-  PurchaseOrder: 'PO Number',
-  AmountInDocCurrency: 'Amount',
-  TaxAmount: 'Tax Amount',
-  GrossAmount: 'Gross Amount',
-  MaterialDescription: 'Description',
-  Quantity: 'Quantity',
-  UnitOfMeasure: 'UOM',
-  UnitPrice: 'Unit Price',
-  DocumentCurrency: 'Currency',
-}
-
+// FieldName values come straight from the DIE schema, so the label has to be
+// derived from the name rather than looked up in a table — a field added to
+// the schema has to render readably without a frontend change.
+//
+// Words are split on a lower-to-upper boundary only, and each word gets its
+// first letter capitalised without the rest being touched, so a run of
+// capitals survives intact:
+//   vendorName     -> Vendor Name
+//   PurchaseOrder  -> Purchase Order
+//   vendorNNsa     -> Vendor NNsa   (not "Vendor N Nsa")
 export function fieldLabel(fieldName) {
   if (!fieldName) return '—'
-  if (FIELD_LABELS[fieldName]) return FIELD_LABELS[fieldName]
-  return fieldName.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/_/g, ' ')
+  const words = String(fieldName)
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+  return words.length ? words.join(' ') : '—'
 }
 
 export function mapDocumentRow(record) {
@@ -104,6 +102,19 @@ export function mapHeaderField(record) {
   }
 }
 
+// The Item column comes from the grouping key and is always first; these
+// follow it in a fixed order so the table reads the same whatever order the
+// service returns fields in (OData sorts them alphabetically, which puts
+// Amount before Description). Anything not listed keeps its arrival order
+// after these, so a new DIE field still shows up without a change here.
+const LINE_ITEM_COLUMN_ORDER = ['MaterialNumber', 'MaterialDescription']
+
+function orderLineItemColumns(names) {
+  const preferred = LINE_ITEM_COLUMN_ORDER.filter((n) => names.includes(n))
+  const rest = names.filter((n) => !LINE_ITEM_COLUMN_ORDER.includes(n))
+  return [...preferred, ...rest]
+}
+
 // Line items come back flat (EAV): one row per (ItemNumber, FieldName). Group
 // by ItemNumber into a row, and let the field names define the columns so any
 // new field DIE returns shows up without a frontend change.
@@ -127,5 +138,5 @@ export function groupLineItemFields(records) {
     (a, b) => Number(a.itemNumber) - Number(b.itemNumber) || a.itemNumber.localeCompare(b.itemNumber)
   )
 
-  return { columns: columns.map((name) => ({ key: name, label: fieldLabel(name) })), rows }
+  return { columns: orderLineItemColumns(columns).map((name) => ({ key: name, label: fieldLabel(name) })), rows }
 }

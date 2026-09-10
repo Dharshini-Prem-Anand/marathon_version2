@@ -8,7 +8,7 @@
 //   invoice line -> receipts: PurchaseOrder + ItemNumber = PONumber + Orderitem_number  (SUMMED —
 //                             a line can have several partial goods receipts)
 
-import { vendorName } from './vendorNames.js'
+import { vendorLabel } from './vendorNames.js'
 
 const num = (v) => {
   const n = Number(v)
@@ -47,7 +47,7 @@ function sortGroupedByCreationDateDesc(grouped) {
   return [...grouped.entries()].sort((a, b) => creationTime(b[1]) - creationTime(a[1]))
 }
 
-export function buildMatchingRecords(invoices, purchaseOrders, goodsReceipts) {
+export function buildMatchingRecords(invoices, purchaseOrders, goodsReceipts, vendorNamesByInvoice = {}) {
   // PO lines by "PurchaseOrder::PurchaseOrderItem"
   const poByLine = new Map()
   for (const po of purchaseOrders) {
@@ -135,7 +135,7 @@ export function buildMatchingRecords(invoices, purchaseOrders, goodsReceipts) {
       fiscalYear: head.FiscalYear,
       poNumber,
       context: {
-        vendor: vendorName(head.VendorNO),
+        vendor: vendorLabel(vendorNamesByInvoice, head.InvoiceNumber, head.VendorNO),
         vendorCode: head.VendorNO,
         // Invoices carries no channel; these all arrive via the email pipeline.
         channel: 'Email',
@@ -156,85 +156,12 @@ export function buildMatchingRecords(invoices, purchaseOrders, goodsReceipts) {
       // HeaderAmount is null on most invoices, so the queue amount is the
       // sum of the line amounts.
       amount: money(invTotal, currency),
+      // Raw, unformatted — what the Date Range filter reads.
+      creationDate: head.CreationDate ?? null,
     }
   }
 
   return { ids, records }
-}
-
-// Pre-Validation queue: same invoice grouping as buildMatchingRecords, but
-// without the PO/GR joins — the queue table only needs invoiceNumber, vendor
-// and the summed line amount.
-export function buildInvoiceSummaries(invoices) {
-  const grouped = new Map()
-  for (const row of invoices) {
-    const key = invoiceKey(row)
-    if (!grouped.has(key)) grouped.set(key, [])
-    grouped.get(key).push(row)
-  }
-
-  const summaries = []
-  for (const [key, lines] of sortGroupedByCreationDateDesc(grouped)) {
-    const head = lines[0]
-    const currency = head.Currency || 'USD'
-    const total = lines.reduce((sum, line) => sum + num(line.AmountInDocCurrency), 0)
-    summaries.push({
-      id: key,
-      invoiceNumber: head.InvoiceNumber,
-      vendor: vendorName(head.VendorNO),
-      amount: money(total, currency),
-    })
-  }
-  return summaries
-}
-
-const formatInvoiceDate = (value) => {
-  if (!value) return '—'
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return String(value)
-  return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(d)
-}
-
-// Pre-Validation "Selected Invoice Preview" — same invoice grouping as
-// buildMatchingRecords, reshaped into the header + line-item fields that
-// panel expects (there's no PO/GR match view here, just the invoice as
-// received).
-export function buildInvoicePreviews(invoices) {
-  const grouped = new Map()
-  for (const row of invoices) {
-    const key = invoiceKey(row)
-    if (!grouped.has(key)) grouped.set(key, [])
-    grouped.get(key).push(row)
-  }
-
-  const previews = {}
-  for (const [key, lines] of grouped) {
-    const head = lines[0]
-    const currency = head.Currency || 'USD'
-    const invTotal = lines.reduce((sum, line) => sum + num(line.AmountInDocCurrency), 0)
-    const grossAmount = `${money(invTotal, currency)} ${currency}`
-
-    previews[key] = {
-      // The mock invoices always displayed the vendor name in caps.
-      vendorName: vendorName(head.VendorNO).toUpperCase(),
-      // No confidence score on Invoices — every live invoice gets the same badge.
-      confidenceBadge: 'HIGH CONFIDENCE',
-      invoiceNumber: head.InvoiceNumber,
-      invoiceDate: formatInvoiceDate(head.PostingDate),
-      poNumber: head.PurchaseOrder || '—',
-      grossAmount,
-      lineItems: lines.map((line) => ({
-        line: line.ItemNumber,
-        description: line.MaterialDescription || line.MaterialNumber || '—',
-        quantity: num(line.Quantity),
-        uom: line.BaseUnit || '—',
-        unitPrice: unitPrice(line.AmountInDocCurrency, line.Quantity, currency),
-        amount: money(line.AmountInDocCurrency, currency),
-      })),
-      totalAmountDue: grossAmount,
-    }
-  }
-  return previews
 }
 
 // Counts for the stats tiles that the data can actually support.

@@ -12,16 +12,18 @@ import CorrectionHistoryModelLearning from '../components/CorrectionHistoryModel
 import ApprovalBanner from '../components/ApprovalBanner'
 import FilterEmptyState from '../components/FilterEmptyState'
 import { useFilters, matchesCompanyCode, matchesOption } from '../hooks/useFilters'
+import { preValidationFilters, preValidationStats } from '../data'
+import { buildInvoicePreviewFromExtractedFields, FIELD_RULE_CATEGORY } from '../utils/preValidationMappers'
 import {
-  preValidationFilters,
-  preValidationStats,
-  preValidationQueue,
-  preValidationRecords,
-} from '../data'
-import { FIELD_RULE_CATEGORY, buildInvoicePreviewFromExtractedFields } from '../utils/preValidationMappers'
-import { fetchPreValidation, fetchExtractedHeaderFieldsByInvoice } from '../api/invoiceAutomation'
+  fetchExtractedHeaderFieldsByInvoice,
+  fetchPreValidation,
+  fetchPreValidationKpis,
+  fetchVendorNameFields,
+} from '../api/invoiceAutomation'
 import { buildPreValidationRecords } from '../utils/preValidationRules'
-import { isTodayRange } from '../utils/dateRange'
+import { buildVendorNamesByInvoice } from '../utils/vendorNames'
+import { KPI_UNAVAILABLE, kpiDateParams, mergeKpiStats, PRE_VALIDATION_KPI_FIELDS } from '../utils/kpiTiles'
+import { dateRangeFilter, parseRowDate } from '../utils/dateRange'
 
 const DEFAULT_DATE_RANGE = 'Today'
 
@@ -31,43 +33,11 @@ const CONFIDENCE_BAND_BY_BADGE = {
   'LOW CONFIDENCE': 'Low (< 70%)',
 }
 
-// Row-level vendor labels matching vendorOptions casing — seed rows only; live
-// rows carry the vendor straight from PreValidation.
-const VENDOR_BY_ID = {
-  'INV-2025-10456': 'Global Industrial Supply',
-  'INV-2025-10412': 'Office Depot',
-  'INV-2025-10398': 'Cintas Corporation',
-  'INV-2025-10422': 'Verizon Wireless',
-  'CM-2025-10077': 'Grainger',
-}
-
-// Seed data shown for any date range other than Today — PreValidation has no
-// historical window to page through yet. Reshaped to the same { ids, records }
-// contract buildPreValidationRecords returns so both sources render alike.
-const MOCK_DATA = (() => {
-  const ids = [...preValidationQueue]
-  const records = {}
-  for (const id of ids) {
-    const record = preValidationRecords[id]
-    records[id] = {
-      ...record,
-      invoiceNumber: id,
-      vendor: VENDOR_BY_ID[id] ?? record.invoice.vendorName,
-      amount: record.invoice.grossAmount.replace(' USD', ''),
-    }
-  }
-  return { ids, records }
-})()
-
-// record.invoice.invoiceDate is a formatted display string ("May 18, 2025")
-// for both live rows (buildPreValidationRecords) and seed rows — parseable
-// back into a real Date for chronological sorting. Unparseable/missing dates
-// sort last regardless of direction (handled by useColumnSortFilter's null check).
+// The invoice's own CreationDate, unformatted, as a Date — what the queue
+// sorts and the Date Range filter matches on. Missing/unparseable dates sort
+// last regardless of direction (handled by useColumnSortFilter's null check).
 function invoiceDateValue(record) {
-  const raw = record?.invoice?.invoiceDate
-  if (!raw) return null
-  const d = new Date(raw)
-  return Number.isNaN(d.getTime()) ? null : d
+  return parseRowDate(record?.creationDate)
 }
 
 // Document Type / Confidence Band / Validation Status all come off the
@@ -99,10 +69,13 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
     let cancelled = false
     setLiveError(null)
 
-    fetchPreValidation()
-      .then((rows) => {
+    // Vendor names live in the extraction, not on PreValidation (whose
+    // VendorName column is null on every row) — fetched alongside so the queue
+    // renders once, with names already resolved.
+    Promise.all([fetchPreValidation(), fetchVendorNameFields().catch(() => [])])
+      .then(([rows, vendorFields]) => {
         if (cancelled) return
-        setLiveData(buildPreValidationRecords(rows))
+        setLiveData(buildPreValidationRecords(rows, buildVendorNamesByInvoice(vendorFields)))
       })
       .catch((err) => {
         if (cancelled) return
@@ -115,11 +88,35 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
     }
   }, [])
 
+  // The tile row comes from /preValidationKpis, over whatever window the Date
+  // Range filter has applied. null until it answers, so the tiles show a
+  // placeholder instead of the sample numbers they're defined with.
+  const [kpis, setKpis] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetchPreValidationKpis(kpiDateParams(appliedDateRange))
+      .then((res) => {
+        if (!cancelled) setKpis(res)
+      })
+      .catch(() => {
+        if (!cancelled) setKpis(KPI_UNAVAILABLE)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [appliedDateRange])
+
   // A field correction marks that field's rule as passed, for that invoice only.
   const [ruleOverrides, setRuleOverrides] = useState({})
 
-  const showLive = isTodayRange(appliedDateRange)
-  const { ids, records } = showLive ? liveData : MOCK_DATA
+  const { ids, records } = liveData
+
+  // Every row is live; the Date Range filter narrows them by invoice creation
+  // date rather than switching the page to a different data source.
+  const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
 
   const rulesFor = (id) => ruleOverrides[id] ?? records[id]?.validationRuleResults ?? []
 
@@ -136,6 +133,7 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
     .filter((id) => {
       const attrs = deriveAttributes(records[id], rulesFor(id))
       return (
+        inDateRange(records[id].creationDate) &&
         matchesCompanyCode(applied['Company Code']) &&
         matchesOption(applied['Vendor'], attrs.vendor) &&
         matchesOption(applied['Document Type'], attrs.documentType) &&
@@ -166,7 +164,7 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
   const [extractedPreview, setExtractedPreview] = useState(null)
 
   useEffect(() => {
-    if (!showLive || !selectedRecordId) {
+    if (!selectedRecordId) {
       setExtractedPreview(null)
       return
     }
@@ -185,7 +183,7 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
     return () => {
       cancelled = true
     }
-  }, [showLive, selectedRecordId])
+  }, [selectedRecordId])
 
   // confidenceBadge isn't part of the extracted-fields shape (it comes from
   // validation rules, already on selectedRecord.invoice) — spreading
@@ -223,16 +221,9 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
     setAppliedDateRange(dateRange)
   }
 
-  // "Pending Pre-Validation" tracks the queue table below it — the rest of
-  // the tiles have no live source yet, so they stay on their sample values.
   const stats = useMemo(
-    () =>
-      preValidationStats.map((stat) =>
-        stat.label === 'Pending Pre-Validation'
-          ? { ...stat, value: filteredQueue.length.toLocaleString() }
-          : stat
-      ),
-    [filteredQueue]
+    () => mergeKpiStats(preValidationStats, PRE_VALIDATION_KPI_FIELDS, kpis),
+    [kpis]
   )
 
   return (
@@ -285,7 +276,7 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
         </>
       ) : (
         <FilterEmptyState
-          message={(showLive && liveError) || 'No invoice matches the selected filters.'}
+          message={liveError || 'No invoice matches the selected filters.'}
         />
       )}
     </>

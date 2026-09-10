@@ -8,7 +8,7 @@ import FormatPerformanceChart from '../components/FormatPerformanceChart'
 import PainPointTable from '../components/PainPointTable'
 import LearningModelPerformance from '../components/LearningModelPerformance'
 import { useFilters, matchesCompanyCode, matchesOption } from '../hooks/useFilters'
-import { documentAiFilters, documentAiStats, documentAiQueue, documentAiFields } from '../data'
+import { documentAiFilters, documentAiStats } from '../data'
 import {
   fetchDocumentPdf,
   fetchDocumentQueue,
@@ -16,13 +16,13 @@ import {
   fetchExtractedLineItemFields,
   reprocessExtraction,
 } from '../api/invoiceAutomation'
-import { groupLineItemFields, mapDocumentRow, mapHeaderField, formatReceived } from '../utils/documentMappers'
-import { dateRangeBounds, isTodayRange, mockRowDate } from '../utils/dateRange'
+import { groupLineItemFields, mapDocumentRow, mapHeaderField } from '../utils/documentMappers'
+import { ALL_DATES_RANGE, dateRangeFilter } from '../utils/dateRange'
 
 const LOW_CONFIDENCE_THRESHOLD = 80
 const DEFAULT_DATE_RANGE = 'Today'
 
-export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectConsumed, onNavigate }) {
+export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectConsumed, onNavigate, onNavigateToEmail }) {
   const { draft, applied, setField, apply } = useFilters(documentAiFilters)
   const [dateRange, setDateRange] = useState(DEFAULT_DATE_RANGE)
   const [appliedDateRange, setAppliedDateRange] = useState(DEFAULT_DATE_RANGE)
@@ -68,37 +68,33 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
     }
   }, [refreshKey])
 
+  // Every row is live; the Date Range filter narrows them by when the email
+  // carrying the document was received, rather than switching the page to a
+  // different data source.
+  const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
+
   // A deep link from Email & Attachment Triage arrives as a documentId; once
-  // that document has loaded into the queue, select it and clear the pending flag.
+  // that document has loaded into the queue, select it and clear the pending
+  // flag. Each page keeps its own Date Range, so the linked document can sit
+  // outside this one's window — drop the constraint rather than land on
+  // another document.
   useEffect(() => {
     if (!pendingSelectId) return
-    if (!documents.some((d) => d.id === pendingSelectId)) return
+    const target = documents.find((d) => d.id === pendingSelectId)
+    if (!target) return
     setSelectedId(pendingSelectId)
+    if (!inDateRange(target.receivedDateTime)) {
+      setDateRange(ALL_DATES_RANGE)
+      setAppliedDateRange(ALL_DATES_RANGE)
+    }
     onPendingSelectConsumed?.()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingSelectId, documents])
 
-  const showLive = isTodayRange(appliedDateRange)
-
-  // Seed rows for every range other than Today, narrowed to the chosen
-  // window — same mechanism Email Triage uses for its mockRows.
-  const mockDocuments = useMemo(() => {
-    const { start, end } = dateRangeBounds(appliedDateRange)
-    return documentAiQueue
-      .map((row, index) => ({ ...row, receivedDate: mockRowDate(row, index) }))
-      .filter((row) => row.receivedDate >= start && row.receivedDate < end)
-      .map((row) => ({
-        ...row,
-        receivedDateTime: row.receivedDate.toISOString(),
-        received: formatReceived(row.receivedDate.toISOString()),
-      }))
-  }, [appliedDateRange])
-
-  const sourceDocuments = showLive ? documents : mockDocuments
-
-  const filteredQueue = sourceDocuments
+  const filteredQueue = documents
     .filter(
       (row) =>
+        inDateRange(row.receivedDateTime) &&
         matchesCompanyCode(applied['Company Code']) &&
         matchesOption(applied['Vendor'], row.vendor) &&
         matchesOption(applied['Invoice Channel'], row.channel) &&
@@ -114,15 +110,6 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
     if (!selectedDoc) {
       setHeaderFields([])
       setLineItems({ columns: [], rows: [] })
-      setFieldsError(null)
-      setFieldsLoading(false)
-      return
-    }
-
-    if (!selectedDoc.isRemote) {
-      const seed = documentAiFields[selectedDoc.id]
-      setHeaderFields(seed?.headerFields ?? [])
-      setLineItems(seed?.lineItems ?? { columns: [], rows: [] })
       setFieldsError(null)
       setFieldsLoading(false)
       return
@@ -166,7 +153,7 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
     if (!dieDocumentId) {
       setPdfUrl(null)
       setPdfError(
-        selectedDoc ? (selectedDoc.isRemote ? 'No DIE document ID on this record.' : 'Preview not available for sample data.') : null
+        selectedDoc ? 'No DIE document ID on this record.' : null
       )
       setPdfLoading(false)
       return
@@ -197,16 +184,18 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
     // dieDocumentId alone isn't enough: it stays null across the transition
-    // from "no selection yet" to "seed doc selected" (seed rows have no DIE
-    // id), so docKey is needed too or this effect silently never re-runs.
+    // from "no selection yet" to a row that has no DIE id, so docKey is
+    // needed too or this effect silently never re-runs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [docKey, dieDocumentId])
 
-  const statsLoading = showLive && documentsLoading
+  const statsLoading = documentsLoading
 
+  // The tiles count the queue as filtered, so the Date Range and the other
+  // filters visibly move them.
   const stats = useMemo(() => {
-    const total = sourceDocuments.length
-    const lowConfidence = sourceDocuments.filter(
+    const total = filteredQueue.length
+    const lowConfidence = filteredQueue.filter(
       (d) => Number.isFinite(d.confidenceValue) && d.confidenceValue < LOW_CONFIDENCE_THRESHOLD
     ).length
 
@@ -219,7 +208,7 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
       }
       return stat
     })
-  }, [sourceDocuments, statsLoading])
+  }, [filteredQueue, statsLoading])
 
   const handleGo = () => {
     apply()
@@ -259,8 +248,9 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
           rows={filteredQueue}
           selectedId={selectedDoc?.id ?? null}
           onSelect={setSelectedId}
-          loading={showLive && documentsLoading}
-          error={showLive ? documentsError : null}
+          loading={documentsLoading}
+          error={documentsError}
+          onOpenEmail={onNavigateToEmail}
         />
         <FormatPerformanceChart />
         <PainPointTable />
