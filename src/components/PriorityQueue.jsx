@@ -12,6 +12,32 @@ const priorityColor = {
 
 const PAGE_SIZE = 5
 
+const range = (start, end) => Array.from({ length: end - start + 1 }, (_, i) => start + i)
+
+// Bounds the page strip to a fixed number of slots — first, last, a window
+// around the current page, and '…' for whatever's skipped — instead of one
+// button per page, which overruns the panel once there are dozens of pages.
+// The slot count stays constant as the current page changes (unless there
+// simply aren't that many pages), so the bar doesn't grow or shrink and
+// shift the rest of the row as you page through.
+function pageWindow(current, count, siblingCount = 1) {
+  const totalSlots = siblingCount * 2 + 5
+  if (count <= totalSlots) return range(1, count)
+
+  const leftSibling = Math.max(current - siblingCount, 1)
+  const rightSibling = Math.min(current + siblingCount, count)
+  const showLeftDots = leftSibling > 2
+  const showRightDots = rightSibling < count - 1
+
+  if (!showLeftDots && showRightDots) {
+    return [...range(1, 3 + siblingCount * 2), '…', count]
+  }
+  if (showLeftDots && !showRightDots) {
+    return [1, '…', ...range(count - (3 + siblingCount * 2) + 1, count)]
+  }
+  return [1, '…', ...range(leftSibling, rightSibling), '…', count]
+}
+
 const COLUMNS = {
   priority: (row) => row.priority,
   invoice: (row) => row.invoice,
@@ -123,15 +149,21 @@ export default function PriorityQueue({ rows = [], loading }) {
             >
               <ChevronLeft size={14} />
             </button>
-            {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
-              <button
-                key={n}
-                className={`pagination-page${n === currentPage ? ' active' : ''}`}
-                onClick={() => setPage(n)}
-              >
-                {n}
-              </button>
-            ))}
+            {pageWindow(currentPage, pageCount).map((n, i) =>
+              n === '…' ? (
+                <span key={`ellipsis-${i}`} className="pagination-ellipsis">
+                  {n}
+                </span>
+              ) : (
+                <button
+                  key={n}
+                  className={`pagination-page${n === currentPage ? ' active' : ''}`}
+                  onClick={() => setPage(n)}
+                >
+                  {n}
+                </button>
+              )
+            )}
             <button
               className="pagination-btn"
               disabled={currentPage === pageCount}
