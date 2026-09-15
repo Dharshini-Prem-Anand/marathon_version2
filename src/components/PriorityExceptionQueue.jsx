@@ -1,7 +1,10 @@
+import { useRef, useState } from 'react'
+import { Maximize2 } from 'lucide-react'
 import { priorityColor } from '../data'
 import SortFilterTh from './SortFilterTh'
 import TableSearchInput from './TableSearchInput'
 import TablePagination from './TablePagination'
+import TableExpandModal from './TableExpandModal'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 import { usePagedRows } from '../hooks/usePagedRows'
 
@@ -21,19 +24,19 @@ const COLUMNS = {
 // roughly the height of that panel; the rest are a page away.
 const PAGE_SIZE = 10
 
-export default function PriorityExceptionQueue({ rows = [], selectedId, onSelect }) {
-  const colCount = 8
-  const ctl = useColumnSortFilter(rows, COLUMNS)
-  const paging = usePagedRows(ctl.rows, PAGE_SIZE)
+const COL_COUNT = 8
+
+// In the panel every value is ellipsized to one line, because the tile shares
+// its row with the AI Review panel. Zoomed, nothing is cut: the long columns
+// wrap onto as many lines as they need and the table keeps its full width,
+// scrolling sideways inside the modal.
+function ExceptionTable({ ctl, paging, expanded, selectedId, onSelect }) {
+  const clip = expanded ? '' : ' cell-ellipsis'
 
   return (
-    <section className="panel priority-exception-queue">
-      <div className="panel-title-row">
-        <h2 className="panel-title">Priority Exception Queue</h2>
-        <TableSearchInput ctl={ctl} />
-      </div>
-      <div className="table-wrap">
-        <table className="table-fixed">
+    <div className="table-wrap">
+      <table className={expanded ? 'exception-table-full' : 'table-fixed'}>
+        {!expanded && (
           <colgroup>
             <col style={{ width: '8%' }} />
             <col style={{ width: '14%' }} />
@@ -44,62 +47,113 @@ export default function PriorityExceptionQueue({ rows = [], selectedId, onSelect
             <col style={{ width: '12%' }} />
             <col style={{ width: '9%' }} />
           </colgroup>
-          <thead>
+        )}
+        <thead>
+          <tr>
+            <SortFilterTh columnKey="priority" label="Priority" ctl={ctl} />
+            <SortFilterTh columnKey="invoice" label="Invoice" ctl={ctl} />
+            <SortFilterTh columnKey="vendor" label="Vendor" ctl={ctl} />
+            <SortFilterTh columnKey="amount" label="Amount" ctl={ctl} />
+            <SortFilterTh columnKey="issue" label="Issue" ctl={ctl} />
+            <SortFilterTh columnKey="due" label="Due" ctl={ctl} />
+            <SortFilterTh columnKey="owner" label="Owner" ctl={ctl} />
+            <SortFilterTh columnKey="sla" label="SLA" ctl={ctl} />
+          </tr>
+        </thead>
+        <tbody>
+          {paging.visibleRows.length === 0 ? (
             <tr>
-              <SortFilterTh columnKey="priority" label="Priority" ctl={ctl} />
-              <SortFilterTh columnKey="invoice" label="Invoice" ctl={ctl} />
-              <SortFilterTh columnKey="vendor" label="Vendor" ctl={ctl} />
-              <SortFilterTh columnKey="amount" label="Amount" ctl={ctl} />
-              <SortFilterTh columnKey="issue" label="Issue" ctl={ctl} />
-              <SortFilterTh columnKey="due" label="Due" ctl={ctl} />
-              <SortFilterTh columnKey="owner" label="Owner" ctl={ctl} />
-              <SortFilterTh columnKey="sla" label="SLA" ctl={ctl} />
+              <td colSpan={COL_COUNT} className="table-empty-cell">
+                No exceptions match the selected filters.
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {paging.visibleRows.length === 0 ? (
-              <tr>
-                <td colSpan={colCount} className="table-empty-cell">
-                  No exceptions match the selected filters.
+          ) : (
+            paging.visibleRows.map((row) => (
+              <tr
+                key={row.id ?? row.invoice}
+                onClick={() => onSelect?.(row.invoice)}
+                className={`triage-row${selectedId === row.invoice ? ' selected' : ''}`}
+              >
+                <td>
+                  <span className={`priority-dot color-${priorityColor[row.priority]}`} />
+                  {row.priority}
+                </td>
+                <td className={`cell-mono${clip}`}>{row.invoice}</td>
+                <td className={clip.trim() || undefined} title={row.vendor}>
+                  {row.vendor}
+                </td>
+                <td>{row.amount}</td>
+                <td className={`${clip}${row.issueColor ? ` color-${row.issueColor}` : ''}`.trim() || undefined} title={row.issue}>
+                  {row.issue}
+                </td>
+                <td className={row.dueColor ? `color-${row.dueColor}` : undefined}>{row.due}</td>
+                <td className={clip.trim() || undefined}>{row.owner}</td>
+                <td>
+                  <span className={`priority-dot color-${row.slaColor}`} />
+                  <span className={`color-${row.slaColor}`}>{row.sla}</span>
                 </td>
               </tr>
-            ) : (
-              paging.visibleRows.map((row) => (
-                <tr
-                  key={row.id ?? row.invoice}
-                  onClick={() => onSelect?.(row.invoice)}
-                  className={`triage-row${selectedId === row.invoice ? ' selected' : ''}`}
-                >
-                  <td>
-                    <span className={`priority-dot color-${priorityColor[row.priority]}`} />
-                    {row.priority}
-                  </td>
-                  <td className="cell-mono cell-ellipsis">{row.invoice}</td>
-                  <td className="cell-ellipsis" title={row.vendor}>
-                    {row.vendor}
-                  </td>
-                  <td>{row.amount}</td>
-                  <td className={`cell-ellipsis${row.issueColor ? ` color-${row.issueColor}` : ''}`} title={row.issue}>
-                    {row.issue}
-                  </td>
-                  <td className={row.dueColor ? `color-${row.dueColor}` : undefined}>{row.due}</td>
-                  <td className="cell-ellipsis">{row.owner}</td>
-                  <td>
-                    <span className={`priority-dot color-${row.slaColor}`} />
-                    <span className={`color-${row.slaColor}`}>{row.sla}</span>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+// Paging is shared between the panel and the modal, so "View All" and page
+// changes made in one show up in the other.
+function QueueFooter({ paging }) {
+  return (
+    <>
       {paging.showViewAll && (
         <button className="btn-link view-all-link" onClick={paging.expand}>
           View All Exceptions ({paging.total})
         </button>
       )}
       {paging.expanded && <TablePagination paging={paging} />}
+    </>
+  )
+}
+
+export default function PriorityExceptionQueue({ rows = [], selectedId, onSelect }) {
+  const ctl = useColumnSortFilter(rows, COLUMNS)
+  const paging = usePagedRows(ctl.rows, PAGE_SIZE)
+  const [expanded, setExpanded] = useState(false)
+  const tableAnchorRef = useRef(null)
+
+  const tableProps = { ctl, paging, selectedId, onSelect }
+
+  return (
+    <section className="panel priority-exception-queue">
+      <div className="panel-title-row">
+        <h2 className="panel-title">Priority Exception Queue</h2>
+        <TableSearchInput ctl={ctl} />
+        <button
+          className="icon-btn table-expand-btn"
+          onClick={() => setExpanded(true)}
+          aria-label="Expand Priority Exception Queue table"
+          title="Expand table"
+        >
+          <Maximize2 size={16} />
+        </button>
+      </div>
+
+      <div ref={tableAnchorRef}>
+        <ExceptionTable {...tableProps} />
+      </div>
+      <QueueFooter paging={paging} />
+
+      {expanded && (
+        <TableExpandModal
+          title="Priority Exception Queue"
+          anchorRef={tableAnchorRef}
+          onClose={() => setExpanded(false)}
+        >
+          <ExceptionTable {...tableProps} expanded />
+          <QueueFooter paging={paging} />
+        </TableExpandModal>
+      )}
     </section>
   )
 }

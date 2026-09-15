@@ -43,6 +43,12 @@ export function fetchPipelineStatus(messageId) {
   }).then((res) => res?.value ?? [])
 }
 
+// Every pipeline row, for the Dashboard's flow strip — it counts documents
+// per stage across the whole window rather than for one email.
+export function fetchAllPipelineStatus() {
+  return apiGet('/PipelineStatus').then((res) => res?.value ?? [])
+}
+
 export function fetchExtractedHeaderFields(messageId, fileName) {
   return apiGet('/ExtractedHeaderFields', {
     $filter: documentKeyFilter(messageId, fileName),

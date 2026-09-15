@@ -1,5 +1,4 @@
 import { Users, Clock, ShieldCheck, TrendingUp, DollarSign } from 'lucide-react'
-import { valueRealization as defaultValueRealization, valueFooter as defaultValueFooter } from '../data'
 
 const iconMap = {
   users: Users,
@@ -9,7 +8,7 @@ const iconMap = {
   dollar: DollarSign,
 }
 
-export default function ValueRealization({ items = defaultValueRealization, footer = defaultValueFooter }) {
+export default function ValueRealization({ items = [], footer = [] }) {
   return (
     <section className="panel">
       <h2 className="panel-title">MVP Value Realization</h2>

@@ -1,7 +1,6 @@
 import { ChevronRight } from 'lucide-react'
-import { flowSteps as defaultFlowSteps, flowLegend as defaultFlowLegend } from '../data'
 
-export default function FlowSteps({ steps = defaultFlowSteps, legend = defaultFlowLegend }) {
+export default function FlowSteps({ steps = [], legend = [] }) {
   return (
     <section className="panel">
       <h2 className="panel-title">End-to-End Invoice Flow</h2>

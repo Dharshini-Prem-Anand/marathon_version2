@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { priorityQueue } from '../data'
 import SortFilterTh from './SortFilterTh'
 import TableSearchInput from './TableSearchInput'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
@@ -23,7 +22,7 @@ const COLUMNS = {
   action: (row) => row.action,
 }
 
-export default function PriorityQueue({ rows = priorityQueue }) {
+export default function PriorityQueue({ rows = [], loading }) {
   const ctl = useColumnSortFilter(rows, COLUMNS)
   const [page, setPage] = useState(1)
   const rowsKey = ctl.rows.map((r) => r.invoice).join('|')
@@ -44,7 +43,19 @@ export default function PriorityQueue({ rows = priorityQueue }) {
         <TableSearchInput ctl={ctl} />
       </div>
       <div className="table-wrap">
-        <table>
+        {/* Fixed columns: live issue text and recommendations are sentences,
+            and an auto-layout table lets one of them squeeze the rest of the
+            row into nothing. Each cell keeps its full text in a tooltip. */}
+        <table className="table-fixed">
+          <colgroup>
+            <col style={{ width: '9%' }} />
+            <col style={{ width: '11%' }} />
+            <col style={{ width: '17%' }} />
+            <col style={{ width: '25%' }} />
+            <col style={{ width: '13%' }} />
+            <col style={{ width: '12%' }} />
+            <col style={{ width: '13%' }} />
+          </colgroup>
           <thead>
             <tr>
               <SortFilterTh columnKey="priority" label="Priority" ctl={ctl} />
@@ -57,25 +68,31 @@ export default function PriorityQueue({ rows = priorityQueue }) {
             </tr>
           </thead>
           <tbody>
-            {ctl.rows.length === 0 ? (
+            {loading || ctl.rows.length === 0 ? (
               <tr>
                 <td colSpan={7} className="table-empty-cell">
-                  No invoices match the selected filters.
+                  {loading ? 'Loading exceptions…' : 'No exceptions match the selected filters.'}
                 </td>
               </tr>
             ) : (
               pageRows.map((row) => (
-                <tr key={row.invoice}>
+                <tr key={row.id ?? row.invoice}>
                   <td>
                     <span className={`priority-dot color-${priorityColor[row.priority]}`} />
                     {row.priority}
                   </td>
                   <td className="cell-mono">{row.invoice}</td>
-                  <td>{row.vendor}</td>
-                  <td>{row.issue}</td>
+                  <td className="cell-ellipsis" title={row.vendor}>
+                    {row.vendor}
+                  </td>
+                  <td className="cell-ellipsis" title={row.issue}>
+                    {row.issue}
+                  </td>
                   <td>{row.due}</td>
                   <td>{row.owner}</td>
-                  <td className="cell-action">{row.action}</td>
+                  <td className="cell-action cell-ellipsis" title={row.action}>
+                    {row.action}
+                  </td>
                 </tr>
               ))
             )}
@@ -83,7 +100,7 @@ export default function PriorityQueue({ rows = priorityQueue }) {
         </table>
       </div>
 
-      {ctl.rows.length > 0 && (
+      {!loading && ctl.rows.length > 0 && (
         <div className="table-pagination">
           <span>
             Showing {start + 1} to {Math.min(start + PAGE_SIZE, ctl.rows.length)} of {ctl.rows.length} entries

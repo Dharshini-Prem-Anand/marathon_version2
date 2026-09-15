@@ -1,5 +1,4 @@
 import { ClipboardList, List, Search, CheckSquare } from 'lucide-react'
-import { bottlenecks as defaultBottlenecks, diagnostics, dashboardIntervention } from '../data'
 
 const iconMap = {
   clipboard: ClipboardList,
@@ -9,18 +8,27 @@ const iconMap = {
 }
 
 export default function Bottlenecks({
-  bottlenecks = defaultBottlenecks,
-  intervention = dashboardIntervention,
+  bottlenecks,
+  diagnostics = [],
+  intervention = {},
   onReviewRecommendations,
 }) {
-  const maxValue = Math.max(...bottlenecks.map((b) => b.value))
+  // null while /preValidationKpis is in flight, [] when it came back with no
+  // failing rules — neither can be scaled against a maximum.
+  const bars = Array.isArray(bottlenecks) ? bottlenecks : []
+  const maxValue = Math.max(1, ...bars.map((b) => b.value))
 
   return (
     <section className="panel bottlenecks">
       <h2 className="panel-title">Process Bottlenecks &amp; Diagnostics</h2>
       <div className="bottlenecks-grid">
         <div className="bottleneck-bars">
-          {bottlenecks.map((b) => (
+          {bars.length === 0 && (
+            <div className="table-empty-cell">
+              {bottlenecks == null ? 'Loading rule failures…' : 'No rule failures in this period.'}
+            </div>
+          )}
+          {bars.map((b) => (
             <div className="bottleneck-row" key={b.label}>
               <span className="bottleneck-label">{b.label}</span>
               <div className="bottleneck-bar-track">

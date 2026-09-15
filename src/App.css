@@ -602,6 +602,12 @@
   white-space: normal;
 }
 
+/* ...except the ones that opt into one-line truncation: the live issue and
+   recommendation text runs to a couple of sentences. */
+.priority-queue td.cell-ellipsis {
+  white-space: nowrap;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -2484,6 +2490,51 @@ body.is-resizing-cols iframe {
 
 .table-expand-btn {
   flex-shrink: 0;
+}
+
+/* ---------- ZOOMED PRIORITY EXCEPTION QUEUE ---------- */
+/* Wide enough for all eight columns; the body still scrolls sideways when the
+   viewport can't give it that. */
+.priority-exception-queue .table-modal {
+  width: min(1180px, 94vw);
+}
+
+.priority-exception-queue .table-modal-body {
+  overflow: auto;
+}
+
+/* Auto layout, not the panel's fixed percentages: each column takes the width
+   its own content needs, and nothing is ellipsized. */
+.exception-table-full {
+  table-layout: auto;
+  min-width: 1060px;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.exception-table-full th,
+.exception-table-full td {
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+/* Vendor and Issue are the two that carry sentences — they wrap onto as many
+   lines as they need instead of pushing the table off the side. Due keeps its
+   full date on one line. */
+.exception-table-full th:nth-child(3),
+.exception-table-full td:nth-child(3) {
+  white-space: normal;
+  word-break: break-word;
+  min-width: 150px;
+  max-width: 210px;
+}
+
+.exception-table-full th:nth-child(5),
+.exception-table-full td:nth-child(5) {
+  white-space: normal;
+  word-break: break-word;
+  min-width: 260px;
+  max-width: 400px;
 }
 
 /* Line-item cells stack the extracted value above its confidence badge. */

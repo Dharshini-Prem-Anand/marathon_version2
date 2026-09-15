@@ -1,5 +1,4 @@
 import { Mail, FileText, CheckCircle2, Link2, Lightbulb, BarChart3 } from 'lucide-react'
-import { capabilityCards as defaultCapabilityCards } from '../data'
 
 const iconMap = {
   mail: Mail,
@@ -10,7 +9,7 @@ const iconMap = {
   barChart: BarChart3,
 }
 
-export default function CapabilityCards({ cards = defaultCapabilityCards }) {
+export default function CapabilityCards({ cards = [] }) {
   return (
     <section className="panel">
       <h2 className="panel-title">MVP Capability Performance</h2>

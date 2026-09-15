@@ -20,11 +20,14 @@ export const scorecardMetrics = [
   { label: 'Extraction & Validation Accuracy', value: '94%', target: 'Target 98%', trend: 'up', color: 'green' },
 ]
 
+// All four are filled from the loaded rows: company code via the purchase
+// order, channel from the email, vendor from the extraction and status from
+// where the pipeline left the invoice.
 export const dashboardFilters = [
-  { label: 'Company Code', value: 'All', options: companyCodeOptions },
-  { label: 'Invoice Channel', value: 'All', options: invoiceChannelOptions },
-  { label: 'Vendor', value: 'All', options: vendorOptions },
-  { label: 'Status', value: 'All', options: ['All', 'Active', 'Pending', 'Closed'] },
+  { label: 'Company Code', value: 'All', options: ['All'] },
+  { label: 'Invoice Channel', value: 'All', options: ['All'] },
+  { label: 'Vendor', value: 'All', options: ['All'] },
+  { label: 'Status', value: 'All', options: ['All'] },
 ]
 
 export const dashboardPersonaField = {
