@@ -23,6 +23,7 @@ import {
   fetchMatchingKpis,
   fetchPreValidationKpis,
   fetchPurchaseOrders,
+  fetchTouchlessCount,
   fetchTriageKpis,
   fetchVendorNameFields,
 } from '../api/invoiceAutomation'
@@ -67,6 +68,7 @@ export default function Dashboard({ onNavigate }) {
   const [preValidation, setPreValidation] = useState(null)
   const [exceptionKpis, setExceptionKpis] = useState(null)
   const [matching, setMatching] = useState(null)
+  const [touchlessCount, setTouchlessCount] = useState(null)
 
   const [pipeline, setPipeline] = useState(null)
   const [emails, setEmails] = useState([])
@@ -92,12 +94,14 @@ export default function Dashboard({ onNavigate }) {
     setPreValidation(null)
     setExceptionKpis(null)
     setMatching(null)
+    setTouchlessCount(null)
 
     load(fetchTriageKpis, setTriage)
     load(fetchExtractionKpis, setExtraction)
     load(fetchPreValidationKpis, setPreValidation)
     load(fetchExceptionKpis, setExceptionKpis)
     load(fetchMatchingKpis, setMatching)
+    load(fetchTouchlessCount, setTouchlessCount)
 
     return () => {
       cancelled = true
@@ -220,9 +224,10 @@ export default function Dashboard({ onNavigate }) {
     extraction,
     cycleTime,
     pipelineLoaded,
+    touchlessCount,
   })
   const flow = buildFlowSteps({ funnel, matching, pipelineLoaded })
-  const legend = buildFlowLegend({ funnel, exceptions: exceptionKpis, pipelineLoaded })
+  const legend = buildFlowLegend({ touchlessCount, exceptions: exceptionKpis })
   const cards = buildCapabilityCards(capabilityCards, {
     triage,
     extraction,

@@ -187,6 +187,12 @@ export function fetchExceptionKpis(range) {
   return kpiQuery('/exceptionKpis', range)
 }
 
+// Dashboard's Business Outcome Scorecard — Touchless Invoice Processing and
+// Human Touches per Invoice both read off this one call.
+export function fetchTouchlessCount(range) {
+  return kpiQuery('/touchlesscount', range)
+}
+
 // Document Information Extraction schema (header + line-item field
 // definitions) behind the Schema Configuration dialog. Python service, not CAP.
 export function fetchDieSchema() {

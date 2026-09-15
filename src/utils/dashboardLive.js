@@ -137,17 +137,30 @@ export function invoiceStatusFromPipeline(rows = []) {
 // Colour and target come from the tile definitions; only the value is data.
 // No trend arrows: nothing in the service carries a prior period, and an
 // arrow pointing the wrong way is worse than no arrow.
-export function buildScorecard(definitions, { funnel, preValidation, extraction, cycleTime, pipelineLoaded }) {
-  const touchless = funnel.documents > 0 ? (funnel.clean / funnel.documents) * 100 : null
+export function buildScorecard(definitions, { funnel, preValidation, extraction, cycleTime, pipelineLoaded, touchlessCount }) {
+  // /touchlesscount returns { touchlessCount, humanReview } — both figures
+  // are shares of the same total, which is the pipeline's own document count.
+  const totalInvoices = funnel.documents
+  const touchlessLoaded = pipelineLoaded && touchlessCount != null
+  const touchlessValue = num(touchlessCount?.touchlessCount)
+  const humanReviewValue = num(touchlessCount?.humanReview)
+
+  const touchlessPct =
+    totalInvoices > 0 && touchlessValue != null ? (touchlessValue / totalInvoices) * 100 : null
+  const humanTouchesPerInvoice =
+    totalInvoices > 0 && humanReviewValue != null ? humanReviewValue / totalInvoices : null
 
   const values = {
-    'Touchless Invoice Processing': pipelineLoaded ? percent(touchless) : LOADING,
+    'Touchless Invoice Processing': touchlessLoaded ? percent(touchlessPct) : LOADING,
     'First-Pass VIM Readiness': pending(preValidation, percent(preValidation?.firstPassVimReadinessPercent)),
     // No rate card behind it anywhere in the service.
     'Cost per Invoice': NO_VALUE,
     'Intake-to-VIM Cycle Time': pipelineLoaded ? cycleTime : LOADING,
-    // Needs a touch / audit log, which no entity keeps.
-    'Human Touches per Invoice': NO_VALUE,
+    'Human Touches per Invoice': touchlessLoaded
+      ? humanTouchesPerInvoice == null
+        ? NO_VALUE
+        : humanTouchesPerInvoice.toFixed(1)
+      : LOADING,
     'Extraction & Validation Accuracy': pending(extraction, percent(extraction?.overallExtractionAccuracy)),
   }
 
@@ -173,10 +186,10 @@ export function buildFlowSteps({ funnel, matching, pipelineLoaded }) {
   ]
 }
 
-export function buildFlowLegend({ funnel, exceptions, pipelineLoaded }) {
+export function buildFlowLegend({ touchlessCount, exceptions }) {
   return [
-    { label: 'Touchless', value: pipelineLoaded ? count(funnel.clean) : LOADING, color: 'blue' },
-    { label: 'Human Review', value: pipelineLoaded ? count(funnel.touched) : LOADING, color: 'orange' },
+    { label: 'Touchless', value: pending(touchlessCount, count(touchlessCount?.touchlessCount)), color: 'blue' },
+    { label: 'Human Review', value: pending(touchlessCount, count(touchlessCount?.humanReview)), color: 'orange' },
     { label: 'Exceptions', value: pending(exceptions, count(exceptions?.openExceptions)), color: 'red' },
   ]
 }
