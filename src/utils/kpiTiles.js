@@ -50,6 +50,7 @@ export const TRIAGE_KPI_FIELDS = {
 }
 
 export const PRE_VALIDATION_KPI_FIELDS = {
+  'Pre-Validated Invoices': { key: 'prevalidatedInvoices', format: count },
   'Pending Pre-Validation': { key: 'pendingPreValidation', format: count },
   'Auto-Validated': { key: 'autoValidated', format: count },
   'First-Pass VIM Readiness': { key: 'firstPassVimReadinessPercent', format: percent },
@@ -59,6 +60,7 @@ export const PRE_VALIDATION_KPI_FIELDS = {
 }
 
 export const EXCEPTION_KPI_FIELDS = {
+  'Exceptioned Invoices': { key: 'exceptionedInvoices', format: count },
   'Open Exceptions': { key: 'openExceptions', format: count },
   'At Risk of Late Payment': { key: 'atRiskOfLatePayment', format: count },
   Unassigned: { key: 'unassigned', format: count },
@@ -78,10 +80,11 @@ export const DOCUMENT_AI_KPI_FIELDS = {
 }
 
 export const MATCHING_KPI_FIELDS = {
+  'Total Invoices': { key: 'totalInvoices', format: count },
   'PO Invoices': { key: 'poInvoices', format: count },
   'Fully Matched': { key: 'fullyMatched', format: count },
   'Partial Match': { key: 'partialMatch', format: count },
-  'PO Not Found': { key: 'poNotFound', format: count },
+  'Non PO invoices': { key: 'nonPoInvoices', format: count },
   'Tolerance Exceptions': { key: 'toleranceExceptions', format: count },
   'Ready for VIM': { key: 'readyForVIM', format: count },
 }

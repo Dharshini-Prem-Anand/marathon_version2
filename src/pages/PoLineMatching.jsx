@@ -188,19 +188,20 @@ export default function PoLineMatching({ onNavigateToException }) {
     }
   })
 
-  // Tiles and the Matching Performance panel come from /matchingkpis. That
-  // route isn't deployed yet, so the four count tiles keep the counts this
-  // page derives from the filtered queue until it answers; Tolerance
+  // Tiles and the Matching Performance panel come from /matchingkpis. The
+  // four count tiles keep the counts this page derives from the filtered
+  // queue until that call answers, then the service's numbers win; Tolerance
   // Exceptions and Ready for VIM have no local equivalent and show a
-  // placeholder rather than the sample numbers they were defined with.
+  // placeholder until it does.
   const stats = useMemo(() => {
     const counts = matchingStatCounts(filteredQueue, records)
     const local = poMatchingStats.map((stat) => {
       const value = {
+        'Total Invoices': counts.total,
         'PO Invoices': counts.total,
         'Fully Matched': counts.matched,
         'Partial Match': counts.partial,
-        'PO Not Found': counts.notFound,
+        'Non PO invoices': counts.notFound,
       }[stat.label]
       return { ...stat, value: value === undefined ? kpiPlaceholder(kpis) : value.toLocaleString() }
     })

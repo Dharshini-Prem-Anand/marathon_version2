@@ -1171,7 +1171,8 @@ export const preValidationFilters = [
 ]
 
 export const preValidationStats = [
-  { icon: 'fileText', label: 'Pending Pre-Validation', value: '42', valueColor: 'blue', target: null },
+  { icon: 'fileText', label: 'Pre-Validated Invoices', value: '2,222', valueColor: 'blue', target: null },
+  { icon: 'list', label: 'Pending Pre-Validation', value: '42', valueColor: 'blue', target: null },
   { icon: 'checkCircle', label: 'Auto-Validated', value: '2,180', valueColor: 'green', target: null },
   { icon: 'target', label: 'First-Pass VIM Readiness', value: '84%', valueColor: 'green', target: 'Target 95%' },
   { icon: 'alertTriangle', label: 'Low Confidence', value: '18', valueColor: 'orange', target: null },
@@ -1476,10 +1477,11 @@ export const poMatchingContext = {
 }
 
 export const poMatchingStats = [
-  { icon: 'fileText', label: 'PO Invoices', value: '1,986', valueColor: 'blue', target: null },
+  { icon: 'fileText', label: 'Total Invoices', value: '2,024', valueColor: 'blue', target: null },
+  { icon: 'list', label: 'PO Invoices', value: '1,986', valueColor: 'blue', target: null },
+  { icon: 'search', label: 'Non PO invoices', value: '38', valueColor: 'red', target: null },
   { icon: 'checkCircle', label: 'Fully Matched', value: '1,548', valueColor: 'green', target: null },
   { icon: 'pieChart', label: 'Partial Match', value: '274', valueColor: 'orange', target: null },
-  { icon: 'search', label: 'PO Not Found', value: '38', valueColor: 'red', target: null },
   { icon: 'alertTriangle', label: 'Tolerance Exceptions', value: '126', valueColor: 'orange', target: null },
   { icon: 'send', label: 'Ready for VIM', value: '1,928', valueColor: 'green', target: null },
 ]
@@ -1750,6 +1752,7 @@ export const exceptionsFilters = [
 ]
 
 export const exceptionsStats = [
+  { icon: 'fileText', label: 'Exceptioned Invoices', value: '23', valueColor: 'blue', target: null },
   { icon: 'alertTriangle', label: 'Open Exceptions', value: '23', valueColor: 'blue', target: null },
   { icon: 'clock', label: 'At Risk of Late Payment', value: '18', valueColor: 'orange', target: null },
   { icon: 'user', label: 'Unassigned', value: '4', valueColor: 'blue', target: null },

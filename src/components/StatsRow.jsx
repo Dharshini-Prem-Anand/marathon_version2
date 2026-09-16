@@ -44,7 +44,7 @@ const iconMap = {
 
 export default function StatsRow({ stats, actions }) {
   return (
-    <div className="stats-row">
+    <div className="stats-row" style={{ gridTemplateColumns: `repeat(${stats.length}, minmax(0, 1fr))` }}>
       {stats.map((s) => {
         const Icon = iconMap[s.icon]
         const action = actions?.[s.label]

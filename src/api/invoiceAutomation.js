@@ -172,9 +172,6 @@ export function fetchExtractionKpis(range) {
 
 // PO & Line Matching's tile row and its Matching Performance panel.
 //
-// NOT deployed yet: the service's route list has no matching-KPI route in
-// either casing, so this 404s today and the page falls back to the counts it
-// computes from the loaded invoices. Confirm the spelling when it ships.
 export function fetchMatchingKpis(range) {
   return kpiQuery('/matchingkpis', range)
 }
