@@ -579,7 +579,7 @@ export const valueDeliveredTriage = [
 
 export const emailTriageGuidance = {
   title: 'Business Use & Guidance',
-  closeIcon: 'arrowLeft',
+  closeIcon: 'x',
   sections: [
     {
       heading: 'Purpose',

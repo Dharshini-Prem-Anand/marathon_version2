@@ -1,5 +1,6 @@
 import { MoreVertical } from 'lucide-react'
 import TablePagination from './TablePagination'
+import TableFillerRows from './TableFillerRows'
 import SortFilterTh from './SortFilterTh'
 import TableSearchInput from './TableSearchInput'
 import { usePagedRows } from '../hooks/usePagedRows'
@@ -27,7 +28,8 @@ const COLUMNS = {
 export default function TriageQueueTable({ rows, selectedId, onSelect, loading, error }) {
   const colCount = 7
   const ctl = useColumnSortFilter(rows, COLUMNS, { key: 'date', dir: 'desc' })
-  const paging = usePagedRows(ctl.rows)
+  const paging = usePagedRows(ctl.rows, undefined, { alwaysExpanded: true })
+  const shownRowCount = loading || error || paging.visibleRows.length === 0 ? 1 : paging.visibleRows.length
 
   return (
     <section className="panel triage-queue">
@@ -103,16 +105,12 @@ export default function TriageQueueTable({ rows, selectedId, onSelect, loading, 
                 </tr>
               ))
             )}
+            <TableFillerRows count={paging.pageSize - shownRowCount} colSpan={colCount} />
           </tbody>
         </table>
       </div>
 
-      {paging.showViewAll && (
-        <button className="btn-link view-all-link" onClick={paging.expand}>
-          View All ({paging.total})
-        </button>
-      )}
-      {paging.expanded && <TablePagination paging={paging} />}
+      <TablePagination paging={paging} showCollapse={false} />
     </section>
   )
 }

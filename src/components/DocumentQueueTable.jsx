@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { FileText, Mail, Maximize2 } from 'lucide-react'
 import TablePagination from './TablePagination'
+import TableFillerRows from './TableFillerRows'
 import SortFilterTh from './SortFilterTh'
 import TableSearchInput from './TableSearchInput'
 import TableExpandModal from './TableExpandModal'
@@ -54,6 +55,7 @@ function SourceEmailCell({ row, onOpenEmail }) {
 // expanded modal, where there's room to read them.
 function QueueTable({ ctl, paging, compact, selectedId, onSelect, onOpenEmail, loading, error }) {
   const colCount = compact ? 3 : 6
+  const shownRowCount = loading || error || paging.visibleRows.length === 0 ? 1 : paging.visibleRows.length
 
   return (
     <div className="table-wrap">
@@ -126,30 +128,22 @@ function QueueTable({ ctl, paging, compact, selectedId, onSelect, onOpenEmail, l
               </tr>
             ))
           )}
+          <TableFillerRows count={paging.pageSize - shownRowCount} colSpan={colCount} />
         </tbody>
       </table>
     </div>
   )
 }
 
-// Paging is shared between the tile and the modal, so "View All" and page
-// changes made in one show up in the other.
+// Paging is shared between the tile and the modal, so page changes made in
+// one show up in the other.
 function QueueFooter({ paging }) {
-  return (
-    <>
-      {paging.showViewAll && (
-        <button className="btn-link view-all-link" onClick={paging.expand}>
-          View All Documents ({paging.total})
-        </button>
-      )}
-      {paging.expanded && <TablePagination paging={paging} />}
-    </>
-  )
+  return <TablePagination paging={paging} showCollapse={false} />
 }
 
 export default function DocumentQueueTable({ rows = [], selectedId, onSelect, loading, error, onOpenEmail, wide }) {
   const ctl = useColumnSortFilter(rows, COLUMNS)
-  const paging = usePagedRows(ctl.rows)
+  const paging = usePagedRows(ctl.rows, undefined, { alwaysExpanded: true })
   const [expanded, setExpanded] = useState(false)
   const tableAnchorRef = useRef(null)
 

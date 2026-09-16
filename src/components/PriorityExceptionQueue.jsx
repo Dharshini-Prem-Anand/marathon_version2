@@ -4,6 +4,7 @@ import { priorityColor } from '../data'
 import SortFilterTh from './SortFilterTh'
 import TableSearchInput from './TableSearchInput'
 import TablePagination from './TablePagination'
+import TableFillerRows from './TableFillerRows'
 import TableExpandModal from './TableExpandModal'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 import { usePagedRows } from '../hooks/usePagedRows'
@@ -32,6 +33,7 @@ const COL_COUNT = 8
 // scrolling sideways inside the modal.
 function ExceptionTable({ ctl, paging, expanded, selectedId, onSelect }) {
   const clip = expanded ? '' : ' cell-ellipsis'
+  const shownRowCount = paging.visibleRows.length === 0 ? 1 : paging.visibleRows.length
 
   return (
     <div className="table-wrap">
@@ -95,30 +97,22 @@ function ExceptionTable({ ctl, paging, expanded, selectedId, onSelect }) {
               </tr>
             ))
           )}
+          <TableFillerRows count={paging.pageSize - shownRowCount} colSpan={COL_COUNT} />
         </tbody>
       </table>
     </div>
   )
 }
 
-// Paging is shared between the panel and the modal, so "View All" and page
-// changes made in one show up in the other.
+// Paging is shared between the panel and the modal, so page changes made in
+// one show up in the other.
 function QueueFooter({ paging }) {
-  return (
-    <>
-      {paging.showViewAll && (
-        <button className="btn-link view-all-link" onClick={paging.expand}>
-          View All Exceptions ({paging.total})
-        </button>
-      )}
-      {paging.expanded && <TablePagination paging={paging} />}
-    </>
-  )
+  return <TablePagination paging={paging} showCollapse={false} />
 }
 
 export default function PriorityExceptionQueue({ rows = [], selectedId, onSelect }) {
   const ctl = useColumnSortFilter(rows, COLUMNS)
-  const paging = usePagedRows(ctl.rows, PAGE_SIZE)
+  const paging = usePagedRows(ctl.rows, PAGE_SIZE, { alwaysExpanded: true })
   const [expanded, setExpanded] = useState(false)
   const tableAnchorRef = useRef(null)
 

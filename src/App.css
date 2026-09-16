@@ -1411,6 +1411,12 @@ tbody tr:last-child td {
   border-top: 1px solid var(--border);
 }
 
+.table-pagination-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .table-pagination-info {
   font-size: 12px;
   color: var(--text-secondary);
@@ -1419,40 +1425,68 @@ tbody tr:last-child td {
 .table-pagination-controls {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
-.pagination-btn,
+.pagination-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  height: 26px;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pagination-nav-btn:first-child {
+  padding-left: 2px;
+}
+
+.pagination-nav-btn:hover:not(:disabled) {
+  color: var(--blue);
+}
+
+.pagination-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
 .pagination-page {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 26px;
   height: 26px;
-  padding: 0 6px;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  background: var(--bg-panel);
+  padding: 0 4px;
+  border: none;
+  border-radius: 50%;
+  background: none;
   color: var(--text-secondary);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
 
-.pagination-btn:hover:not(:disabled),
 .pagination-page:hover:not(.is-active) {
-  background: #f7f8fa;
   color: var(--text-primary);
-}
-
-.pagination-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .pagination-page.is-active {
   background: var(--blue);
-  border-color: var(--blue);
   color: #ffffff;
 }
 
@@ -5134,6 +5168,16 @@ body.is-resizing-cols iframe {
   color: var(--text-muted);
   font-size: 13px;
   white-space: normal !important;
+}
+
+/* Pads a table body to a fixed row count so the panel height stays constant
+   regardless of how many real rows are on the current page. */
+.table-filler-row {
+  pointer-events: none;
+}
+
+.table-filler-row td {
+  color: transparent;
 }
 
 .filter-empty-state {

@@ -3,8 +3,10 @@ import { useEffect, useState } from 'react'
 export const PAGE_SIZE = 5
 
 // Collapsed: first `pageSize` rows. Once expanded, page through the rest.
-export function usePagedRows(rows, pageSize = PAGE_SIZE) {
-  const [expanded, setExpanded] = useState(false)
+// `alwaysExpanded` skips the collapsed state entirely, so the table is
+// paginated from the start with no "View All" step.
+export function usePagedRows(rows, pageSize = PAGE_SIZE, { alwaysExpanded = false } = {}) {
+  const [expanded, setExpanded] = useState(alwaysExpanded)
   const [page, setPage] = useState(0)
 
   const total = rows.length
@@ -12,9 +14,9 @@ export function usePagedRows(rows, pageSize = PAGE_SIZE) {
 
   // A new result set (filters changed) collapses back to page one.
   useEffect(() => {
-    setExpanded(false)
+    setExpanded(alwaysExpanded)
     setPage(0)
-  }, [total])
+  }, [total, alwaysExpanded])
 
   const currentPage = Math.min(page, pageCount - 1)
   const visibleRows = expanded
@@ -23,6 +25,7 @@ export function usePagedRows(rows, pageSize = PAGE_SIZE) {
 
   return {
     visibleRows,
+    pageSize,
     total,
     pageCount,
     currentPage,
@@ -32,7 +35,7 @@ export function usePagedRows(rows, pageSize = PAGE_SIZE) {
     lastShown: expanded ? Math.min(currentPage * pageSize + pageSize, total) : visibleRows.length,
     expand: () => setExpanded(true),
     collapse: () => {
-      setExpanded(false)
+      setExpanded(alwaysExpanded)
       setPage(0)
     },
     goToPage: setPage,

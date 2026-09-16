@@ -1,5 +1,6 @@
 import { FileText } from 'lucide-react'
 import TablePagination from './TablePagination'
+import TableFillerRows from './TableFillerRows'
 import SortFilterTh from './SortFilterTh'
 import TableSearchInput from './TableSearchInput'
 import { usePagedRows } from '../hooks/usePagedRows'
@@ -25,7 +26,8 @@ export default function PreValidationQueueTable({ rows = [], selectedId, onSelec
   const colCount = 4
   // Default to the latest invoice (by actual invoice date) on top.
   const ctl = useColumnSortFilter(rows, COLUMNS, { key: 'date', dir: 'desc' })
-  const paging = usePagedRows(ctl.rows)
+  const paging = usePagedRows(ctl.rows, undefined, { alwaysExpanded: true })
+  const shownRowCount = paging.visibleRows.length === 0 ? 1 : paging.visibleRows.length
 
   return (
     <section className="panel document-queue">
@@ -77,16 +79,12 @@ export default function PreValidationQueueTable({ rows = [], selectedId, onSelec
                 </tr>
               ))
             )}
+            <TableFillerRows count={paging.pageSize - shownRowCount} colSpan={colCount} />
           </tbody>
         </table>
       </div>
 
-      {paging.showViewAll && (
-        <button className="btn-link view-all-link" onClick={paging.expand}>
-          View All ({paging.total})
-        </button>
-      )}
-      {paging.expanded && <TablePagination paging={paging} />}
+      <TablePagination paging={paging} showCollapse={false} />
     </section>
   )
 }
