@@ -1163,7 +1163,7 @@ export const documentAiGuidance = {
 }
 
 export const preValidationFilters = [
-  { label: 'Company Code', value: '1000 - Marathon US', options: companyCodeOptions },
+  { label: 'Company Code', value: 'All', options: companyCodeOptions },
   { label: 'Vendor', value: 'All', options: ['All'] },
   { label: 'Document Type', value: 'All', options: ['All'] },
   { label: 'Confidence Band', value: 'All', options: ['All'] },
@@ -1746,7 +1746,7 @@ export const poMatchingGuidance = {
 }
 
 export const exceptionsFilters = [
-  { label: 'Company Code', value: '1000 - Marathon US', options: companyCodeOptions },
+  { label: 'Company Code', value: 'All', options: companyCodeOptions },
   { label: 'Vendor', value: 'All', options: ['All'] },
   { label: 'Priority', value: 'All', options: ['All'] },
 ]
@@ -1847,7 +1847,6 @@ export const aiReviewActions = [
   { label: 'Accept and Route', variant: 'primary' },
   { label: 'Modify Recommendation', variant: 'outline' },
   { label: 'Reject Recommendation', variant: 'outline' },
-  { label: 'View Evidence', variant: 'outline' },
 ]
 
 export const whatIfScenarios = [
@@ -2581,7 +2580,7 @@ export const operationalAnalyticsGuidance = {
 }
 
 export const extractionDiagFilters = [
-  { label: 'Company Code', value: '1000 - Marathon US', options: companyCodeOptions },
+  { label: 'Company Code', value: 'All', options: companyCodeOptions },
   {
     label: 'Vendor',
     value: 'All',

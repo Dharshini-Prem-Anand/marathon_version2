@@ -39,6 +39,7 @@ if (await viewAllBtn.count()) {
 const pageCount = await docSection.locator('.table-pagination .pagination-page').count()
 console.log('PAGE_COUNT:', pageCount)
 
+
 // Identify every document as (fileName, receivedDate) — fileName alone isn't
 // unique (several documents share a name), so pairing it with the Received
 // Date column disambiguates rows a plain filename search can't tell apart.
