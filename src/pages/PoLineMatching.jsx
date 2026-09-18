@@ -48,11 +48,13 @@ export default function PoLineMatching({ onNavigateToException }) {
   const [appliedDateRange, setAppliedDateRange] = useState(DEFAULT_DATE_RANGE)
 
   const [liveData, setLiveData] = useState({ ids: [], records: {} })
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
     let cancelled = false
     setError(null)
+    setLoading(true)
 
     // Invoices carries only a vendor code; the readable name comes from the
     // extraction, fetched alongside the three matching sets.
@@ -72,6 +74,9 @@ export default function PoLineMatching({ onNavigateToException }) {
         if (cancelled) return
         setLiveData({ ids: [], records: {} })
         setError(`Could not load matching data — ${err.message}`)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
       })
 
     return () => {
@@ -196,12 +201,13 @@ export default function PoLineMatching({ onNavigateToException }) {
   const stats = useMemo(() => {
     const counts = matchingStatCounts(filteredQueue, records)
     const local = poMatchingStats.map((stat) => {
+      // 'PO Not Found' and the rest are left to /matchingkpis: the queue can
+      // only count what Invoices.VerificationStatus says.
       const value = {
         'Total Invoices': counts.total,
         'PO Invoices': counts.total,
         'Fully Matched': counts.matched,
         'Partial Match': counts.partial,
-        'Non PO invoices': counts.notFound,
       }[stat.label]
       return { ...stat, value: value === undefined ? kpiPlaceholder(kpis) : value.toLocaleString() }
     })
@@ -277,7 +283,14 @@ export default function PoLineMatching({ onNavigateToException }) {
           <VimProcessingTimeline />
         </>
       ) : (
-        <FilterEmptyState message={error || 'No PO match record matches the selected filters.'} />
+        <FilterEmptyState
+          message={
+            error ||
+            (loading
+              ? 'Loading invoices, purchase orders and goods receipts…'
+              : 'No PO match record matches the selected filters.')
+          }
+        />
       )}
     </>
   )

@@ -7,9 +7,8 @@ import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 
 const statusColor = {
   Matched: 'green',
-  'Partial Match': 'orange',
+  'Partial Mismatch': 'orange',
   Mismatch: 'red',
-  'Not Found': 'red',
 }
 
 const COLUMNS = {

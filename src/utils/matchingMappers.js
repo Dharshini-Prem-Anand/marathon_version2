@@ -1,5 +1,11 @@
 // Builds the PO & Line Matching view model from three flat entity sets.
 //
+// MATCHING IS NOT DECIDED HERE. The pipeline runs the three-way match and
+// writes the outcome to Invoices.VerificationStatus; a line is Matched when
+// that says Success and Mismatch when it doesn't, full stop. The joins below
+// exist only to SHOW what was matched against — the PO line and amount, the
+// goods-receipt total and the variance — never to decide the status.
+//
 // Invoices is line-level (one row per InvoiceNumber+FiscalYear+ItemNumber), so
 // the queue groups it. The CAP associations to PurchaseOrders / GoodsReceipts
 // return null, so the joins are done here:
@@ -14,6 +20,19 @@ const num = (v) => {
   const n = Number(v)
   return Number.isFinite(n) ? n : 0
 }
+
+// Item numbers arrive in three different paddings for the same line: the
+// extracted invoice says "1", the PO line says "00001" and the goods receipt
+// says "0001". Compare them by value or nothing matches — that's what made a
+// whole day's invoices read "Not Found" while the backend had matched them.
+const lineNo = (value) => {
+  const text = String(value ?? '').trim()
+  if (!text) return ''
+  const unpadded = text.replace(/^0+/, '')
+  return unpadded === '' ? '0' : unpadded
+}
+
+const lineKey = (order, item) => `${String(order ?? '').trim()}::${lineNo(item)}`
 
 export const money = (value, currency = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(num(value))
@@ -51,13 +70,13 @@ export function buildMatchingRecords(invoices, purchaseOrders, goodsReceipts, ve
   // PO lines by "PurchaseOrder::PurchaseOrderItem"
   const poByLine = new Map()
   for (const po of purchaseOrders) {
-    poByLine.set(`${po.PurchaseOrder}::${po.PurchaseOrderItem}`, po)
+    poByLine.set(lineKey(po.PurchaseOrder, po.PurchaseOrderItem), po)
   }
 
   // Goods receipts summed per PO line — partial receipts are common.
   const grByLine = new Map()
   for (const gr of goodsReceipts) {
-    const key = `${gr.PONumber}::${gr.Orderitem_number}`
+    const key = lineKey(gr.PONumber, gr.Orderitem_number)
     const acc = grByLine.get(key) ?? { amount: 0, quantity: 0, receipts: [] }
     acc.amount += num(gr.Amount)
     acc.quantity += num(gr.Quantity)
@@ -85,27 +104,24 @@ export function buildMatchingRecords(invoices, purchaseOrders, goodsReceipts, ve
     let poTotal = 0
     let receivedTotal = 0
     let matchedCount = 0
-    let poFoundCount = 0
 
     const matchLines = lines.map((line) => {
-      const lineKey = `${line.PurchaseOrder}::${line.ItemNumber}`
-      const po = poByLine.get(lineKey)
-      const gr = grByLine.get(lineKey)
+      const key = lineKey(line.PurchaseOrder, line.ItemNumber)
+      const po = poByLine.get(key)
+      const gr = grByLine.get(key)
 
       const invAmount = num(line.AmountInDocCurrency)
       const poAmount = po ? num(po.NetAmount) : null
       invTotal += invAmount
-      if (po) {
-        poTotal += poAmount
-        poFoundCount += 1
-      }
+      if (po) poTotal += poAmount
       if (gr) receivedTotal += gr.amount
 
       const verified = isVerified(line.VerificationStatus)
       if (verified) matchedCount += 1
 
-      // No PO line to compare against outranks the verification flag.
-      const matchStatus = !po ? 'notfound' : verified ? 'matched' : 'mismatch'
+      // The backend's verdict, unmodified — a PO line the UI couldn't join to
+      // changes what the row can display, not whether the line matched.
+      const matchStatus = verified ? 'matched' : 'mismatch'
 
       return {
         invLine: line.ItemNumber,
@@ -120,12 +136,12 @@ export function buildMatchingRecords(invoices, purchaseOrders, goodsReceipts, ve
       }
     })
 
-    // Invoice-level status rolls up its lines.
+    // Invoice-level status rolls up its lines' verification: every line
+    // matched, none of them, or some of each.
     let status
-    if (poFoundCount === 0) status = 'Not Found'
-    else if (matchedCount === lines.length) status = 'Matched'
-    else if (matchedCount > 0) status = 'Partial Match'
-    else status = 'Mismatch'
+    if (matchedCount === lines.length) status = 'Matched'
+    else if (matchedCount === 0) status = 'Mismatch'
+    else status = 'Partial Mismatch'
 
     const variance = invTotal - poTotal
 
@@ -167,13 +183,15 @@ export function buildMatchingRecords(invoices, purchaseOrders, goodsReceipts, ve
   return { ids, records }
 }
 
-// Counts for the stats tiles that the data can actually support.
+// Counts for the stats tiles that the data can actually support. PO Not Found
+// isn't one of them any more — nothing on the invoice says a PO is missing, so
+// that tile comes from /matchingkpis alone.
 export function matchingStatCounts(ids, records) {
   const statuses = ids.map((id) => records[id].context.status)
   return {
     total: ids.length,
     matched: statuses.filter((s) => s === 'Matched').length,
-    partial: statuses.filter((s) => s === 'Partial Match').length,
-    notFound: statuses.filter((s) => s === 'Not Found').length,
+    partial: statuses.filter((s) => s === 'Partial Mismatch').length,
+    mismatch: statuses.filter((s) => s === 'Mismatch').length,
   }
 }
