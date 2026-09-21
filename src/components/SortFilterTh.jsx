@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowUpNarrowWide, ArrowDownNarrowWide, Filter, ChevronDown } from 'lucide-react'
+import { ArrowUpNarrowWide, ArrowDownNarrowWide, Filter, ChevronDown, Check } from 'lucide-react'
 
 // A <th> whose label opens a menu with Sort Ascending / Sort Descending / Filter,
 // backed by a useColumnSortFilter() controller (`ctl`). Menu renders in a portal
@@ -9,13 +9,23 @@ import { ArrowUpNarrowWide, ArrowDownNarrowWide, Filter, ChevronDown } from 'luc
 // `dragProps` / `dragState` are optional and come from useColumnOrder() when a
 // table lets the user rearrange its columns; without them the header behaves
 // exactly as before.
-export default function SortFilterTh({ columnKey, label, ctl, className, dragProps, dragState }) {
+//
+// `filterOptions` is optional: when given (an array of the column's valid
+// values), the menu shows a pick-list of those values instead of the
+// Sort Ascending / Sort Descending / free-text Filter controls — for columns
+// like Status where the value set is small and fixed.
+export default function SortFilterTh({ columnKey, label, ctl, className, dragProps, dragState, filterOptions }) {
   const triggerRef = useRef(null)
   const menuRef = useRef(null)
   const [pos, setPos] = useState(null)
   const open = ctl.openKey === columnKey
   const filterValue = ctl.filters[columnKey] || ''
   const active = ctl.sort.key === columnKey || Boolean(filterValue)
+
+  function handleOptionClick(value) {
+    ctl.setFilter(columnKey, filterValue === value ? '' : value)
+    ctl.close()
+  }
 
   function handleTriggerClick() {
     if (open) {
@@ -72,33 +82,49 @@ export default function SortFilterTh({ columnKey, label, ctl, className, dragPro
         pos &&
         createPortal(
           <div className="th-sortfilter-menu" style={{ top: pos.top, left: pos.left }} ref={menuRef}>
-            <button
-              type="button"
-              className={`th-sortfilter-item${ctl.sort.key === columnKey && ctl.sort.dir === 'asc' ? ' selected' : ''}`}
-              onClick={() => ctl.applySort(columnKey, 'asc')}
-            >
-              <ArrowUpNarrowWide size={14} />
-              Sort Ascending
-            </button>
-            <button
-              type="button"
-              className={`th-sortfilter-item${ctl.sort.key === columnKey && ctl.sort.dir === 'desc' ? ' selected' : ''}`}
-              onClick={() => ctl.applySort(columnKey, 'desc')}
-            >
-              <ArrowDownNarrowWide size={14} />
-              Sort Descending
-            </button>
-            <div className="th-sortfilter-divider" />
-            <label className="th-sortfilter-filter">
-              <Filter size={13} />
-              <input
-                type="text"
-                placeholder="Filter"
-                value={filterValue}
-                onChange={(e) => ctl.setFilter(columnKey, e.target.value)}
-                autoFocus
-              />
-            </label>
+            {filterOptions ? (
+              filterOptions.map((opt) => (
+                <button
+                  type="button"
+                  key={opt}
+                  className={`th-sortfilter-item${filterValue === opt ? ' selected' : ''}`}
+                  onClick={() => handleOptionClick(opt)}
+                >
+                  {filterValue === opt ? <Check size={14} /> : <span className="th-sortfilter-item-spacer" />}
+                  {opt}
+                </button>
+              ))
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className={`th-sortfilter-item${ctl.sort.key === columnKey && ctl.sort.dir === 'asc' ? ' selected' : ''}`}
+                  onClick={() => ctl.applySort(columnKey, 'asc')}
+                >
+                  <ArrowUpNarrowWide size={14} />
+                  Sort Ascending
+                </button>
+                <button
+                  type="button"
+                  className={`th-sortfilter-item${ctl.sort.key === columnKey && ctl.sort.dir === 'desc' ? ' selected' : ''}`}
+                  onClick={() => ctl.applySort(columnKey, 'desc')}
+                >
+                  <ArrowDownNarrowWide size={14} />
+                  Sort Descending
+                </button>
+                <div className="th-sortfilter-divider" />
+                <label className="th-sortfilter-filter">
+                  <Filter size={13} />
+                  <input
+                    type="text"
+                    placeholder="Filter"
+                    value={filterValue}
+                    onChange={(e) => ctl.setFilter(columnKey, e.target.value)}
+                    autoFocus
+                  />
+                </label>
+              </>
+            )}
           </div>,
           document.body
         )}

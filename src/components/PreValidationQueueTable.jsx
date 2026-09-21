@@ -48,7 +48,12 @@ export default function PreValidationQueueTable({ rows = [], selectedId, onSelec
               <SortFilterTh columnKey="invoiceNumber" label="Invoice" ctl={ctl} />
               <SortFilterTh columnKey="vendor" label="Vendor" ctl={ctl} />
               <SortFilterTh columnKey="amount" label="Amount" ctl={ctl} />
-              <SortFilterTh columnKey="status" label="Status" ctl={ctl} />
+              <SortFilterTh
+                columnKey="status"
+                label="Status"
+                ctl={ctl}
+                filterOptions={['Failed', 'Review', 'Passed']}
+              />
             </tr>
           </thead>
           <tbody>

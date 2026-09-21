@@ -761,6 +761,12 @@ tbody tr:last-child td {
   color: var(--blue);
 }
 
+.th-sortfilter-item-spacer {
+  display: inline-block;
+  width: 14px;
+  flex-shrink: 0;
+}
+
 .th-sortfilter-divider {
   height: 1px;
   background: var(--border);

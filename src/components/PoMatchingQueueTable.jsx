@@ -20,8 +20,8 @@ const COLUMNS = {
 
 export default function PoMatchingQueueTable({ rows = [], selectedId, onSelect }) {
   const colCount = 4
-  const ctl = useColumnSortFilter(rows, COLUMNS)
-  const paging = usePagedRows(ctl.rows)
+  const ctl = useColumnSortFilter(rows, COLUMNS, undefined, { exactFilterKeys: ['status'] })
+  const paging = usePagedRows(ctl.rows, undefined, { alwaysExpanded: true })
 
   return (
     <section className="panel document-queue">
@@ -42,7 +42,12 @@ export default function PoMatchingQueueTable({ rows = [], selectedId, onSelect }
               <SortFilterTh columnKey="invoiceNumber" label="Invoice" ctl={ctl} />
               <SortFilterTh columnKey="vendor" label="Vendor" ctl={ctl} />
               <SortFilterTh columnKey="amount" label="Amount" ctl={ctl} />
-              <SortFilterTh columnKey="status" label="Status" ctl={ctl} />
+              <SortFilterTh
+                columnKey="status"
+                label="Status"
+                ctl={ctl}
+                filterOptions={['Matched', 'Partial Mismatch', 'Mismatch']}
+              />
             </tr>
           </thead>
           <tbody>
@@ -77,12 +82,7 @@ export default function PoMatchingQueueTable({ rows = [], selectedId, onSelect }
         </table>
       </div>
 
-      {paging.showViewAll && (
-        <button className="btn-link view-all-link" onClick={paging.expand}>
-          View All ({paging.total})
-        </button>
-      )}
-      {paging.expanded && <TablePagination paging={paging} />}
+      <TablePagination paging={paging} showCollapse={false} />
     </section>
   )
 }

@@ -4,7 +4,11 @@ import { useMemo, useState } from 'react'
 // `columns` maps a column key to an accessor returning the raw value that column
 // represents for a row — used for both the quick filter (stringified, case-insensitive
 // contains) and the sort comparator (numeric/date-aware, falls back to string compare).
-export function useColumnSortFilter(rows, columns, initialSort = { key: null, dir: null }) {
+//
+// `exactFilterKeys` marks columns whose filter is a pick-list (SortFilterTh's
+// `filterOptions`) rather than free text — those match the whole value, not a
+// substring, so an option like "Mismatch" doesn't also match "Partial Mismatch".
+export function useColumnSortFilter(rows, columns, initialSort = { key: null, dir: null }, { exactFilterKeys = [] } = {}) {
   const [sort, setSort] = useState(initialSort)
   const [filters, setFilters] = useState({})
   const [openKey, setOpenKey] = useState(null)
@@ -26,7 +30,11 @@ export function useColumnSortFilter(rows, columns, initialSort = { key: null, di
       const accessor = columns[key]
       if (!accessor) continue
       const needle = term.toLowerCase()
-      out = out.filter((row) => String(accessor(row) ?? '').toLowerCase().includes(needle))
+      const exact = exactFilterKeys.includes(key)
+      out = out.filter((row) => {
+        const value = String(accessor(row) ?? '').toLowerCase()
+        return exact ? value === needle : value.includes(needle)
+      })
     }
 
     if (sort.key && sort.dir) {
@@ -47,7 +55,7 @@ export function useColumnSortFilter(rows, columns, initialSort = { key: null, di
     }
 
     return out
-  }, [rows, filters, sort, columns, search])
+  }, [rows, filters, sort, columns, search, exactFilterKeys])
 
   return {
     rows: processedRows,
