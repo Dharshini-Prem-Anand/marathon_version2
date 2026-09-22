@@ -1943,6 +1943,99 @@ tbody tr:last-child td {
   font-size: 12px;
 }
 
+/* Shared expandable-tree table: one summary row per group (a source email,
+   an invoice, ...), expanding to its child rows. Used by the Document
+   Extraction Queue (grouped by email) and the Priority Exception Queue
+   (grouped by invoice). */
+.tree-table td {
+  white-space: nowrap;
+}
+
+.tree-parent-row td {
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+.tree-parent-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tree-chevron {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  transition: transform 0.15s ease;
+}
+
+.tree-chevron.expanded {
+  transform: rotate(90deg);
+}
+
+.tree-parent-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.tree-parent-sub {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.tree-count-badge {
+  flex-shrink: 0;
+}
+
+.tree-open-link-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  padding: 2px;
+}
+
+.tree-child-row {
+  cursor: pointer;
+}
+
+.tree-child-row:hover {
+  background: var(--bg-app);
+}
+
+.tree-child-row.selected {
+  background: var(--blue-light);
+}
+
+.tree-child-row td {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  border-bottom: none;
+}
+
+.tree-child-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 19px;
+  border-left: 2px solid var(--border);
+  margin-left: 6px;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+}
+
+.tree-child-name {
+  color: var(--text-primary);
+  min-width: 0;
+}
+
+.tree-child-badge {
+  flex-shrink: 0;
+}
+
+.tree-child-meta {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .extracted-fields td,
 .extracted-fields th {
   font-size: 12px;
