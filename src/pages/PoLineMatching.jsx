@@ -201,7 +201,7 @@ export default function PoLineMatching({ onNavigateToException }) {
   const stats = useMemo(() => {
     const counts = matchingStatCounts(filteredQueue, records)
     const local = poMatchingStats.map((stat) => {
-      // 'PO Not Found' and the rest are left to /matchingkpis: the queue can
+      // 'Non PO invoices' and the rest are left to /matchingkpis: the queue can
       // only count what Invoices.VerificationStatus says.
       const value = {
         'Total Invoices': counts.total,

@@ -86,7 +86,7 @@ export const MATCHING_KPI_FIELDS = {
   'Partial Match': { key: 'partialMatch', format: count },
   // The service used to call this poNotFound and now returns nonPoInvoices —
   // invoices it couldn't tie to a purchase order. Same tile, renamed field.
-  'PO Not Found': { key: 'nonPoInvoices', format: count },
+  'Non PO invoices': { key: 'nonPoInvoices', format: count },
   'Tolerance Exceptions': { key: 'toleranceExceptions', format: count },
   'Ready for VIM': { key: 'readyForVIM', format: count },
 }

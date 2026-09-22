@@ -183,8 +183,8 @@ export function buildMatchingRecords(invoices, purchaseOrders, goodsReceipts, ve
   return { ids, records }
 }
 
-// Counts for the stats tiles that the data can actually support. PO Not Found
-// isn't one of them any more — nothing on the invoice says a PO is missing, so
+// Counts for the stats tiles that the data can actually support. Non PO
+// invoices isn't one of them — nothing on the invoice says a PO is missing, so
 // that tile comes from /matchingkpis alone.
 export function matchingStatCounts(ids, records) {
   const statuses = ids.map((id) => records[id].context.status)

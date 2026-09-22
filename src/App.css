@@ -581,33 +581,6 @@
   overflow-x: auto;
 }
 
-.priority-queue table {
-  font-size: 10.5px;
-}
-
-.priority-queue .cell-mono {
-  font-size: 10px;
-}
-
-.priority-queue thead th,
-.priority-queue tbody td {
-  padding: 5px 3px;
-}
-
-.priority-queue td:nth-child(3),
-.priority-queue td:nth-child(4),
-.priority-queue td:nth-child(5),
-.priority-queue td:nth-child(6),
-.priority-queue td:nth-child(7) {
-  white-space: normal;
-}
-
-/* ...except the ones that opt into one-line truncation: the live issue and
-   recommendation text runs to a couple of sentences. */
-.priority-queue td.cell-ellipsis {
-  white-space: nowrap;
-}
-
 table {
   width: 100%;
   border-collapse: collapse;
@@ -854,11 +827,6 @@ tbody tr:last-child td {
 .cell-mono {
   font-family: 'Consolas', monospace;
   font-size: 12px;
-}
-
-.cell-action {
-  color: var(--blue);
-  font-weight: 500;
 }
 
 .bg-red {

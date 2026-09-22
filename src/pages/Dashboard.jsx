@@ -18,18 +18,14 @@ import {
   fetchEmailMetadata,
   fetchExceptionKpis,
   fetchExceptions,
-  fetchExtractionKpis,
   fetchInvoices,
   fetchMatchingKpis,
-  fetchPreValidationKpis,
   fetchPurchaseOrders,
   fetchTouchlessCount,
-  fetchTriageKpis,
   fetchVendorNameFields,
 } from '../api/invoiceAutomation'
 import { buildExceptionRows } from '../utils/exceptionsMappers'
 import { buildVendorNamesByInvoice } from '../utils/vendorNames'
-import { preValidationTilePayload } from '../utils/kpiPanels'
 import { KPI_UNAVAILABLE, kpiDateParams } from '../utils/kpiTiles'
 import { dateRangeFilter } from '../utils/dateRange'
 import {
@@ -42,12 +38,11 @@ import {
   buildScorecard,
   buildValueFooter,
   buildValueRealization,
-  cycleTimeLabel,
   invoiceStatusFromPipeline,
   pipelineFunnel,
 } from '../utils/dashboardLive'
 
-const DEFAULT_DATE_RANGE = 'Last 7 Days'
+const DEFAULT_DATE_RANGE = 'Today'
 
 // Stable stand-in for "not loaded yet", so the memos below don't see a new
 // array on every render.
@@ -63,9 +58,6 @@ export default function Dashboard({ onNavigate }) {
 
   // One state per source: a panel shows a placeholder until its own call
   // lands, instead of the whole page waiting on the slowest one.
-  const [triage, setTriage] = useState(null)
-  const [extraction, setExtraction] = useState(null)
-  const [preValidation, setPreValidation] = useState(null)
   const [exceptionKpis, setExceptionKpis] = useState(null)
   const [matching, setMatching] = useState(null)
   const [touchlessCount, setTouchlessCount] = useState(null)
@@ -89,16 +81,10 @@ export default function Dashboard({ onNavigate }) {
           if (!cancelled) setter(KPI_UNAVAILABLE)
         })
 
-    setTriage(null)
-    setExtraction(null)
-    setPreValidation(null)
     setExceptionKpis(null)
     setMatching(null)
     setTouchlessCount(null)
 
-    load(fetchTriageKpis, setTriage)
-    load(fetchExtractionKpis, setExtraction)
-    load(fetchPreValidationKpis, setPreValidation)
     load(fetchExceptionKpis, setExceptionKpis)
     load(fetchMatchingKpis, setMatching)
     load(fetchTouchlessCount, setTouchlessCount)
@@ -151,8 +137,6 @@ export default function Dashboard({ onNavigate }) {
   const pipelineLoaded = pipeline != null
   const funnel = useMemo(() => pipelineFunnel(pipelineRows), [pipelineRows])
   const statusByInvoice = useMemo(() => invoiceStatusFromPipeline(pipelineRows), [pipelineRows])
-  const cycleTime = useMemo(() => cycleTimeLabel(pipelineRows, emails), [pipelineRows, emails])
-
   // Queue rows carry the attributes the filter bar acts on: the vendor from
   // the extraction, the channel from the email, the company code from the PO
   // and the status from where the pipeline left the invoice.
@@ -196,56 +180,15 @@ export default function Dashboard({ onNavigate }) {
       matchesOption(applied['Status'], row.status)
   )
 
-  const preValidationTiles = useMemo(() => preValidationTilePayload(preValidation), [preValidation])
-
-  // Averaged over the exceptions on screen, so it moves with the filters the
-  // way the queue under it does.
-  const avgConfidence = useMemo(() => {
-    const values = filteredQueue
-      .map((row) => Number(String(row.confidence ?? '').replace('%', '')))
-      .filter((n) => Number.isFinite(n))
-    return values.length ? values.reduce((sum, n) => sum + n, 0) / values.length : null
-  }, [filteredQueue])
-
-  const amountAtRisk = useMemo(() => {
-    const values = filteredQueue
-      // '—' strips to an empty string, and Number('') is 0 — which would read
-      // as "no money at risk" rather than "no amount on the row".
-      .map((row) => String(row.amount ?? '').replace(/[^0-9.-]/g, ''))
-      .filter((text) => text !== '')
-      .map(Number)
-      .filter((n) => Number.isFinite(n))
-    return values.length ? values.reduce((sum, n) => sum + n, 0) : null
-  }, [filteredQueue])
-
-  const scorecard = buildScorecard(scorecardMetrics, {
-    funnel,
-    preValidation: preValidationTiles,
-    extraction,
-    cycleTime,
-    pipelineLoaded,
-    touchlessCount,
-  })
+  const scorecard = buildScorecard(scorecardMetrics, { touchlessCount })
   const flow = buildFlowSteps({ funnel, matching, pipelineLoaded })
   const legend = buildFlowLegend({ touchlessCount, exceptions: exceptionKpis })
-  const cards = buildCapabilityCards(capabilityCards, {
-    triage,
-    extraction,
-    preValidation: preValidationTiles,
-    exceptions: exceptionKpis,
-    matching,
-    avgConfidence,
-  })
-  const bottlenecks = buildBottlenecks(preValidation)
-  const diagnostics = buildDiagnostics(extraction)
-  const intervention = buildIntervention({
-    exceptions: exceptionKpis,
-    rows: filteredQueue,
-    avgConfidence,
-    amountAtRisk,
-  })
-  const valueItems = buildValueRealization({ triage, preValidation: preValidationTiles, exceptions: exceptionKpis })
-  const valueFooterItems = buildValueFooter({ exceptions: exceptionKpis })
+  const cards = buildCapabilityCards(capabilityCards, { touchlessCount })
+  const bottlenecks = buildBottlenecks(touchlessCount)
+  const diagnostics = buildDiagnostics(touchlessCount)
+  const intervention = buildIntervention(touchlessCount)
+  const valueItems = buildValueRealization({ touchlessCount })
+  const valueFooterItems = buildValueFooter({ touchlessCount })
 
   const handleGo = () => {
     apply()
@@ -274,7 +217,11 @@ export default function Dashboard({ onNavigate }) {
       <CapabilityCards cards={cards} />
 
       <div className="dashboard-queue-row">
-        <PriorityQueue rows={filteredQueue} loading={exceptionsLoading} />
+        <PriorityQueue
+          rows={filteredQueue}
+          loading={exceptionsLoading}
+          title="Priority Action Queue"
+        />
         <Bottlenecks
           bottlenecks={bottlenecks}
           diagnostics={diagnostics}

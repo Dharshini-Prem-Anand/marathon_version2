@@ -1,15 +1,18 @@
 // The Dashboard on live data.
 //
-// It is an aggregate of the five KPI endpoints (/triageKpis,
-// /getExtractionKpis, /preValidationKpis, /exceptionKpis, /matchingkpis) plus
-// two CAP entities: PipelineStatus — the run record behind every document,
-// which the End-to-End flow strip is a direct picture of — and Exceptions,
-// which is the Priority Action Queue.
+// /touchlesscount now returns one consolidated payload — touchlessCount,
+// humanReview and the businessOutcomeScorecard, mvpCapabilityPerformance,
+// processBottlenecksDiagnostics and mvpValueRealization sections — and that
+// payload is the single source for the Business Outcome Scorecard, MVP
+// Capability Performance, Process Bottlenecks & Diagnostics and MVP Value
+// Realization panels below.
 //
-// Three figures on this page have no source anywhere in the service: cost per
-// invoice (needs a rate card), human touches per invoice (needs a touch log)
-// and annualised value (needs a value model). Those render '—'. Targets are
-// configuration, not data, so they stay as written.
+// Two things on this page still come from elsewhere: PipelineStatus, the run
+// record behind every document, which the End-to-End flow strip is a direct
+// picture of; and /matchingkpis + /exceptionKpis, which fill in "Ready for
+// VIM" and "Exceptions" on the flow legend. Targets are configuration, not
+// data, so they stay as written. Any figure the service hasn't modelled yet
+// (cost per invoice, annualised value, ...) comes back null and renders '—'.
 
 import { PIPELINE_STAGES } from './pipelineStatus'
 
@@ -40,6 +43,22 @@ const money = (value) => {
 
 // '…' until the call lands, '—' once it has and the number isn't in it.
 const pending = (payload, formatted) => (payload == null ? LOADING : formatted)
+
+// intakeToVimCycleTimeHours comes back as a fraction of an hour for a live
+// run, so it needs the same Min/Hrs/Days unit-picking as cycleTimeLabel.
+const hoursLabel = (hours) => {
+  const h = num(hours)
+  if (h == null) return NO_VALUE
+  const minutes = h * 60
+  if (minutes < 60) return `${minutes.toFixed(1)} Min`
+  if (h < 24) return `${h.toFixed(1)} Hrs`
+  return `${(h / 24).toFixed(1)} Days`
+}
+
+const decimal = (value) => {
+  const n = num(value)
+  return n == null ? NO_VALUE : n.toFixed(1)
+}
 
 // ---------------------------------------------------------------------------
 // PipelineStatus
@@ -74,40 +93,6 @@ export function pipelineFunnel(rows = []) {
   return { documents, stages, clean, touched: documents - clean }
 }
 
-// Intake to the last thing the pipeline did, averaged over the documents that
-// have both timestamps. Rendered in the unit that fits: the live runs take
-// about a minute, and "0.0 Days" would say nothing.
-export function cycleTimeLabel(pipelineRows = [], emails = []) {
-  const receivedByMessage = new Map()
-  for (const email of emails) {
-    if (email.MessageID && email.ReceivedDateTime) receivedByMessage.set(email.MessageID, email.ReceivedDateTime)
-  }
-
-  const lastByDocument = new Map()
-  for (const row of pipelineRows) {
-    const stamp = row.Timestamp ?? row.createdAt
-    if (!stamp) continue
-    const key = `${row.MessageID}::${row.FileName}`
-    const current = lastByDocument.get(key)
-    if (!current || stamp > current.stamp) lastByDocument.set(key, { stamp, messageId: row.MessageID })
-  }
-
-  const spans = []
-  for (const { stamp, messageId } of lastByDocument.values()) {
-    const received = receivedByMessage.get(messageId)
-    if (!received) continue
-    const ms = new Date(stamp) - new Date(received)
-    if (Number.isFinite(ms) && ms >= 0) spans.push(ms)
-  }
-  if (spans.length === 0) return NO_VALUE
-
-  const avgMs = spans.reduce((sum, ms) => sum + ms, 0) / spans.length
-  const minutes = avgMs / 60000
-  if (minutes < 60) return `${minutes.toFixed(1)} Min`
-  if (minutes < 60 * 24) return `${(minutes / 60).toFixed(1)} Hrs`
-  return `${(minutes / (60 * 24)).toFixed(1)} Days`
-}
-
 // Where each invoice stands, for the Dashboard's Status filter: the pipeline
 // either posted it, failed somewhere, or is still working through it.
 export function invoiceStatusFromPipeline(rows = []) {
@@ -137,31 +122,16 @@ export function invoiceStatusFromPipeline(rows = []) {
 // Colour and target come from the tile definitions; only the value is data.
 // No trend arrows: nothing in the service carries a prior period, and an
 // arrow pointing the wrong way is worse than no arrow.
-export function buildScorecard(definitions, { funnel, preValidation, extraction, cycleTime, pipelineLoaded, touchlessCount }) {
-  // /touchlesscount returns { touchlessCount, humanReview } — both figures
-  // are shares of the same total, which is the pipeline's own document count.
-  const totalInvoices = funnel.documents
-  const touchlessLoaded = pipelineLoaded && touchlessCount != null
-  const touchlessValue = num(touchlessCount?.touchlessCount)
-  const humanReviewValue = num(touchlessCount?.humanReview)
-
-  const touchlessPct =
-    totalInvoices > 0 && touchlessValue != null ? (touchlessValue / totalInvoices) * 100 : null
-  const humanTouchesPerInvoice =
-    totalInvoices > 0 && humanReviewValue != null ? humanReviewValue / totalInvoices : null
+export function buildScorecard(definitions, { touchlessCount }) {
+  const scorecard = touchlessCount?.businessOutcomeScorecard
 
   const values = {
-    'Touchless Invoice Processing': touchlessLoaded ? percent(touchlessPct) : LOADING,
-    'First-Pass VIM Readiness': pending(preValidation, percent(preValidation?.firstPassVimReadinessPercent)),
-    // No rate card behind it anywhere in the service.
-    'Cost per Invoice': NO_VALUE,
-    'Intake-to-VIM Cycle Time': pipelineLoaded ? cycleTime : LOADING,
-    'Human Touches per Invoice': touchlessLoaded
-      ? humanTouchesPerInvoice == null
-        ? NO_VALUE
-        : humanTouchesPerInvoice.toFixed(1)
-      : LOADING,
-    'Extraction & Validation Accuracy': pending(extraction, percent(extraction?.overallExtractionAccuracy)),
+    'Touchless Invoice Processing': pending(touchlessCount, percent(scorecard?.touchlessInvoiceProcessingPercent)),
+    'First-Pass VIM Readiness': pending(touchlessCount, percent(scorecard?.firstPassVimReadinessPercent)),
+    'Cost per Invoice': pending(touchlessCount, money(scorecard?.costPerInvoice)),
+    'Intake-to-VIM Cycle Time': pending(touchlessCount, hoursLabel(scorecard?.intakeToVimCycleTimeHours)),
+    'Human Touches per Invoice': pending(touchlessCount, decimal(scorecard?.humanTouchesPerInvoice)),
+    'Extraction & Validation Accuracy': pending(touchlessCount, percent(scorecard?.extractionValidationAccuracyPercent)),
   }
 
   return definitions.map((metric) => ({ ...metric, value: values[metric.label] ?? NO_VALUE, trend: null }))
@@ -198,38 +168,46 @@ export function buildFlowLegend({ touchlessCount, exceptions }) {
 // MVP Capability Performance
 // ---------------------------------------------------------------------------
 
-export function buildCapabilityCards(definitions, { triage, extraction, preValidation, exceptions, matching, avgConfidence }) {
+export function buildCapabilityCards(definitions, { touchlessCount }) {
+  const capability = touchlessCount?.mvpCapabilityPerformance
+  const triage = capability?.emailAttachmentTriage
+  const extraction = capability?.documentAiExtraction
+  const preValidation = capability?.preValidation
+  const matching = capability?.poLineMatching
+  const exceptionRecs = capability?.exceptionRecommendations
+  const prioritization = capability?.prioritizationAnalytics
+
   const byTitle = {
     'Email & Attachment Triage': {
-      value: pending(triage, percent(triage?.autoTriagedPercent)),
-      stat: pending(triage, count(triage?.manualReviews)),
+      value: pending(touchlessCount, percent(triage?.autoTriagedPercent)),
+      stat: pending(touchlessCount, count(triage?.manualReviews)),
     },
     'Document AI & Extraction': {
-      value: pending(extraction, percent(extraction?.overallExtractionAccuracy)),
+      value: pending(touchlessCount, percent(extraction?.extractionAccuracyPercent)),
       // The service reports low confidence as a share of documents, so the
       // card's footer reads as a percentage here rather than a count.
-      stat: pending(extraction, percent(extraction?.lowConfidencePercent)),
+      stat: pending(touchlessCount, percent(extraction?.lowConfidencePercent)),
       statLabel: 'Low-Confidence',
     },
     'Pre-Validation': {
-      value: pending(preValidation, percent(preValidation?.firstPassVimReadinessPercent)),
-      stat: pending(preValidation, count(preValidation?.preventedVimExceptions)),
+      value: pending(touchlessCount, percent(preValidation?.firstPassReadyPercent)),
+      stat: pending(touchlessCount, count(preValidation?.preventedVimExceptions)),
     },
     'PO & Line Matching': {
-      value: pending(matching, percent(matching?.lineMatchRate?.percentage)),
-      stat: pending(matching, count(matching?.toleranceExceptions)),
+      value: pending(touchlessCount, percent(matching?.lineMatchPercent)),
+      stat: pending(touchlessCount, count(matching?.toleranceExceptions)),
     },
     'Exception Recommendations': {
-      value: pending(exceptions, count(exceptions?.recommendations)),
-      target: avgConfidence == null ? `Confidence ${NO_VALUE}` : `${percent(avgConfidence)} Confidence`,
-      stat: pending(exceptions, count(exceptions?.beyondSla)),
+      value: pending(touchlessCount, count(exceptionRecs?.recommendations)),
+      target: pending(touchlessCount, `${percent(exceptionRecs?.confidencePercent)} Confidence`),
+      stat: pending(touchlessCount, count(exceptionRecs?.beyondSla)),
     },
     'Prioritization & Analytics': {
-      value: pending(exceptions, count(exceptions?.openExceptions)),
-      target: pending(exceptions, `${count(exceptions?.atRiskOfLatePayment)} Late-Payment Risk${
-        num(exceptions?.atRiskOfLatePayment) === 1 ? '' : 's'
+      value: pending(touchlessCount, count(prioritization?.priorityItems)),
+      target: pending(touchlessCount, `${count(prioritization?.atRiskOfLatePayment)} Late-Payment Risk${
+        num(prioritization?.atRiskOfLatePayment) === 1 ? '' : 's'
       }`),
-      stat: pending(exceptions, count(exceptions?.unassigned)),
+      stat: pending(touchlessCount, count(prioritization?.unassigned)),
     },
   }
 
@@ -246,41 +224,46 @@ export function buildCapabilityCards(definitions, { triage, extraction, preValid
 // Process Bottlenecks & Diagnostics
 // ---------------------------------------------------------------------------
 
-// The rules that failed pre-validation, as a share of all failures — the same
-// drivers the Pre-Validation page charts.
-export function buildBottlenecks(payload) {
-  const drivers = payload?.topRuleFailureDrivers
-  if (!Array.isArray(drivers) || drivers.length === 0) return null
-  return drivers.map((row) => ({ label: row.rule ?? NO_VALUE, value: Math.round(num(row.percentOfFailures) ?? 0) }))
+// The three process checks the service tracks as a share of invoices passing
+// — the bars on the left of the panel.
+export function buildBottlenecks(touchlessCount) {
+  const diagnostics = touchlessCount?.processBottlenecksDiagnostics
+  if (diagnostics == null) return null
+  return [
+    { label: 'PO Existence', value: Math.round(num(diagnostics.poExistencePercent) ?? 0) },
+    { label: 'Duplicate Check', value: Math.round(num(diagnostics.duplicateCheckPercent) ?? 0) },
+    { label: 'Total Reconciliation', value: Math.round(num(diagnostics.totalReconciliationPercent) ?? 0) },
+  ]
 }
 
 // Header and line accuracy are live; vendor accuracy and corrections retained
 // have no source, so they say so rather than carrying yesterday's mock.
-export function buildDiagnostics(extraction) {
+export function buildDiagnostics(touchlessCount) {
+  const diagnostics = touchlessCount?.processBottlenecksDiagnostics
   return [
-    { icon: 'clipboard', label: 'Header Accuracy', value: pending(extraction, percent(extraction?.headerAccuracy)) },
-    { icon: 'list', label: 'Line Accuracy', value: pending(extraction, percent(extraction?.lineAccuracy)) },
-    { icon: 'search', label: 'Extraction Accuracy', value: pending(extraction, percent(extraction?.overallExtractionAccuracy)) },
+    { icon: 'clipboard', label: 'Header Accuracy', value: pending(touchlessCount, percent(diagnostics?.headerAccuracyPercent)) },
+    { icon: 'list', label: 'Line Accuracy', value: pending(touchlessCount, percent(diagnostics?.lineAccuracyPercent)) },
+    { icon: 'search', label: 'Extraction Accuracy', value: pending(touchlessCount, percent(diagnostics?.extractionAccuracyPercent)) },
     {
       icon: 'check',
       label: 'Average Extraction Time',
-      value: pending(extraction, extraction?.averageExtractionTimeMinutes == null ? NO_VALUE : `${extraction.averageExtractionTimeMinutes} Min`),
+      value: pending(touchlessCount, diagnostics?.averageExtractionTimeMinutes == null ? NO_VALUE : `${diagnostics.averageExtractionTimeMinutes} Min`),
     },
   ]
 }
 
-// Value at risk is the money sitting in open exceptions — the amounts on the
-// rows themselves, not a modelled figure.
-export function buildIntervention({ exceptions, rows = [], avgConfidence, amountAtRisk }) {
-  const recommendations = num(exceptions?.recommendations)
+// Value at risk is the money the service has tied to its own recommendation.
+export function buildIntervention(touchlessCount) {
+  const intervention = touchlessCount?.processBottlenecksDiagnostics?.recommendedIntervention
+  const recommendations = num(intervention?.recommendations)
 
   return {
     description:
-      exceptions == null
+      touchlessCount == null
         ? 'Loading recommendations…'
-        : `Review ${count(recommendations ?? rows.length)} evidence-based recommendation${(recommendations ?? rows.length) === 1 ? '' : 's'}`,
-    confidence: avgConfidence == null ? NO_VALUE : percent(avgConfidence),
-    valueAtRisk: money(amountAtRisk),
+        : `Review ${count(recommendations)} evidence-based recommendation${recommendations === 1 ? '' : 's'}`,
+    confidence: pending(touchlessCount, percent(intervention?.confidencePercent)),
+    valueAtRisk: pending(touchlessCount, money(intervention?.valueAtRisk)),
   }
 }
 
@@ -288,37 +271,34 @@ export function buildIntervention({ exceptions, rows = [], avgConfidence, amount
 // MVP Value Realization
 // ---------------------------------------------------------------------------
 
-export function buildValueRealization({ triage, preValidation, exceptions }) {
-  const value = triage?.valueDelivered
-  const summary = exceptions?.recommendationSummary
-  const decimal = (n) => (num(n) == null ? NO_VALUE : String(num(n)))
+export function buildValueRealization({ touchlessCount }) {
+  const value = touchlessCount?.mvpValueRealization
 
   return [
-    { icon: 'users', value: pending(triage, decimal(value?.fteEquivalent)), label: 'FTEs', title: 'FTE Capacity Released' },
-    { icon: 'clock', value: pending(triage, decimal(value?.hoursPerDayAvoided)), label: 'Hours / Day', title: 'Manual Hours Avoided' },
+    { icon: 'users', value: pending(touchlessCount, decimal(value?.fteCapacityReleased)), label: 'FTEs', title: 'FTE Capacity Released' },
+    { icon: 'clock', value: pending(touchlessCount, decimal(value?.manualHoursAvoidedPerDay)), label: 'Hours / Day', title: 'Manual Hours Avoided' },
     {
       icon: 'shield',
-      value: pending(preValidation, count(preValidation?.preventedVimExceptions)),
+      value: pending(touchlessCount, count(value?.vimExceptionsPrevented)),
       label: 'Exceptions',
       title: 'VIM Exceptions Prevented',
     },
     {
       icon: 'trend',
-      value: pending(exceptions, percent(summary?.cycleTimeReductionPercent)),
+      value: pending(touchlessCount, percent(value?.cycleTimeReducedPercent)),
       label: 'Improvement',
       title: 'Cycle Time Reduced',
     },
-    // No value model behind an annualised figure.
-    { icon: 'dollar', value: NO_VALUE, label: 'Value', title: 'Annualized Value' },
+    { icon: 'dollar', value: pending(touchlessCount, money(value?.annualizedValue)), label: 'Value', title: 'Annualized Value' },
   ]
 }
 
-export function buildValueFooter({ exceptions }) {
-  const summary = exceptions?.recommendationSummary
+export function buildValueFooter({ touchlessCount }) {
+  const value = touchlessCount?.mvpValueRealization
   return [
-    { label: 'Late-Payment Exposure Avoided', value: pending(exceptions, money(summary?.latePaymentExposureAvoided)) },
-    { label: 'Minutes Saved per Invoice', value: pending(exceptions, count(summary?.minutesSaved)) },
-    { label: 'Processing Cost Reduction', value: NO_VALUE },
-    { label: 'Discount Opportunity Protected', value: NO_VALUE },
+    { label: 'Late-Payment Exposure Avoided', value: pending(touchlessCount, money(value?.latePaymentExposureAvoided)) },
+    { label: 'Minutes Saved per Invoice', value: pending(touchlessCount, count(value?.minutesSavedPerInvoice)) },
+    { label: 'Processing Cost Reduction', value: pending(touchlessCount, money(value?.processingCostReduction)) },
+    { label: 'Discount Opportunity Protected', value: pending(touchlessCount, money(value?.discountOpportunityProtected)) },
   ]
 }
