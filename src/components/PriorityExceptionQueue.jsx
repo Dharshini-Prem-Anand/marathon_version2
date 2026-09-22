@@ -63,7 +63,7 @@ const GROUP_COLUMNS = {
   sla: (g) => g.sla,
 }
 
-const COL_COUNT = 8
+const COL_COUNT = 7
 
 // In the panel every value is ellipsized to one line, because the tile shares
 // its row with the AI Review panel. Zoomed, nothing is cut: the long columns
@@ -79,14 +79,13 @@ function ExceptionTable({ ctl, paging, expanded, selectedId, onSelect, expandedI
       <table className={`tree-table ${expanded ? 'exception-table-full' : 'table-fixed'}`}>
         {!expanded && (
           <colgroup>
-            <col style={{ width: '8%' }} />
+            <col style={{ width: '9%' }} />
+            <col style={{ width: '18%' }} />
+            <col style={{ width: '22%' }} />
+            <col style={{ width: '14%' }} />
             <col style={{ width: '15%' }} />
-            <col style={{ width: '17%' }} />
-            <col style={{ width: '11%' }} />
-            <col style={{ width: '19%' }} />
             <col style={{ width: '12%' }} />
-            <col style={{ width: '9%' }} />
-            <col style={{ width: '9%' }} />
+            <col style={{ width: '10%' }} />
           </colgroup>
         )}
         <thead>
@@ -95,7 +94,6 @@ function ExceptionTable({ ctl, paging, expanded, selectedId, onSelect, expandedI
             <SortFilterTh columnKey="invoice" label="Invoice" ctl={ctl} />
             <SortFilterTh columnKey="vendor" label="Vendor" ctl={ctl} />
             <SortFilterTh columnKey="amount" label="Amount" ctl={ctl} />
-            <SortFilterTh columnKey="issue" label="Issue" ctl={ctl} />
             <SortFilterTh columnKey="due" label="Due" ctl={ctl} />
             <SortFilterTh columnKey="owner" label="Owner" ctl={ctl} />
             <SortFilterTh columnKey="sla" label="SLA" ctl={ctl} />
@@ -130,9 +128,6 @@ function ExceptionTable({ ctl, paging, expanded, selectedId, onSelect, expandedI
                       {g.vendor}
                     </td>
                     <td>{g.amount}</td>
-                    <td className={clip.trim() || undefined} title={g.issues}>
-                      {g.issues}
-                    </td>
                     <td className={g.dueColor ? `color-${g.dueColor}` : undefined}>{g.due}</td>
                     <td className={clip.trim() || undefined}>{g.owner}</td>
                     <td>
@@ -141,31 +136,32 @@ function ExceptionTable({ ctl, paging, expanded, selectedId, onSelect, expandedI
                     </td>
                   </tr>
                   {open &&
-                    g.exceptions.map((e) => (
-                      <tr
-                        key={e.id}
-                        onClick={(ev) => {
-                          ev.stopPropagation()
-                          onSelect?.(e.invoice)
-                        }}
-                        className={`tree-child-row${selectedId === e.invoice ? ' selected' : ''}`}
-                      >
-                        <td colSpan={COL_COUNT}>
-                          <div className="tree-child-line">
-                            <span className={`priority-dot color-${priorityColor[e.priority]}`} />
-                            <span
-                              className={`cell-ellipsis tree-child-name${e.issueColor ? ` color-${e.issueColor}` : ''}`}
-                              title={e.issue}
-                            >
-                              {e.issue}
-                            </span>
-                            <span className={`tree-child-meta${e.dueColor ? ` color-${e.dueColor}` : ''}`}>Due {e.due}</span>
-                            <span className="tree-child-meta">{e.owner}</span>
-                            <span className={`badge badge-${e.slaColor} tree-child-badge`}>{e.sla}</span>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    g.exceptions.map((e, idx) => {
+                      const label = e.materialNumber || idx + 1
+                      const text = `${label} - ${e.issue}`
+                      return (
+                        <tr
+                          key={e.id}
+                          onClick={(ev) => {
+                            ev.stopPropagation()
+                            onSelect?.(e.invoice)
+                          }}
+                          className={`tree-child-row${selectedId === e.invoice ? ' selected' : ''}`}
+                        >
+                          <td colSpan={COL_COUNT}>
+                            <div className="tree-child-line">
+                              <span className={`priority-dot color-${priorityColor[e.priority]}`} />
+                              <span
+                                className={`cell-ellipsis tree-child-name${e.issueColor ? ` color-${e.issueColor}` : ''}`}
+                                title={text}
+                              >
+                                {text}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                 </Fragment>
               )
             })

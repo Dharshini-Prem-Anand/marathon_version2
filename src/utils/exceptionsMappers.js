@@ -43,6 +43,11 @@ export function buildExceptionRows(exceptions, vendorNamesByInvoice = {}) {
         // number — using the invoice alone produces duplicate React keys.
         id: `${row.ExceptionCode}::${row.InvoiceNumber}::${row.FiscalYear}::${row.ItemNumber}`,
         invoice: row.InvoiceNumber,
+        // Not every exception is tied to a material (a header-level check,
+        // like the invoice total not matching its line items, has none) — the
+        // queue falls back to a 1-based position among the invoice's other
+        // exceptions when this is null.
+        materialNumber: row.MaterialNumber || null,
         priority,
         // Vendor comes back as a code (e.g. "USSU-LSF01"), same as Invoices —
         // the readable name comes from the extraction, keyed by invoice number.
