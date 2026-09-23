@@ -53,9 +53,9 @@ const NO_ROWS = []
 // dropdowns narrow the Priority Action Queue rather than the panels above it
 // — the same split every other page has.
 export default function Dashboard() {
-  const { draft, applied, setField, apply } = useFilters(dashboardFilters)
-  const [dateRange, setDateRange] = useState(DEFAULT_DATE_RANGE)
-  const [appliedDateRange, setAppliedDateRange] = useState(DEFAULT_DATE_RANGE)
+  const { draft, applied, setField, apply, reset } = useFilters(dashboardFilters)
+  const { dateRange, appliedDateRange, customRange, setDateRange, setCustomRange, applyDateRange, resetDateRange } =
+    useSharedDateRange()
 
   // One state per source: a panel shows a placeholder until its own call
   // lands, instead of the whole page waiting on the slowest one.
