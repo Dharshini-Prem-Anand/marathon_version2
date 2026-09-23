@@ -24,6 +24,34 @@ function formatDue(value) {
 
 const PRIORITY_RANK = { High: 0, Medium: 1, Low: 2 }
 
+// ExceptionType is usually a plain category string (e.g. "No GRN"), but a
+// handful of generated rows carry it as a JSON string that nests the real
+// category under an identifying field instead, e.g.
+// `{"MaterialNumber": {"9701": "No GRN"}}`. Both shapes resolve to the same
+// three pieces: which field identifies this line, that field's value, and
+// the actual exception type text — what the queue's dropdown line reads.
+function resolveExceptionType(row) {
+  const raw = row.ExceptionType
+  if (typeof raw === 'string' && raw.trim().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(raw)
+      const [fieldName] = Object.keys(parsed)
+      const nested = parsed?.[fieldName]
+      if (fieldName && nested && typeof nested === 'object') {
+        const [fieldValue] = Object.keys(nested)
+        return { fieldName, fieldValue, exceptionType: nested[fieldValue] ?? null }
+      }
+    } catch {
+      // Not parseable JSON after all — fall through to the flat fields below.
+    }
+  }
+
+  const exceptionType = typeof raw === 'string' ? raw : null
+  if (row.MaterialNumber) return { fieldName: 'MaterialNumber', fieldValue: row.MaterialNumber, exceptionType }
+  if (row.ItemNumber) return { fieldName: 'ItemNumber', fieldValue: row.ItemNumber, exceptionType }
+  return { fieldName: 'InvoiceNumber', fieldValue: row.InvoiceNumber, exceptionType }
+}
+
 export function buildExceptionRows(exceptions, vendorNamesByInvoice = {}) {
   return [...exceptions]
     .sort((a, b) => {
@@ -36,6 +64,7 @@ export function buildExceptionRows(exceptions, vendorNamesByInvoice = {}) {
       const priority = normalizePriority(row.Priority)
       const color = priorityColor[priority] ?? null
       const sla = Number(row.SLA)
+      const { fieldName, fieldValue, exceptionType } = resolveExceptionType(row)
 
       return {
         // An invoice can carry several distinct exceptions, so the row key
@@ -43,11 +72,9 @@ export function buildExceptionRows(exceptions, vendorNamesByInvoice = {}) {
         // number — using the invoice alone produces duplicate React keys.
         id: `${row.ExceptionCode}::${row.InvoiceNumber}::${row.FiscalYear}::${row.ItemNumber}`,
         invoice: row.InvoiceNumber,
-        // Not every exception is tied to a material (a header-level check,
-        // like the invoice total not matching its line items, has none) — the
-        // queue falls back to a 1-based position among the invoice's other
-        // exceptions when this is null.
-        materialNumber: row.MaterialNumber || null,
+        exceptionType,
+        exceptionFieldName: fieldName,
+        exceptionFieldValue: fieldValue,
         priority,
         // Vendor comes back as a code (e.g. "USSU-LSF01"), same as Invoices —
         // the readable name comes from the extraction, keyed by invoice number.

@@ -136,9 +136,10 @@ function ExceptionTable({ ctl, paging, expanded, selectedId, onSelect, expandedI
                     </td>
                   </tr>
                   {open &&
-                    g.exceptions.map((e, idx) => {
-                      const label = e.materialNumber || idx + 1
-                      const text = `${label} - ${e.issue}`
+                    g.exceptions.map((e) => {
+                      const text = `${e.exceptionFieldName} : ${e.exceptionFieldValue ?? '—'}, Exception Type : ${
+                        e.exceptionType ?? '—'
+                      }`
                       return (
                         <tr
                           key={e.id}
