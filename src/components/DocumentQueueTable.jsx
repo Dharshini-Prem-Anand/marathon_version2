@@ -194,7 +194,7 @@ function QueueFooter({ paging }) {
   return <TablePagination paging={paging} showCollapse={false} />
 }
 
-export default function DocumentQueueTable({ rows = [], selectedId, onSelect, loading, error, onOpenEmail, wide }) {
+export default function DocumentQueueTable({ rows = [], selectedId, revealSelected = true, onSelect, loading, error, onOpenEmail, wide }) {
   const groups = groupByEmail(rows)
   const ctl = useColumnSortFilter(groups, GROUP_COLUMNS)
   const paging = usePagedRows(ctl.rows, undefined, { alwaysExpanded: true })
@@ -203,14 +203,16 @@ export default function DocumentQueueTable({ rows = [], selectedId, onSelect, lo
   const tableAnchorRef = useRef(null)
 
   // Keep the selected document's email open so the highlighted row stays
-  // visible instead of being hidden inside a collapsed group.
+  // visible instead of being hidden inside a collapsed group. Skipped for the
+  // page's default first-row selection (`revealSelected` false) so every email
+  // starts collapsed; a click or deep link still opens its email.
   useEffect(() => {
-    if (!selectedId) return
+    if (!selectedId || !revealSelected) return
     const owner = groups.find((g) => g.attachments.some((a) => a.id === selectedId))
     if (!owner) return
     setExpandedIds((prev) => (prev.has(owner.key) ? prev : new Set(prev).add(owner.key)))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId])
+  }, [selectedId, revealSelected])
 
   const toggle = (key) =>
     setExpandedIds((prev) => {

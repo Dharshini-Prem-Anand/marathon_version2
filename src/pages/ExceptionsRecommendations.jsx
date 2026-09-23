@@ -177,6 +177,7 @@ export default function ExceptionsRecommendations({ pendingSelectId, onPendingSe
           <PriorityExceptionQueue
             rows={filteredRows}
             selectedId={selectedRecordId}
+            revealSelected={selectedRecordId === selectedExceptionId}
             onSelect={setSelectedExceptionId}
           />
           <AiReviewRecommendation

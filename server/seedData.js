@@ -223,7 +223,7 @@ export const emailTriageFilters = [
 export const emailTriageStats = [
   { icon: 'mail', label: 'Emails Received Today', value: '2,600', valueColor: 'blue', target: null },
   { icon: 'checkCircle', label: 'Auto-Triaged', value: '89%', valueColor: 'green', target: 'Target: 95%' },
-  { icon: 'fileText', label: 'Attachments Downloaded', value: '2,314', valueColor: 'blue', target: null },
+  { icon: 'fileText', label: 'Received Documents', value: '2,314', valueColor: 'blue', target: null },
   { icon: 'user', label: 'Manual Reviews', value: '42', valueColor: 'red', target: 'Target: < 20' },
   { icon: 'copy', label: 'Duplicate Attachments', value: '12', valueColor: 'red', target: null },
   { icon: 'clock', label: 'Average Triage Time', value: '2.1 min', valueColor: 'blue', target: 'Target: 1.0 min' },

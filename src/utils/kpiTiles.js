@@ -43,7 +43,7 @@ const decimal = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(1))
 export const TRIAGE_KPI_FIELDS = {
   'Emails Received': { key: 'emailsReceivedToday', format: count },
   'Auto-Triaged': { key: 'autoTriagedPercent', format: percent },
-  'Attachments Downloaded': { key: 'attachmentsDownloaded', format: count },
+  'Received Documents': { key: 'attachmentsDownloaded', format: count },
   'Manual Reviews': { key: 'manualReviews', format: count },
   'Duplicate Attachments': { key: 'duplicateAttachments', format: count },
   // Lower-case unit here — it's what this page's tile has always shown.

@@ -6,7 +6,8 @@ import { X } from 'lucide-react'
 // of the page, so it reads as that table zooming up in place. `ready` stays
 // false for the measuring pass so the box's un-transformed size is read
 // before the zoom-in animation's `scale()` would otherwise skew it.
-function useAnchoredPosition(anchorRef) {
+// `centered` skips the anchor and centers the box in the viewport instead.
+function useAnchoredPosition(anchorRef, centered) {
   const boxRef = useRef(null)
   const [style, setStyle] = useState({ opacity: 0 })
   const [ready, setReady] = useState(false)
@@ -14,13 +15,17 @@ function useAnchoredPosition(anchorRef) {
   useLayoutEffect(() => {
     const anchorEl = anchorRef?.current
     const boxEl = boxRef.current
-    if (!anchorEl || !boxEl) return
+    if (!boxEl || (!centered && !anchorEl)) return
 
-    const anchorRect = anchorEl.getBoundingClientRect()
     const boxRect = boxEl.getBoundingClientRect()
     const margin = 16
-    const cx = anchorRect.left + anchorRect.width / 2
-    const cy = anchorRect.top + anchorRect.height / 2
+    let cx = window.innerWidth / 2
+    let cy = window.innerHeight / 2
+    if (!centered) {
+      const anchorRect = anchorEl.getBoundingClientRect()
+      cx = anchorRect.left + anchorRect.width / 2
+      cy = anchorRect.top + anchorRect.height / 2
+    }
 
     const maxLeft = Math.max(margin, window.innerWidth - boxRect.width - margin)
     const maxTop = Math.max(margin, window.innerHeight - boxRect.height - margin)
@@ -29,13 +34,13 @@ function useAnchoredPosition(anchorRef) {
 
     setStyle({ left, top, opacity: 1 })
     setReady(true)
-  }, [anchorRef])
+  }, [anchorRef, centered])
 
   return { boxRef, style, ready }
 }
 
-export default function TableExpandModal({ title, onClose, anchorRef, children }) {
-  const { boxRef, style, ready } = useAnchoredPosition(anchorRef)
+export default function TableExpandModal({ title, onClose, anchorRef, centered = false, children }) {
+  const { boxRef, style, ready } = useAnchoredPosition(anchorRef, centered)
 
   useEffect(() => {
     const onKeyDown = (e) => {

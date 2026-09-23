@@ -45,7 +45,6 @@ function groupByInvoice(rows) {
     group.due = worst.due
     group.sla = worst.sla
     group.slaColor = worst.slaColor
-    group.owner = group.exceptions.every((e) => e.owner === worst.owner) ? worst.owner : 'Multiple'
     group.issues = [...new Set(group.exceptions.map((e) => e.issue))].join(', ')
   }
 
@@ -59,11 +58,10 @@ const GROUP_COLUMNS = {
   amount: (g) => g.amount,
   issue: (g) => g.issues,
   due: (g) => g.due,
-  owner: (g) => g.owner,
   sla: (g) => g.sla,
 }
 
-const COL_COUNT = 7
+const COL_COUNT = 6
 
 // In the panel every value is ellipsized to one line, because the tile shares
 // its row with the AI Review panel. Zoomed, nothing is cut: the long columns
@@ -79,13 +77,12 @@ function ExceptionTable({ ctl, paging, expanded, selectedId, onSelect, expandedI
       <table className={`tree-table ${expanded ? 'exception-table-full' : 'table-fixed'}`}>
         {!expanded && (
           <colgroup>
-            <col style={{ width: '9%' }} />
-            <col style={{ width: '18%' }} />
-            <col style={{ width: '22%' }} />
-            <col style={{ width: '14%' }} />
-            <col style={{ width: '15%' }} />
-            <col style={{ width: '12%' }} />
             <col style={{ width: '10%' }} />
+            <col style={{ width: '20%' }} />
+            <col style={{ width: '26%' }} />
+            <col style={{ width: '14%' }} />
+            <col style={{ width: '18%' }} />
+            <col style={{ width: '12%' }} />
           </colgroup>
         )}
         <thead>
@@ -95,7 +92,6 @@ function ExceptionTable({ ctl, paging, expanded, selectedId, onSelect, expandedI
             <SortFilterTh columnKey="vendor" label="Vendor" ctl={ctl} />
             <SortFilterTh columnKey="amount" label="Amount" ctl={ctl} />
             <SortFilterTh columnKey="due" label="Due" ctl={ctl} />
-            <SortFilterTh columnKey="owner" label="Owner" ctl={ctl} />
             <SortFilterTh columnKey="sla" label="SLA" ctl={ctl} />
           </tr>
         </thead>
@@ -129,7 +125,6 @@ function ExceptionTable({ ctl, paging, expanded, selectedId, onSelect, expandedI
                     </td>
                     <td>{g.amount}</td>
                     <td className={g.dueColor ? `color-${g.dueColor}` : undefined}>{g.due}</td>
-                    <td className={clip.trim() || undefined}>{g.owner}</td>
                     <td>
                       <span className={`priority-dot color-${g.slaColor}`} />
                       <span className={`color-${g.slaColor}`}>{g.sla}</span>
@@ -185,7 +180,7 @@ function QueueFooter({ paging }) {
 // roughly the height of that panel; the rest are a page away.
 const PAGE_SIZE = 10
 
-export default function PriorityExceptionQueue({ rows = [], selectedId, onSelect }) {
+export default function PriorityExceptionQueue({ rows = [], selectedId, revealSelected = true, onSelect }) {
   const groups = groupByInvoice(rows)
   const ctl = useColumnSortFilter(groups, GROUP_COLUMNS)
   const paging = usePagedRows(ctl.rows, PAGE_SIZE, { alwaysExpanded: true })
@@ -194,14 +189,16 @@ export default function PriorityExceptionQueue({ rows = [], selectedId, onSelect
   const tableAnchorRef = useRef(null)
 
   // Keep the selected exception's group open so the highlighted row stays
-  // visible instead of being hidden inside a collapsed group.
+  // visible instead of being hidden inside a collapsed group. Skipped for the
+  // page's default first-row selection (`revealSelected` false) so every group
+  // starts collapsed; a click or deep link still opens its group.
   useEffect(() => {
-    if (!selectedId) return
+    if (!selectedId || !revealSelected) return
     const owner = groups.find((g) => g.exceptions.some((e) => e.id === selectedId))
     if (!owner) return
     setExpandedIds((prev) => (prev.has(owner.key) ? prev : new Set(prev).add(owner.key)))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId])
+  }, [selectedId, revealSelected])
 
   const toggle = (key) =>
     setExpandedIds((prev) => {

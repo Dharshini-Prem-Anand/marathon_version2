@@ -2734,6 +2734,51 @@ body.is-resizing-cols iframe {
   overflow: auto;
 }
 
+/* ---------- ZOOMED PRIORITY ACTION QUEUE ---------- */
+/* Opens centered and sized to show the whole page of rows at once: nearly the
+   full viewport, with Issue given the spare width so it wraps onto fewer
+   lines. The body only scrolls if the screen is too small to fit it. */
+.priority-queue .table-modal {
+  width: min(1400px, 96vw);
+  max-height: 94vh;
+}
+
+.priority-queue .exception-table-full {
+  min-width: 0;
+}
+
+.priority-queue .exception-table-full th,
+.priority-queue .exception-table-full td {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.priority-queue .exception-table-full th:nth-child(5),
+.priority-queue .exception-table-full td:nth-child(5) {
+  max-width: none;
+}
+
+/* Panel view of the Priority Action Queue: every cell keeps its full text on
+   one line, and the table overflows .table-wrap, which scrolls horizontally. */
+.queue-table-scroll {
+  table-layout: auto;
+  width: max-content;
+  min-width: 100%;
+}
+
+.queue-table-scroll th,
+.queue-table-scroll td {
+  white-space: nowrap;
+}
+
+/* Issue carries a full sentence, so it's capped and ellipsized (full text in
+   the hover title) rather than widening the table or wrapping the row taller. */
+.queue-table-scroll td:nth-child(4) {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Auto layout, not the panel's fixed percentages: each column takes the width
    its own content needs, and nothing is ellipsized. */
 .exception-table-full {

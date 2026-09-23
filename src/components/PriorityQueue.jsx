@@ -18,50 +18,39 @@ const COLUMNS = {
   amount: (row) => row.amount,
   issue: (row) => row.issue,
   due: (row) => row.due,
-  owner: (row) => row.owner,
   sla: (row) => row.sla,
 }
 
-const COL_COUNT = 8
+// Amount and SLA only show in the expanded modal; the panel keeps the
+// columns that fit its width.
+const COMPACT_COL_COUNT = 5
+const EXPANDED_COL_COUNT = 7
 
 // One flat row per exception — an invoice with several flagged exceptions
 // shows several rows, each carrying its own amount/issue/SLA. No grouping
 // or expand/collapse; every exception is visible directly in the table.
 function QueueTable({ ctl, paging, expanded, selectedId, onSelect, emptyMessage }) {
-  const clip = expanded ? '' : ' cell-ellipsis'
+  const colCount = expanded ? EXPANDED_COL_COUNT : COMPACT_COL_COUNT
   const shownRowCount = paging.visibleRows.length === 0 ? 1 : paging.visibleRows.length
 
   return (
     <div className="table-wrap">
-      <table className={expanded ? 'exception-table-full' : 'table-fixed'}>
-        {!expanded && (
-          <colgroup>
-            <col style={{ width: '8%' }} />
-            <col style={{ width: '10%' }} />
-            <col style={{ width: '14%' }} />
-            <col style={{ width: '10%' }} />
-            <col style={{ width: '24%' }} />
-            <col style={{ width: '14%' }} />
-            <col style={{ width: '10%' }} />
-            <col style={{ width: '10%' }} />
-          </colgroup>
-        )}
+      <table className={expanded ? 'exception-table-full' : 'queue-table-scroll'}>
         <thead>
           <tr>
             <SortFilterTh columnKey="priority" label="Priority" ctl={ctl} />
             <SortFilterTh columnKey="invoice" label="Invoice" ctl={ctl} />
             <SortFilterTh columnKey="vendor" label="Vendor" ctl={ctl} />
-            <SortFilterTh columnKey="amount" label="Amount" ctl={ctl} />
+            {expanded && <SortFilterTh columnKey="amount" label="Amount" ctl={ctl} />}
             <SortFilterTh columnKey="issue" label="Issue" ctl={ctl} />
             <SortFilterTh columnKey="due" label="Due" ctl={ctl} />
-            <SortFilterTh columnKey="owner" label="Owner" ctl={ctl} />
-            <SortFilterTh columnKey="sla" label="SLA" ctl={ctl} />
+            {expanded && <SortFilterTh columnKey="sla" label="SLA" ctl={ctl} />}
           </tr>
         </thead>
         <tbody>
           {paging.visibleRows.length === 0 ? (
             <tr>
-              <td colSpan={COL_COUNT} className="table-empty-cell">
+              <td colSpan={colCount} className="table-empty-cell">
                 {emptyMessage}
               </td>
             </tr>
@@ -76,24 +65,21 @@ function QueueTable({ ctl, paging, expanded, selectedId, onSelect, emptyMessage 
                   <span className={`priority-dot color-${priorityColor[row.priority]}`} />
                   {row.priority}
                 </td>
-                <td className={`cell-mono${clip}`}>{row.invoice}</td>
-                <td className={clip.trim() || undefined} title={row.vendor}>
-                  {row.vendor}
-                </td>
-                <td>{row.amount}</td>
-                <td className={clip.trim() || undefined} title={row.issue}>
-                  {row.issue}
-                </td>
+                <td className="cell-mono">{row.invoice}</td>
+                <td>{row.vendor}</td>
+                {expanded && <td>{row.amount}</td>}
+                <td title={row.issue}>{row.issue}</td>
                 <td className={row.dueColor ? `color-${row.dueColor}` : undefined}>{row.due}</td>
-                <td className={clip.trim() || undefined}>{row.owner}</td>
-                <td>
-                  <span className={`priority-dot color-${row.slaColor}`} />
-                  <span className={`color-${row.slaColor}`}>{row.sla}</span>
-                </td>
+                {expanded && (
+                  <td>
+                    <span className={`priority-dot color-${row.slaColor}`} />
+                    <span className={`color-${row.slaColor}`}>{row.sla}</span>
+                  </td>
+                )}
               </tr>
             ))
           )}
-          <TableFillerRows count={paging.pageSize - shownRowCount} colSpan={COL_COUNT} />
+          <TableFillerRows count={paging.pageSize - shownRowCount} colSpan={colCount} />
         </tbody>
       </table>
     </div>
@@ -138,7 +124,7 @@ export default function PriorityQueue({ rows = [], loading, title = 'Priority Ac
       <QueueFooter paging={paging} />
 
       {expanded && (
-        <TableExpandModal title={title} anchorRef={tableAnchorRef} onClose={() => setExpanded(false)}>
+        <TableExpandModal title={title} anchorRef={tableAnchorRef} centered onClose={() => setExpanded(false)}>
           <QueueTable {...tableProps} expanded />
           <QueueFooter paging={paging} />
         </TableExpandModal>

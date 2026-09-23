@@ -347,6 +347,7 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
         <DocumentQueueTable
           rows={filteredQueue}
           selectedId={selectedDoc?.id ?? null}
+          revealSelected={selectedDoc?.id === selectedId}
           onSelect={setSelectedId}
           loading={documentsLoading}
           error={documentsError}
