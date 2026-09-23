@@ -6,6 +6,7 @@ import EmailPreviewPanel from '../components/EmailPreviewPanel'
 import IntakeByChannel from '../components/IntakeByChannel'
 import ValueDeliveredRow from '../components/ValueDeliveredRow'
 import { useFilters, matchesOption, withLiveOptions } from '../hooks/useFilters'
+import { useSharedDateRange } from '../context/DateRangeContext'
 import { emailTriageFilters, emailTriageStats } from '../data'
 import {
   fetchAttachmentCategories,
@@ -40,9 +41,17 @@ function matchesCategory(selected, categories) {
 }
 
 export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onPendingSelectConsumed }) {
-  const { draft, applied, setField, apply } = useFilters(emailTriageFilters)
-  const [dateRange, setDateRange] = useState(DEFAULT_DATE_RANGE)
-  const [appliedDateRange, setAppliedDateRange] = useState(DEFAULT_DATE_RANGE)
+  const { draft, applied, setField, apply, reset } = useFilters(emailTriageFilters)
+  const {
+    dateRange,
+    appliedDateRange,
+    customRange,
+    setDateRange,
+    setCustomRange,
+    applyDateRange,
+    resetDateRange,
+    setDateRangeImmediate,
+  } = useSharedDateRange()
   const [selectedId, setSelectedId] = useState(null)
 
   const [emails, setEmails] = useState([])
@@ -53,6 +62,11 @@ export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onP
   // for the whole queue because the Proposed Category filter has to offer
   // every value in the data, not just the selected email's.
   const [categoriesByEmail, setCategoriesByEmail] = useState({})
+
+  // MessageID -> how many of its attachments were classified into a document
+  // category, as opposed to AttachmentCount (every file the email carried,
+  // classified or not).
+  const [documentCountByEmail, setDocumentCountByEmail] = useState({})
 
   const [attachments, setAttachments] = useState([])
   const [attachmentsLoading, setAttachmentsLoading] = useState(false)
@@ -89,18 +103,24 @@ export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onP
       .then((records) => {
         if (cancelled) return
         const byEmail = {}
+        const countByEmail = {}
         for (const record of records) {
           const category = String(record.ProposedCategory ?? '').trim()
           if (!category) continue
           const list = (byEmail[record.MessageID] ??= [])
           if (!list.includes(category)) list.push(category)
+          countByEmail[record.MessageID] = (countByEmail[record.MessageID] ?? 0) + 1
         }
         setCategoriesByEmail(byEmail)
+        setDocumentCountByEmail(countByEmail)
       })
       // The queue itself doesn't depend on this; a failure just leaves the
-      // Proposed Category filter with nothing to offer.
+      // Proposed Category filter with nothing to offer and Document Count at 0.
       .catch(() => {
-        if (!cancelled) setCategoriesByEmail({})
+        if (!cancelled) {
+          setCategoriesByEmail({})
+          setDocumentCountByEmail({})
+        }
       })
 
     return () => {
@@ -124,7 +144,10 @@ export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onP
 
   // Every row is live; the Date Range filter narrows them by when the email
   // was received rather than switching the page to a different data source.
-  const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
+  const inDateRange = useMemo(
+    () => dateRangeFilter(appliedDateRange, undefined, customRange),
+    [appliedDateRange, customRange]
+  )
 
   const filteredRows = emails
     .filter(
@@ -139,19 +162,20 @@ export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onP
     // previewed by default is its top row and not whichever one the service
     // happened to return first.
     .sort((a, b) => new Date(b.receivedDateTime ?? 0) - new Date(a.receivedDateTime ?? 0))
+    .map((row) => ({ ...row, documentCount: documentCountByEmail[row.id] ?? 0 }))
 
   // Arriving from a document's "Source Email" link: select that email once its
   // row has loaded. Rows are keyed by MessageID, which is what the link sends.
-  // Each page keeps its own Date Range, so the linked email can sit outside
-  // this one's window — drop the constraint rather than land on another email.
+  // The Date Range is shared across pages, so widening it here also widens it
+  // wherever else it's shown — the linked email can sit outside the current
+  // window, and dropping the constraint beats landing on another email.
   useEffect(() => {
     if (!pendingSelectId) return
     const target = emails.find((r) => r.id === pendingSelectId)
     if (!target) return
     setSelectedId(pendingSelectId)
     if (!inDateRange(target.receivedDateTime)) {
-      setDateRange(ALL_DATES_RANGE)
-      setAppliedDateRange(ALL_DATES_RANGE)
+      setDateRangeImmediate(ALL_DATES_RANGE)
     }
     onPendingSelectConsumed?.()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -225,7 +249,7 @@ export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onP
   useEffect(() => {
     let cancelled = false
 
-    fetchTriageKpis(kpiDateParams(appliedDateRange))
+    fetchTriageKpis(kpiDateParams(appliedDateRange, undefined, customRange))
       .then((res) => {
         if (!cancelled) setKpis(res)
       })
@@ -236,25 +260,30 @@ export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onP
     return () => {
       cancelled = true
     }
-  }, [appliedDateRange])
+  }, [appliedDateRange, customRange])
 
   // The same response carries the three panels below the queue.
   const intake = useMemo(() => mapIntakeByChannel(kpis), [kpis])
   const valueDelivered = useMemo(() => mapValueDelivered(kpis), [kpis])
-  const rangeSubtitle = kpiRangeSubtitle(appliedDateRange)
+  const rangeSubtitle = kpiRangeSubtitle(appliedDateRange, customRange)
 
   const stats = useMemo(() => {
     const merged = mergeKpiStats(emailTriageStats, TRIAGE_KPI_FIELDS, kpis)
     // This tile counts arrivals over the applied window, so it says which
     // window under the number instead of hard-coding "Today" in the label.
     return merged.map((stat) =>
-      stat.label === 'Emails Received' ? { ...stat, target: kpiRangeSubtitle(appliedDateRange) } : stat
+      stat.label === 'Emails Received' ? { ...stat, target: kpiRangeSubtitle(appliedDateRange, customRange) } : stat
     )
-  }, [kpis, appliedDateRange])
+  }, [kpis, appliedDateRange, customRange])
 
   const handleGo = () => {
     apply()
-    setAppliedDateRange(dateRange)
+    applyDateRange()
+  }
+
+  const handleReset = () => {
+    reset()
+    resetDateRange()
   }
 
   return (
@@ -266,7 +295,10 @@ export default function EmailTriage({ onNavigateToDocument, pendingSelectId, onP
         dateRangeLabel={DEFAULT_DATE_RANGE}
         dateRangeValue={dateRange}
         onDateRangeChange={setDateRange}
+        customRange={customRange}
+        onCustomRangeChange={setCustomRange}
         onGo={handleGo}
+        onReset={handleReset}
       />
       <StatsRow stats={stats} />
 

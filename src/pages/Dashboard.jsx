@@ -7,6 +7,7 @@ import PriorityQueue from '../components/PriorityQueue'
 import Bottlenecks from '../components/Bottlenecks'
 import ValueRealization from '../components/ValueRealization'
 import { useFilters, matchesOption, withLiveOptions } from '../hooks/useFilters'
+import { useSharedDateRange } from '../context/DateRangeContext'
 import {
   scorecardMetrics,
   capabilityCards,
@@ -71,7 +72,7 @@ export default function Dashboard() {
   // KPI endpoints — refetched whenever the window changes.
   useEffect(() => {
     let cancelled = false
-    const params = kpiDateParams(appliedDateRange)
+    const params = kpiDateParams(appliedDateRange, undefined, customRange)
     const load = (fetcher, setter) =>
       fetcher(params)
         .then((res) => {
@@ -92,7 +93,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true
     }
-  }, [appliedDateRange])
+  }, [appliedDateRange, customRange])
 
   // CAP entities — the run record behind the flow strip, the exceptions
   // behind the queue, and the two joins that give a row its vendor name and
@@ -139,7 +140,10 @@ export default function Dashboard() {
   // Queue rows carry the attributes the filter bar acts on: the vendor from
   // the extraction, the channel from the email, the company code from the PO
   // and the status from where the pipeline left the invoice.
-  const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
+  const inDateRange = useMemo(
+    () => dateRangeFilter(appliedDateRange, undefined, customRange),
+    [appliedDateRange, customRange]
+  )
 
   // Received date lives on the email, not the pipeline row, so the flow
   // strip's document counts join back to it by MessageID — the same date
@@ -209,7 +213,12 @@ export default function Dashboard() {
 
   const handleGo = () => {
     apply()
-    setAppliedDateRange(dateRange)
+    applyDateRange()
+  }
+
+  const handleReset = () => {
+    reset()
+    resetDateRange()
   }
 
   return (
@@ -222,7 +231,10 @@ export default function Dashboard() {
           dateRangeLabel={DEFAULT_DATE_RANGE}
           dateRangeValue={dateRange}
           onDateRangeChange={setDateRange}
+          customRange={customRange}
+          onCustomRangeChange={setCustomRange}
           onGo={handleGo}
+          onReset={handleReset}
           personaField={dashboardPersonaField}
           personaValue={draft.Persona ?? dashboardPersonaField.value}
           onPersonaChange={(v) => setField('Persona', v)}

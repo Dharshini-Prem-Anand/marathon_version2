@@ -18,7 +18,15 @@ export function useFilters(fields, { live = false } = {}) {
 
   const apply = useCallback(() => setApplied(draft), [draft])
 
-  return { draft, applied, setField, apply }
+  // Back to each field's originally configured default (e.g. 'All') — what
+  // the Reset button calls.
+  const reset = useCallback(() => {
+    const resetValues = Object.fromEntries(fields.map((f) => [f.label, f.value]))
+    setDraft(resetValues)
+    setApplied(resetValues)
+  }, [fields])
+
+  return { draft, applied, setField, apply, reset }
 }
 
 export function matchesCompanyCode(selected) {

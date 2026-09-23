@@ -774,6 +774,136 @@ tbody tr:last-child td {
   border-color: var(--blue);
 }
 
+/* ---------- MINI CALENDAR (Custom Range picker) ---------- */
+.mini-calendar {
+  position: fixed;
+  z-index: 1000;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 12px;
+  width: 240px;
+}
+
+.mini-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.mini-calendar-month {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mini-calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 2px;
+}
+
+.mini-calendar-weekdays span {
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.mini-calendar-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.mini-calendar-day {
+  background: none;
+  border: none;
+  border-radius: 6px;
+  height: 28px;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.mini-calendar-day.empty {
+  cursor: default;
+}
+
+.mini-calendar-day:not(.empty):hover {
+  background: var(--bg-app);
+}
+
+.mini-calendar-day.today {
+  font-weight: 700;
+  color: var(--blue);
+}
+
+.mini-calendar-day.in-range {
+  background: var(--blue-light);
+  border-radius: 0;
+}
+
+.mini-calendar-day.selected {
+  background: var(--blue);
+  color: #fff;
+}
+
+.mini-calendar-footer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mini-calendar-range-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.mini-calendar-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.mini-calendar-actions .btn-outline,
+.mini-calendar-actions .btn-primary {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12.5px;
+}
+
+.mini-calendar-actions .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.filter-date-icon-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--blue);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+}
+
+.filter-date-custom-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
 .table-search-box {
   display: flex;
   align-items: center;

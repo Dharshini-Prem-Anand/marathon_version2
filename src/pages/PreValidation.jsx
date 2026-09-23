@@ -11,10 +11,13 @@ import PreventedExceptionsByType from '../components/PreventedExceptionsByType'
 import ApprovalBanner from '../components/ApprovalBanner'
 import FilterEmptyState from '../components/FilterEmptyState'
 import { useFilters, matchesCompanyCode, matchesOption, withLiveOptions } from '../hooks/useFilters'
+import { useSharedDateRange } from '../context/DateRangeContext'
 import { preValidationFilters, preValidationStats } from '../data'
 import { buildInvoicePreviewFromExtractedFields, FIELD_RULE_CATEGORY } from '../utils/preValidationMappers'
 import {
+  fetchEmailReceivedTimes,
   fetchExtractedHeaderFieldsByInvoice,
+  fetchInvoiceMessageIds,
   fetchPreValidation,
   fetchPreValidationKpis,
   fetchVendorNameFields,
@@ -43,11 +46,31 @@ const CONFIDENCE_BAND_BY_BADGE = {
   'LOW CONFIDENCE': 'Low (< 70%)',
 }
 
-// The invoice's own CreationDate, unformatted, as a Date — what the queue
-// sorts and the Date Range filter matches on. Missing/unparseable dates sort
-// last regardless of direction (handled by useColumnSortFilter's null check).
-function invoiceDateValue(record) {
-  return parseRowDate(record?.creationDate)
+// PreValidation carries no MessageID of its own, so this joins InvoiceNumber
+// -> MessageID (from ExtractedHeaderFields) -> ReceivedDateTime (from
+// EmailMetadata) to find when each invoice's email actually arrived.
+function buildReceivedByInvoice(headerRows, emailRows) {
+  const receivedByMessageId = {}
+  for (const email of emailRows) {
+    if (email.MessageID) receivedByMessageId[email.MessageID] = email.ReceivedDateTime
+  }
+
+  const receivedByInvoice = {}
+  for (const header of headerRows) {
+    if (!header.InvoiceNumber || header.InvoiceNumber in receivedByInvoice) continue
+    const received = receivedByMessageId[header.MessageID]
+    if (received) receivedByInvoice[header.InvoiceNumber] = received
+  }
+  return receivedByInvoice
+}
+
+// When the invoice's email was received, as a Date — what the queue sorts
+// on, latest first. Falls back to when the pipeline wrote this row, then to
+// the invoice's own (possibly weeks-old) CreationDate, for an invoice the
+// join above couldn't resolve. Missing/unparseable dates sort last regardless
+// of direction (handled by useColumnSortFilter's null check).
+function invoiceDateValue(invoiceNumber, record, receivedByInvoice) {
+  return parseRowDate(receivedByInvoice?.[invoiceNumber] ?? record?.createdAt ?? record?.creationDate)
 }
 
 // Document Type / Confidence Band / Validation Status all come off the
@@ -65,15 +88,19 @@ function deriveAttributes(record, rules) {
 }
 
 export default function PreValidation({ onNavigate, onNavigateToException }) {
-  const { draft, applied, setField, apply } = useFilters(preValidationFilters)
+  const { draft, applied, setField, apply, reset } = useFilters(preValidationFilters)
   const [selectedId, setSelectedId] = useState(null)
-  const [dateRange, setDateRange] = useState(DEFAULT_DATE_RANGE)
-  const [appliedDateRange, setAppliedDateRange] = useState(DEFAULT_DATE_RANGE)
+  const { dateRange, appliedDateRange, customRange, setDateRange, setCustomRange, applyDateRange, resetDateRange } =
+    useSharedDateRange()
 
   // The queue, the invoice preview, the rule results and the vendor/payee
   // panel all come from PreValidation — one call, keyed by invoice.
   const [liveData, setLiveData] = useState({ ids: [], records: {} })
   const [liveError, setLiveError] = useState(null)
+
+  // InvoiceNumber -> its email's ReceivedDateTime, joined via
+  // ExtractedHeaderFields.MessageID (see buildReceivedByInvoice above).
+  const [receivedByInvoice, setReceivedByInvoice] = useState({})
 
   useEffect(() => {
     let cancelled = false
@@ -81,11 +108,19 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
 
     // Vendor names live in the extraction, not on PreValidation (whose
     // VendorName column is null on every row) — fetched alongside so the queue
-    // renders once, with names already resolved.
-    Promise.all([fetchPreValidation(), fetchVendorNameFields().catch(() => [])])
-      .then(([rows, vendorFields]) => {
+    // renders once, with names already resolved. The email-received join is
+    // best-effort: a failure just leaves the queue sorted by its next-best
+    // timestamp instead of blocking the page.
+    Promise.all([
+      fetchPreValidation(),
+      fetchVendorNameFields().catch(() => []),
+      fetchInvoiceMessageIds().catch(() => []),
+      fetchEmailReceivedTimes().catch(() => []),
+    ])
+      .then(([rows, vendorFields, headerRows, emailRows]) => {
         if (cancelled) return
         setLiveData(buildPreValidationRecords(rows, buildVendorNamesByInvoice(vendorFields)))
+        setReceivedByInvoice(buildReceivedByInvoice(headerRows, emailRows))
       })
       .catch((err) => {
         if (cancelled) return
@@ -106,7 +141,7 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
   useEffect(() => {
     let cancelled = false
 
-    fetchPreValidationKpis(kpiDateParams(appliedDateRange))
+    fetchPreValidationKpis(kpiDateParams(appliedDateRange, undefined, customRange))
       .then((res) => {
         if (!cancelled) setKpis(res)
       })
@@ -117,7 +152,7 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
     return () => {
       cancelled = true
     }
-  }, [appliedDateRange])
+  }, [appliedDateRange, customRange])
 
   // A field correction marks that field's rule as passed, for that invoice only.
   const [ruleOverrides, setRuleOverrides] = useState({})
@@ -127,7 +162,10 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
   // Every row is live; the Date Range filter narrows them by when the pipeline
   // wrote the row (managed createdAt), falling back to the invoice's own date
   // where that's missing.
-  const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
+  const inDateRange = useMemo(
+    () => dateRangeFilter(appliedDateRange, undefined, customRange),
+    [appliedDateRange, customRange]
+  )
 
   const rulesFor = (id) => ruleOverrides[id] ?? records[id]?.validationRuleResults ?? []
 
@@ -157,11 +195,12 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
         matchesOption(applied['Validation Status'], attrs.validationStatus)
       )
     })
-    // Latest invoice first, by actual invoice date — same ordering the queue
-    // table defaults to, so the auto-selected invoice matches its top row.
+    // Latest invoice first, by when its email was received — same ordering
+    // the queue table defaults to, so the auto-selected invoice matches its
+    // top row.
     .sort((a, b) => {
-      const dateA = invoiceDateValue(records[a])
-      const dateB = invoiceDateValue(records[b])
+      const dateA = invoiceDateValue(a, records[a], receivedByInvoice)
+      const dateB = invoiceDateValue(b, records[b], receivedByInvoice)
       if (!dateA && !dateB) return 0
       if (!dateA) return 1
       if (!dateB) return -1
@@ -228,13 +267,18 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
       vendor: attrs.vendor,
       amount: record.amount,
       status: attrs.validationStatus,
-      date: invoiceDateValue(record),
+      date: invoiceDateValue(id, record, receivedByInvoice),
     }
   })
 
   const handleGo = () => {
     apply()
-    setAppliedDateRange(dateRange)
+    applyDateRange()
+  }
+
+  const handleReset = () => {
+    reset()
+    resetDateRange()
   }
 
   // The tile numbers arrive nested under `preValidationKpis`; the same
@@ -243,7 +287,7 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
     () => mergeKpiStats(preValidationStats, PRE_VALIDATION_KPI_FIELDS, preValidationTilePayload(kpis)),
     [kpis]
   )
-  const rangeSubtitle = kpiRangeSubtitle(appliedDateRange)
+  const rangeSubtitle = kpiRangeSubtitle(appliedDateRange, customRange)
   const ruleFailureDrivers = useMemo(() => mapRuleFailureDrivers(kpis), [kpis])
   const preventedExceptions = useMemo(() => mapPreventedExceptions(kpis), [kpis])
 
@@ -256,8 +300,11 @@ export default function PreValidation({ onNavigate, onNavigateToException }) {
         dateRangeLabel={DEFAULT_DATE_RANGE}
         dateRangeValue={dateRange}
         onDateRangeChange={setDateRange}
+        customRange={customRange}
+        onCustomRangeChange={setCustomRange}
         onGo={handleGo}
-        hideAdaptLink
+        onReset={handleReset}
+        hideResetButton
       />
       <StatsRow stats={stats} />
 

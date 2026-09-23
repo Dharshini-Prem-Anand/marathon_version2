@@ -40,7 +40,7 @@ export default function ExtractionDiagnostics() {
         onFieldChange={setField}
         onGo={apply}
         dateRangeLabel="05/11/2025 - 05/18/2025"
-        hideAdaptLink
+        hideResetButton
       />
       <StatsRow stats={extractionDiagStats} />
 

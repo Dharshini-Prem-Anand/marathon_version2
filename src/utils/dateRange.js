@@ -1,10 +1,16 @@
 // Resolves a FilterBar date-range label into an inclusive [start, end) window.
-export function dateRangeBounds(label, now = new Date()) {
+// `customBounds` ({ start, end } Dates) supplies the window for 'Custom
+// Range' — the label alone doesn't carry it, since it comes from the mini
+// calendar picker rather than being derived from `now`.
+export function dateRangeBounds(label, now = new Date(), customBounds = null) {
   const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
   const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n)
   const today = startOfDay(now)
   const tomorrow = addDays(today, 1)
   const quarterStart = (d) => new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3, 1)
+  // Unbounded — used for 'All Dates' and any label this function doesn't
+  // recognise (including 'Custom Range' before the user has picked both ends).
+  const unbounded = { start: new Date(0), end: new Date(8.64e15) }
 
   switch (label) {
     case 'Today':
@@ -30,16 +36,19 @@ export function dateRangeBounds(label, now = new Date()) {
     }
     case 'Year to Date':
       return { start: new Date(now.getFullYear(), 0, 1), end: tomorrow }
+    case 'Custom Range':
+      if (!customBounds?.start || !customBounds?.end) return unbounded
+      return { start: startOfDay(customBounds.start), end: addDays(startOfDay(customBounds.end), 1) }
+    case 'All Dates':
     default:
-      // Custom Range / unknown: don't constrain.
-      return { start: new Date(0), end: new Date(8.64e15) }
+      return unbounded
   }
 }
 
-// The FilterBar option whose window is unbounded (see dateRangeBounds' default
-// branch). A cross-page link selects a row the current window may exclude, so
-// the target page switches to this rather than landing on the wrong row.
-export const ALL_DATES_RANGE = 'Custom Range'
+// The FilterBar option whose window is unbounded. A cross-page link selects a
+// row the current window may exclude, so the target page switches to this
+// rather than landing on the wrong row.
+export const ALL_DATES_RANGE = 'All Dates'
 
 // Live rows carry dates in three shapes: an ISO timestamp
 // (EmailMetadata.ReceivedDateTime), an ISO date (Invoices.CreationDate,
@@ -68,8 +77,8 @@ export function parseRowDate(value) {
 // Builds the predicate a queue filters its rows by. A row whose date is
 // missing or unparseable can't be placed in the window, so it's excluded
 // rather than shown in every range.
-export function dateRangeFilter(rangeLabel, now = new Date()) {
-  const { start, end } = dateRangeBounds(rangeLabel, now)
+export function dateRangeFilter(rangeLabel, now = new Date(), customBounds = null) {
+  const { start, end } = dateRangeBounds(rangeLabel, now, customBounds)
   return (value) => {
     const date = parseRowDate(value)
     return Boolean(date) && date >= start && date < end

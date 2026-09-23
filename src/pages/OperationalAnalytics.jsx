@@ -10,7 +10,7 @@ import { useFilters, matchesCompanyCode } from '../hooks/useFilters'
 import { operationalAnalyticsFilters, operationalAnalyticsScorecard, analyticsDisclaimer, analyticsCopyright } from '../data'
 
 export default function OperationalAnalytics() {
-  const { draft, applied, setField, apply } = useFilters(operationalAnalyticsFilters)
+  const { draft, applied, setField, apply, reset } = useFilters(operationalAnalyticsFilters)
 
   // These figures are portfolio-wide aggregates (all vendors, all channels, all
   // statuses combined) — there's no per-vendor/channel/status breakdown to slice
@@ -23,7 +23,13 @@ export default function OperationalAnalytics() {
 
   return (
     <>
-      <FilterBar fields={operationalAnalyticsFilters} values={draft} onFieldChange={setField} onGo={apply} />
+      <FilterBar
+        fields={operationalAnalyticsFilters}
+        values={draft}
+        onFieldChange={setField}
+        onGo={apply}
+        onReset={reset}
+      />
 
       {matchesFilters ? (
         <>

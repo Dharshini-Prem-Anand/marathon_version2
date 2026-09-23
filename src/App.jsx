@@ -19,6 +19,7 @@ import KpiMetricsValue from './pages/KpiMetricsValue'
 import KpiFooterBar from './components/KpiFooterBar'
 import ApAssistant from './pages/ApAssistant'
 import ComingSoon from './pages/ComingSoon'
+import { DateRangeProvider } from './context/DateRangeContext'
 import {
   dashboardGuidance,
   emailTriageGuidance,
@@ -170,43 +171,45 @@ function App() {
   }
 
   return (
-    <div className="app">
-      <TopBar
-        onToggleSidebar={() => setCollapsed((c) => !c)}
-        title={topbarTitleByPage[activeItem] ?? defaultTopbarTitle}
-        personaSelector={personaSelectorByPage[activeItem]}
-        searchPlaceholder={searchPlaceholderByPage[activeItem]}
-        roleSelector={roleSelectorByPage[activeItem]}
-      />
-      <div className="app-body">
-        <Sidebar
-          active={activeItem}
-          onSelect={setActiveItem}
-          collapsed={collapsed}
-          onToggleCollapse={() => setCollapsed((c) => !c)}
+    <DateRangeProvider>
+      <div className="app">
+        <TopBar
+          onToggleSidebar={() => setCollapsed((c) => !c)}
+          title={topbarTitleByPage[activeItem] ?? defaultTopbarTitle}
+          personaSelector={personaSelectorByPage[activeItem]}
+          searchPlaceholder={searchPlaceholderByPage[activeItem]}
+          roleSelector={roleSelectorByPage[activeItem]}
         />
+        <div className="app-body">
+          <Sidebar
+            active={activeItem}
+            onSelect={setActiveItem}
+            collapsed={collapsed}
+            onToggleCollapse={() => setCollapsed((c) => !c)}
+          />
 
-        <main className="main-content">
-          {renderPage()}
-          {!hidePageFooterFor.has(activeItem) && (
-            <PageFooter platformLabel={pageFooterPlatformByPage[activeItem]} />
+          <main className="main-content">
+            {renderPage()}
+            {!hidePageFooterFor.has(activeItem) && (
+              <PageFooter platformLabel={pageFooterPlatformByPage[activeItem]} />
+            )}
+          </main>
+
+          {showGuidance && guidance ? (
+            <GuidancePanel guidance={guidance} onClose={() => setShowGuidance(false)} />
+          ) : (
+            <button
+              className="guidance-reopen"
+              onClick={() => setShowGuidance(true)}
+              aria-label="Open guidance panel"
+            >
+              <PanelRightOpen size={18} />
+            </button>
           )}
-        </main>
-
-        {showGuidance && guidance ? (
-          <GuidancePanel guidance={guidance} onClose={() => setShowGuidance(false)} />
-        ) : (
-          <button
-            className="guidance-reopen"
-            onClick={() => setShowGuidance(true)}
-            aria-label="Open guidance panel"
-          >
-            <PanelRightOpen size={18} />
-          </button>
-        )}
+        </div>
+        {showKpiFooterFor.has(activeItem) && <KpiFooterBar />}
       </div>
-      {showKpiFooterFor.has(activeItem) && <KpiFooterBar />}
-    </div>
+    </DateRangeProvider>
   )
 }
 

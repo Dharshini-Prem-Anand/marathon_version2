@@ -38,7 +38,7 @@ export default function WorkAssignment() {
         dateFieldLabel="Date"
         dateRangeLabel="05/15/2025"
         hideGoButton
-        hideAdaptLink
+        hideResetButton
       />
       <StatsRow stats={workAssignmentStats} />
 

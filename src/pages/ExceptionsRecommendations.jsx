@@ -7,6 +7,7 @@ import WhatIfResolutionScenarios from '../components/WhatIfResolutionScenarios'
 import InfoBanner from '../components/InfoBanner'
 import FilterEmptyState from '../components/FilterEmptyState'
 import { useFilters, matchesCompanyCode, matchesOption, withLiveOptions } from '../hooks/useFilters'
+import { useSharedDateRange } from '../context/DateRangeContext'
 import { exceptionsFilters, exceptionsStats } from '../data'
 import { fetchExceptionKpis, fetchExceptions, fetchVendorNameFields } from '../api/invoiceAutomation'
 import { buildExceptionRows } from '../utils/exceptionsMappers'
@@ -18,11 +19,23 @@ import { mapRecommendationSummary, mapWhatIfScenarios } from '../utils/kpiPanels
 const DEFAULT_DATE_RANGE = 'Today'
 
 export default function ExceptionsRecommendations({ pendingSelectId, onPendingSelectConsumed }) {
-  const { draft, applied, setField, apply } = useFilters(exceptionsFilters)
-  const [selectedInvoice, setSelectedInvoice] = useState(null)
-  const [postedInvoices, setPostedInvoices] = useState(() => new Set())
-  const [dateRange, setDateRange] = useState(DEFAULT_DATE_RANGE)
-  const [appliedDateRange, setAppliedDateRange] = useState(DEFAULT_DATE_RANGE)
+  const { draft, applied, setField, apply, reset } = useFilters(exceptionsFilters)
+  // The queue groups exceptions by invoice, but each line item carries its
+  // own Reason/Recommendation/Evidence from the backend — selection has to
+  // track the individual exception's own id, not just the invoice, or every
+  // line item under one invoice would show the same (first) exception's data.
+  const [selectedExceptionId, setSelectedExceptionId] = useState(null)
+  const [postedExceptions, setPostedExceptions] = useState(() => new Set())
+  const {
+    dateRange,
+    appliedDateRange,
+    customRange,
+    setDateRange,
+    setCustomRange,
+    applyDateRange,
+    resetDateRange,
+    setDateRangeImmediate,
+  } = useSharedDateRange()
 
   // The Priority Exception Queue binds to the live CAP /Exceptions data.
   const [liveRows, setLiveRows] = useState([])
@@ -58,7 +71,7 @@ export default function ExceptionsRecommendations({ pendingSelectId, onPendingSe
   useEffect(() => {
     let cancelled = false
 
-    fetchExceptionKpis(kpiDateParams(appliedDateRange))
+    fetchExceptionKpis(kpiDateParams(appliedDateRange, undefined, customRange))
       .then((res) => {
         if (!cancelled) setKpis(res)
       })
@@ -69,7 +82,7 @@ export default function ExceptionsRecommendations({ pendingSelectId, onPendingSe
     return () => {
       cancelled = true
     }
-  }, [appliedDateRange])
+  }, [appliedDateRange, customRange])
 
   const stats = useMemo(() => mergeKpiStats(exceptionsStats, EXCEPTION_KPI_FIELDS, kpis), [kpis])
 
@@ -80,7 +93,10 @@ export default function ExceptionsRecommendations({ pendingSelectId, onPendingSe
   // Every row is live; the Date Range filter narrows them by when the pipeline
   // raised the exception (managed createdAt). Due is the deadline, often in the
   // future, so filtering on it hid today's exceptions from every past window.
-  const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
+  const inDateRange = useMemo(
+    () => dateRangeFilter(appliedDateRange, undefined, customRange),
+    [appliedDateRange, customRange]
+  )
   const sourceRows = useMemo(
     () => liveRows.filter((row) => inDateRange(row.createdAt ?? row.dueDate)),
     [liveRows, inDateRange]
@@ -106,30 +122,36 @@ export default function ExceptionsRecommendations({ pendingSelectId, onPendingSe
   )
 
   // A deep link from Pre-Validation / PO & Line Matching's "Exception —
-  // routed for..." link arrives as an invoice id — select that row. Each page
-  // keeps its own Date Range, so the linked exception can sit outside this
-  // one's window — drop the constraint rather than land on another exception.
+  // routed for..." link arrives as an invoice id — select that invoice's
+  // first exception. The Date Range is shared across pages, so widening it
+  // here also widens it wherever else it's shown — the linked exception can
+  // sit outside the current window, and dropping the constraint beats landing
+  // on another exception.
   useEffect(() => {
     if (!pendingSelectId) return
     const target = liveRows.find((row) => row.invoice === pendingSelectId)
     if (!target) return
-    setSelectedInvoice(pendingSelectId)
+    setSelectedExceptionId(target.id)
     if (!inDateRange(target.dueDate)) {
-      setDateRange(ALL_DATES_RANGE)
-      setAppliedDateRange(ALL_DATES_RANGE)
+      setDateRangeImmediate(ALL_DATES_RANGE)
     }
     onPendingSelectConsumed?.()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingSelectId, liveRows])
 
-  const selectedRecordId = filteredRows.some((row) => row.invoice === selectedInvoice)
-    ? selectedInvoice
-    : filteredRows[0]?.invoice ?? null
-  const selectedException = filteredRows.find((row) => row.invoice === selectedRecordId) ?? null
+  const selectedRecordId = filteredRows.some((row) => row.id === selectedExceptionId)
+    ? selectedExceptionId
+    : filteredRows[0]?.id ?? null
+  const selectedException = filteredRows.find((row) => row.id === selectedRecordId) ?? null
 
   const handleGo = () => {
     apply()
-    setAppliedDateRange(dateRange)
+    applyDateRange()
+  }
+
+  const handleReset = () => {
+    reset()
+    resetDateRange()
   }
 
   return (
@@ -141,7 +163,10 @@ export default function ExceptionsRecommendations({ pendingSelectId, onPendingSe
         dateRangeLabel={DEFAULT_DATE_RANGE}
         dateRangeValue={dateRange}
         onDateRangeChange={setDateRange}
+        customRange={customRange}
+        onCustomRangeChange={setCustomRange}
         onGo={handleGo}
+        onReset={handleReset}
       />
       <StatsRow stats={stats} />
 
@@ -152,13 +177,13 @@ export default function ExceptionsRecommendations({ pendingSelectId, onPendingSe
           <PriorityExceptionQueue
             rows={filteredRows}
             selectedId={selectedRecordId}
-            onSelect={setSelectedInvoice}
+            onSelect={setSelectedExceptionId}
           />
           <AiReviewRecommendation
             exception={selectedException}
-            posted={selectedRecordId ? postedInvoices.has(selectedRecordId) : false}
+            posted={selectedRecordId ? postedExceptions.has(selectedRecordId) : false}
             onPostToSap={() => {
-              if (selectedRecordId) setPostedInvoices((prev) => new Set(prev).add(selectedRecordId))
+              if (selectedRecordId) setPostedExceptions((prev) => new Set(prev).add(selectedRecordId))
             }}
           />
         </div>

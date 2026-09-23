@@ -103,6 +103,19 @@ export function fetchVendorNameFields() {
   return apiGet('/ExtractedHeaderFields', { $filter: VENDOR_NAME_FILTER }).then((res) => res?.value ?? [])
 }
 
+// PreValidation carries no MessageID of its own, so the queue can't sort by
+// when the invoice's email arrived without this join: every
+// ExtractedHeaderFields row for a given invoice carries the same MessageID
+// (one row per field name, same document), so any one of them will do.
+export function fetchInvoiceMessageIds() {
+  return apiGet('/ExtractedHeaderFields', { $select: 'InvoiceNumber,MessageID' }).then((res) => res?.value ?? [])
+}
+
+// The other half of that join — MessageID -> when the email arrived.
+export function fetchEmailReceivedTimes() {
+  return apiGet('/EmailMetadata', { $select: 'MessageID,ReceivedDateTime' }).then((res) => res?.value ?? [])
+}
+
 // PO & Line Matching. The CAP associations Invoices.purchaseOrder /
 // Invoices.goodsReceipt resolve to null (PurchaseOrderItem, GRNumber,
 // MaterialDocYear and MaterialDocItem are empty on every invoice row), so

@@ -144,9 +144,9 @@ function ExceptionTable({ ctl, paging, expanded, selectedId, onSelect, expandedI
                           key={e.id}
                           onClick={(ev) => {
                             ev.stopPropagation()
-                            onSelect?.(e.invoice)
+                            onSelect?.(e.id)
                           }}
-                          className={`tree-child-row${selectedId === e.invoice ? ' selected' : ''}`}
+                          className={`tree-child-row${selectedId === e.id ? ' selected' : ''}`}
                         >
                           <td colSpan={COL_COUNT}>
                             <div className="tree-child-line">
@@ -192,12 +192,13 @@ export default function PriorityExceptionQueue({ rows = [], selectedId, onSelect
   const [expandedIds, setExpandedIds] = useState(() => new Set())
   const tableAnchorRef = useRef(null)
 
-  // Keep the selected invoice's group open so the highlighted row stays
+  // Keep the selected exception's group open so the highlighted row stays
   // visible instead of being hidden inside a collapsed group.
   useEffect(() => {
     if (!selectedId) return
-    if (!groups.some((g) => g.key === selectedId)) return
-    setExpandedIds((prev) => (prev.has(selectedId) ? prev : new Set(prev).add(selectedId)))
+    const owner = groups.find((g) => g.exceptions.some((e) => e.id === selectedId))
+    if (!owner) return
+    setExpandedIds((prev) => (prev.has(owner.key) ? prev : new Set(prev).add(owner.key)))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId])
 

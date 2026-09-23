@@ -81,6 +81,7 @@ function recommendationFor(exception) {
       invoiceId: exception.invoice,
       vendor: exception.vendor,
       amount: exception.amount,
+      issue: exception.issue,
       recommendation: exception.recommendation,
       confidence: exception.confidence ?? '—',
       evidenceUsed: exception.evidenceUsed ?? '—',
@@ -93,6 +94,7 @@ function recommendationFor(exception) {
     invoiceId: exception.invoice,
     vendor: exception.vendor,
     amount: exception.amount,
+    issue: exception.issue,
     recommendation: `Review required: "${exception.issue}" flagged for ${exception.vendor}. Confirm resolution before posting to SAP.`,
     confidence: '—',
     evidenceUsed: 'Invoice record, vendor master, exception log',
@@ -111,6 +113,13 @@ export default function AiReviewRecommendation({ exception, posted, onPostToSap 
       <div className="ai-review-heading">
         Invoice {r.invoiceId} | {r.vendor} | {r.amount}
       </div>
+
+      {r.issue && (
+        <div className="ai-review-block">
+          <div className="ai-review-label">Exception Details:</div>
+          <p>{r.issue}</p>
+        </div>
+      )}
 
       <div className="ai-review-block">
         <div className="ai-review-label">Recommendation:</div>

@@ -6,6 +6,7 @@ import InvoicePreviewPanel from '../components/InvoicePreviewPanel'
 import DocAiPipelineStepper from '../components/DocAiPipelineStepper'
 import FormatPerformanceChart from '../components/FormatPerformanceChart'
 import { useFilters, matchesCompanyCode, matchesOption, withLiveOptions } from '../hooks/useFilters'
+import { useSharedDateRange } from '../context/DateRangeContext'
 import { documentAiFilters, documentAiStats } from '../data'
 import {
   fetchDocumentPdf,
@@ -27,9 +28,17 @@ import { mapFormatPerformance } from '../utils/kpiPanels'
 const DEFAULT_DATE_RANGE = 'Today'
 
 export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectConsumed, onNavigate, onNavigateToEmail }) {
-  const { draft, applied, setField, apply } = useFilters(documentAiFilters)
-  const [dateRange, setDateRange] = useState(DEFAULT_DATE_RANGE)
-  const [appliedDateRange, setAppliedDateRange] = useState(DEFAULT_DATE_RANGE)
+  const { draft, applied, setField, apply, reset } = useFilters(documentAiFilters)
+  const {
+    dateRange,
+    appliedDateRange,
+    customRange,
+    setDateRange,
+    setCustomRange,
+    applyDateRange,
+    resetDateRange,
+    setDateRangeImmediate,
+  } = useSharedDateRange()
   const [selectedId, setSelectedId] = useState(null)
 
   const [documents, setDocuments] = useState([])
@@ -111,21 +120,24 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
   // Every row is live; the Date Range filter narrows them by when the email
   // carrying the document was received, rather than switching the page to a
   // different data source.
-  const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
+  const inDateRange = useMemo(
+    () => dateRangeFilter(appliedDateRange, undefined, customRange),
+    [appliedDateRange, customRange]
+  )
 
   // A deep link from Email & Attachment Triage arrives as a documentId; once
   // that document has loaded into the queue, select it and clear the pending
-  // flag. Each page keeps its own Date Range, so the linked document can sit
-  // outside this one's window — drop the constraint rather than land on
-  // another document.
+  // flag. The Date Range is shared across pages, so widening it here also
+  // widens it wherever else it's shown — the linked document can sit outside
+  // the current window, and dropping the constraint beats landing on another
+  // document.
   useEffect(() => {
     if (!pendingSelectId) return
     const target = documents.find((d) => d.id === pendingSelectId)
     if (!target) return
     setSelectedId(pendingSelectId)
     if (!inDateRange(target.receivedDateTime)) {
-      setDateRange(ALL_DATES_RANGE)
-      setAppliedDateRange(ALL_DATES_RANGE)
+      setDateRangeImmediate(ALL_DATES_RANGE)
     }
     onPendingSelectConsumed?.()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -262,7 +274,7 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
   useEffect(() => {
     let cancelled = false
 
-    fetchExtractionKpis(kpiDateParams(appliedDateRange))
+    fetchExtractionKpis(kpiDateParams(appliedDateRange, undefined, customRange))
       .then((res) => {
         if (!cancelled) setKpis(res)
       })
@@ -273,7 +285,7 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
     return () => {
       cancelled = true
     }
-  }, [appliedDateRange])
+  }, [appliedDateRange, customRange])
 
   const formatPerformance = useMemo(() => mapFormatPerformance(kpis), [kpis])
 
@@ -292,7 +304,12 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
 
   const handleGo = () => {
     apply()
-    setAppliedDateRange(dateRange)
+    applyDateRange()
+  }
+
+  const handleReset = () => {
+    reset()
+    resetDateRange()
   }
 
   // Re-runs extraction, then reloads the queue AND the field tables. The
@@ -319,7 +336,10 @@ export default function DocumentAiExtraction({ pendingSelectId, onPendingSelectC
         dateRangeLabel={DEFAULT_DATE_RANGE}
         dateRangeValue={dateRange}
         onDateRangeChange={setDateRange}
+        customRange={customRange}
+        onCustomRangeChange={setCustomRange}
         onGo={handleGo}
+        onReset={handleReset}
       />
       <StatsRow stats={stats} actions={statsActions} />
 

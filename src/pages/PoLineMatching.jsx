@@ -9,6 +9,7 @@ import MatchingPerformance from '../components/MatchingPerformance'
 import VimProcessingTimeline from '../components/VimProcessingTimeline'
 import FilterEmptyState from '../components/FilterEmptyState'
 import { useFilters, matchesCompanyCode, matchesOption, withLiveOptions } from '../hooks/useFilters'
+import { useSharedDateRange } from '../context/DateRangeContext'
 import { poMatchingFilters, poMatchingStats } from '../data'
 import {
   fetchGoodsReceipts,
@@ -42,10 +43,10 @@ const EXPLANATION_NOT_READY = {
 }
 
 export default function PoLineMatching({ onNavigateToException }) {
-  const { draft, applied, setField, apply } = useFilters(poMatchingFilters)
+  const { draft, applied, setField, apply, reset } = useFilters(poMatchingFilters)
   const [selectedId, setSelectedId] = useState(null)
-  const [dateRange, setDateRange] = useState(DEFAULT_DATE_RANGE)
-  const [appliedDateRange, setAppliedDateRange] = useState(DEFAULT_DATE_RANGE)
+  const { dateRange, appliedDateRange, customRange, setDateRange, setCustomRange, applyDateRange, resetDateRange } =
+    useSharedDateRange()
 
   const [liveData, setLiveData] = useState({ ids: [], records: {} })
   const [loading, setLoading] = useState(true)
@@ -89,7 +90,7 @@ export default function PoLineMatching({ onNavigateToException }) {
   useEffect(() => {
     let cancelled = false
 
-    fetchMatchingKpis(kpiDateParams(appliedDateRange))
+    fetchMatchingKpis(kpiDateParams(appliedDateRange, undefined, customRange))
       .then((res) => {
         if (!cancelled) setKpis(res)
       })
@@ -100,7 +101,7 @@ export default function PoLineMatching({ onNavigateToException }) {
     return () => {
       cancelled = true
     }
-  }, [appliedDateRange])
+  }, [appliedDateRange, customRange])
 
   const [explanation, setExplanation] = useState(null)
 
@@ -109,7 +110,10 @@ export default function PoLineMatching({ onNavigateToException }) {
   // Every row is live; the Date Range filter narrows them by when the pipeline
   // wrote the invoice (managed createdAt), falling back to the invoice's own
   // date where that's missing.
-  const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
+  const inDateRange = useMemo(
+    () => dateRangeFilter(appliedDateRange, undefined, customRange),
+    [appliedDateRange, customRange]
+  )
 
   // Every dropdown is filled from the loaded rows — a static list would offer
   // choices (e.g. EDI) that never match a live invoice, since Invoices carries
@@ -243,7 +247,12 @@ export default function PoLineMatching({ onNavigateToException }) {
 
   const handleGo = () => {
     apply()
-    setAppliedDateRange(dateRange)
+    applyDateRange()
+  }
+
+  const handleReset = () => {
+    reset()
+    resetDateRange()
   }
 
   return (
@@ -255,7 +264,10 @@ export default function PoLineMatching({ onNavigateToException }) {
         dateRangeLabel={DEFAULT_DATE_RANGE}
         dateRangeValue={dateRange}
         onDateRangeChange={setDateRange}
+        customRange={customRange}
+        onCustomRangeChange={setCustomRange}
         onGo={handleGo}
+        onReset={handleReset}
       />
       <StatsRow stats={stats} />
 

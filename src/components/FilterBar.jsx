@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Calendar } from 'lucide-react'
+import MiniCalendar from './MiniCalendar'
 
 const defaultDateRangeOptions = [
   'Today',
@@ -12,7 +13,14 @@ const defaultDateRangeOptions = [
   'Last Quarter',
   'Year to Date',
   'Custom Range',
+  'All Dates',
 ]
+
+function formatCustomRangeLabel(customRange) {
+  if (!customRange?.start || !customRange?.end) return null
+  const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return `${fmt(customRange.start)} – ${fmt(customRange.end)}`
+}
 
 export default function FilterBar({
   fields,
@@ -23,12 +31,15 @@ export default function FilterBar({
   onDateRangeChange,
   dateRangeOptions,
   dateFieldLabel = 'Date Range',
+  customRange,
+  onCustomRangeChange,
   personaField,
   personaValue,
   onPersonaChange,
-  hideAdaptLink,
+  hideResetButton,
   hideGoButton,
   onGo,
+  onReset,
 }) {
   const options =
     dateRangeOptions ??
@@ -38,10 +49,18 @@ export default function FilterBar({
   const [internalDateRange, setInternalDateRange] = useState(dateRangeLabel)
   // Controlled when the parent passes dateRangeValue, uncontrolled otherwise.
   const dateRange = dateRangeValue ?? internalDateRange
+  const [calendarOpen, setCalendarOpen] = useState(false)
+  const dateFieldRef = useRef(null)
+
   const handleDateRangeChange = (value) => {
     setInternalDateRange(value)
     onDateRangeChange?.(value)
+    // Nothing to pick a window from yet, so open the calendar right away
+    // instead of silently falling back to "every date".
+    if (value === 'Custom Range') setCalendarOpen(true)
   }
+
+  const customRangeLabel = dateRange === 'Custom Range' ? formatCustomRangeLabel(customRange) : null
 
   return (
     <div className="filter-bar">
@@ -58,15 +77,40 @@ export default function FilterBar({
 
       <div className="filter-field">
         <label>{dateFieldLabel}</label>
-        <div className="filter-date-select">
+        <div className="filter-date-select" ref={dateFieldRef}>
           <select value={dateRange} onChange={(e) => handleDateRangeChange(e.target.value)}>
             {options.map((opt) => (
               <option key={opt}>{opt}</option>
             ))}
           </select>
-          <Calendar size={15} className="filter-date-icon" />
+          {dateRange === 'Custom Range' ? (
+            <button
+              type="button"
+              className="filter-date-icon-btn"
+              onClick={() => setCalendarOpen((v) => !v)}
+              aria-label="Choose custom date range"
+            >
+              <Calendar size={15} />
+            </button>
+          ) : (
+            <Calendar size={15} className="filter-date-icon" />
+          )}
         </div>
+        {customRangeLabel && <span className="filter-date-custom-label">{customRangeLabel}</span>}
       </div>
+
+      {calendarOpen && (
+        <MiniCalendar
+          anchorRef={dateFieldRef}
+          initialStart={customRange?.start}
+          initialEnd={customRange?.end}
+          onCancel={() => setCalendarOpen(false)}
+          onApply={(start, end) => {
+            onCustomRangeChange?.({ start, end })
+            setCalendarOpen(false)
+          }}
+        />
+      )}
 
       {personaField && (
         <div className="filter-field">
@@ -86,7 +130,11 @@ export default function FilterBar({
           Go
         </button>
       )}
-      {!hideAdaptLink && <button className="btn-link">Adapt Filters</button>}
+      {!hideResetButton && (
+        <button className="btn-link" onClick={onReset}>
+          Reset
+        </button>
+      )}
     </div>
   )
 }

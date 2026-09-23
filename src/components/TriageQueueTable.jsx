@@ -23,10 +23,11 @@ const COLUMNS = {
   vendor: (row) => row.vendor,
   subject: (row) => row.subject,
   attachments: (row) => row.attachments,
+  documents: (row) => row.documentCount,
 }
 
 export default function TriageQueueTable({ rows, selectedId, onSelect, loading, error }) {
-  const colCount = 7
+  const colCount = 8
   const ctl = useColumnSortFilter(rows, COLUMNS, { key: 'date', dir: 'desc' })
   const paging = usePagedRows(ctl.rows, undefined, { alwaysExpanded: true })
   const shownRowCount = loading || error || paging.visibleRows.length === 0 ? 1 : paging.visibleRows.length
@@ -43,9 +44,10 @@ export default function TriageQueueTable({ rows, selectedId, onSelect, loading, 
             <col style={{ width: '11%' }} />
             <col style={{ width: '10%' }} />
             <col style={{ width: '11%' }} />
+            <col style={{ width: '20%' }} />
             <col style={{ width: '22%' }} />
-            <col style={{ width: '28%' }} />
             <col style={{ width: '10%' }} />
+            <col style={{ width: '8%' }} />
             <col style={{ width: '8%' }} />
           </colgroup>
           <thead>
@@ -56,6 +58,7 @@ export default function TriageQueueTable({ rows, selectedId, onSelect, loading, 
               <SortFilterTh columnKey="vendor" label="Sender" ctl={ctl} />
               <SortFilterTh columnKey="subject" label="Subject" ctl={ctl} />
               <SortFilterTh columnKey="attachments" label="Attach." ctl={ctl} />
+              <SortFilterTh columnKey="documents" label="Docs" ctl={ctl} />
               <th></th>
             </tr>
           </thead>
@@ -97,6 +100,7 @@ export default function TriageQueueTable({ rows, selectedId, onSelect, loading, 
                     {row.subject}
                   </td>
                   <td>{row.attachments}</td>
+                  <td>{row.documentCount}</td>
                   <td>
                     <button className="icon-btn" onClick={(e) => e.stopPropagation()} aria-label="Row actions">
                       <MoreVertical size={16} />

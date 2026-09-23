@@ -16,12 +16,13 @@ function toApiDate(date) {
 // half-open [start, end), so the last day is `end` minus one CALENDAR day —
 // subtracting 24h would land on the wrong date across a DST change.
 //
-// 'Custom Range' and unknown labels come back unbounded (1970 → year 275760),
-// so both ends are clamped to something a service can answer for.
+// 'All Dates', an unpicked 'Custom Range' and unknown labels come back
+// unbounded (1970 → year 275760), so both ends are clamped to something a
+// service can answer for.
 const EARLIEST_QUERYABLE_YEAR = 2000
 
-export function kpiDateParams(rangeLabel, now = new Date()) {
-  const { start, end } = dateRangeBounds(rangeLabel, now)
+export function kpiDateParams(rangeLabel, now = new Date(), customBounds = null) {
+  const { start, end } = dateRangeBounds(rangeLabel, now, customBounds)
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const earliest = new Date(EARLIEST_QUERYABLE_YEAR, 0, 1)
   const lastDay = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1)
@@ -106,8 +107,13 @@ export const KPI_UNAVAILABLE = Object.freeze({})
 // scoped to the applied Date Range, so a label like "Emails Received Today"
 // would be wrong the moment another range is picked — the window goes here
 // rather than into the label.
-export function kpiRangeSubtitle(rangeLabel) {
-  return rangeLabel === ALL_DATES_RANGE ? 'All dates' : rangeLabel
+export function kpiRangeSubtitle(rangeLabel, customBounds = null) {
+  if (rangeLabel === ALL_DATES_RANGE) return 'All dates'
+  if (rangeLabel === 'Custom Range' && customBounds?.start && customBounds?.end) {
+    const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    return `${fmt(customBounds.start)} – ${fmt(customBounds.end)}`
+  }
+  return rangeLabel
 }
 
 // Overlays a KPI response onto the tile definitions, keeping their icon, colour
