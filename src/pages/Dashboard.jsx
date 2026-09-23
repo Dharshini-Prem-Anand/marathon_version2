@@ -51,7 +51,7 @@ const NO_ROWS = []
 // The KPI endpoints take a window and nothing else, so the filter bar's
 // dropdowns narrow the Priority Action Queue rather than the panels above it
 // — the same split every other page has.
-export default function Dashboard({ onNavigate }) {
+export default function Dashboard() {
   const { draft, applied, setField, apply } = useFilters(dashboardFilters)
   const [dateRange, setDateRange] = useState(DEFAULT_DATE_RANGE)
   const [appliedDateRange, setAppliedDateRange] = useState(DEFAULT_DATE_RANGE)
@@ -135,12 +135,29 @@ export default function Dashboard({ onNavigate }) {
 
   const pipelineRows = pipeline ?? NO_ROWS
   const pipelineLoaded = pipeline != null
-  const funnel = useMemo(() => pipelineFunnel(pipelineRows), [pipelineRows])
   const statusByInvoice = useMemo(() => invoiceStatusFromPipeline(pipelineRows), [pipelineRows])
   // Queue rows carry the attributes the filter bar acts on: the vendor from
   // the extraction, the channel from the email, the company code from the PO
   // and the status from where the pipeline left the invoice.
   const inDateRange = useMemo(() => dateRangeFilter(appliedDateRange), [appliedDateRange])
+
+  // Received date lives on the email, not the pipeline row, so the flow
+  // strip's document counts join back to it by MessageID — the same date
+  // every other page filters its document rows by.
+  const receivedByMessageId = useMemo(() => {
+    const map = {}
+    for (const email of emails) {
+      if (email.MessageID) map[email.MessageID] = email.ReceivedDateTime
+    }
+    return map
+  }, [emails])
+
+  const pipelineRowsInRange = useMemo(
+    () => pipelineRows.filter((row) => inDateRange(receivedByMessageId[row.MessageID])),
+    [pipelineRows, receivedByMessageId, inDateRange]
+  )
+
+  const funnel = useMemo(() => pipelineFunnel(pipelineRowsInRange), [pipelineRowsInRange])
 
   const queueRows = useMemo(() => {
     const channelByInvoice = {}
@@ -226,7 +243,6 @@ export default function Dashboard({ onNavigate }) {
           bottlenecks={bottlenecks}
           diagnostics={diagnostics}
           intervention={intervention}
-          onReviewRecommendations={() => onNavigate?.('Exceptions & Recommendations')}
         />
       </div>
 

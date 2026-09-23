@@ -11,7 +11,6 @@ export default function Bottlenecks({
   bottlenecks,
   diagnostics = [],
   intervention = {},
-  onReviewRecommendations,
 }) {
   // null while /preValidationKpis is in flight, [] when it came back with no
   // failing rules — neither can be scaled against a maximum.
@@ -68,9 +67,6 @@ export default function Bottlenecks({
               <div className="intervention-stat-value color-orange">{intervention.valueAtRisk}</div>
             </div>
           </div>
-          <button className="btn-primary" onClick={onReviewRecommendations}>
-            Review Recommendations
-          </button>
         </div>
       </div>
     </section>
