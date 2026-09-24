@@ -141,13 +141,16 @@ export function buildScorecard(definitions, { touchlessCount }) {
 // End-to-End Invoice Flow
 // ---------------------------------------------------------------------------
 
-// The six steps are the pipeline's own stages, in order. Ready for VIM is the
-// one the pipeline doesn't record — that comes from the matching service.
-export function buildFlowSteps({ funnel, matching, pipelineLoaded }) {
+// Email Received is the same number as Email & Attachment Triage's Emails
+// Received tile (/triageKpis). The rest are the pipeline's own stages, in
+// order; Ready for VIM is the one the pipeline doesn't record — that comes
+// from the matching service.
+export function buildFlowSteps({ funnel, matching, triage, pipelineLoaded }) {
   const stage = (name) => (pipelineLoaded ? count(funnel.stages[name]) : LOADING)
 
   return [
-    { label: 'Emails / Documents Received', value: pipelineLoaded ? count(funnel.documents) : LOADING },
+    { label: 'Email Received', value: pending(triage, count(triage?.emailsReceivedToday)) },
+    { label: 'Documents Received', value: pipelineLoaded ? count(funnel.documents) : LOADING },
     { label: 'Auto-Triaged', value: stage('EmailClassified') },
     { label: 'Extracted', value: stage('EmailExtracted') },
     { label: 'PO / Validated', value: stage('Prevalidation') },

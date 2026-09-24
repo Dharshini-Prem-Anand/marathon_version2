@@ -34,7 +34,8 @@ export const dashboardPersonaField = {
 }
 
 export const flowSteps = [
-  { label: 'Emails / Documents Received', value: '2,600' },
+  { label: 'Email Received', value: '2,600' },
+  { label: 'Documents Received', value: '2,600' },
   { label: 'Auto-Triaged', value: '2,314' },
   { label: 'Extracted', value: '2,244' },
   { label: 'PO / Validated', value: '2,180' },

@@ -5,14 +5,15 @@
 // once the user has narrowed the data with the filter bar.
 
 const flowStepLabels = [
-  'Emails / Documents Received',
+  'Email Received',
+  'Documents Received',
   'Auto-Triaged',
   'Extracted',
   'PO / Validated',
   'Ready for VIM',
   'Posted',
 ]
-const flowStepBaseline = [2600, 2314, 2244, 2180, 1928, 1874]
+const flowStepBaseline = [2600, 2600, 2314, 2244, 2180, 1928, 1874]
 
 const valueRealizationBaseline = {
   fte: 4.2,

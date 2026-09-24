@@ -23,6 +23,7 @@ import {
   fetchMatchingKpis,
   fetchPurchaseOrders,
   fetchTouchlessCount,
+  fetchTriageKpis,
   fetchVendorNameFields,
 } from '../api/invoiceAutomation'
 import { buildExceptionRows } from '../utils/exceptionsMappers'
@@ -62,6 +63,7 @@ export default function Dashboard() {
   const [exceptionKpis, setExceptionKpis] = useState(null)
   const [matching, setMatching] = useState(null)
   const [touchlessCount, setTouchlessCount] = useState(null)
+  const [triageKpis, setTriageKpis] = useState(null)
 
   const [pipeline, setPipeline] = useState(null)
   const [emails, setEmails] = useState([])
@@ -85,10 +87,12 @@ export default function Dashboard() {
     setExceptionKpis(null)
     setMatching(null)
     setTouchlessCount(null)
+    setTriageKpis(null)
 
     load(fetchExceptionKpis, setExceptionKpis)
     load(fetchMatchingKpis, setMatching)
     load(fetchTouchlessCount, setTouchlessCount)
+    load(fetchTriageKpis, setTriageKpis)
 
     return () => {
       cancelled = true
@@ -202,7 +206,7 @@ export default function Dashboard() {
   )
 
   const scorecard = buildScorecard(scorecardMetrics, { touchlessCount })
-  const flow = buildFlowSteps({ funnel, matching, pipelineLoaded })
+  const flow = buildFlowSteps({ funnel, matching, triage: triageKpis, pipelineLoaded })
   const legend = buildFlowLegend({ touchlessCount, exceptions: exceptionKpis })
   const cards = buildCapabilityCards(capabilityCards, { touchlessCount })
   const bottlenecks = buildBottlenecks(touchlessCount)

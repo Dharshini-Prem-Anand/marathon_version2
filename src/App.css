@@ -2736,8 +2736,8 @@ body.is-resizing-cols iframe {
 
 /* ---------- ZOOMED PRIORITY ACTION QUEUE ---------- */
 /* Opens centered and sized to show the whole page of rows at once: nearly the
-   full viewport, with Issue given the spare width so it wraps onto fewer
-   lines. The body only scrolls if the screen is too small to fit it. */
+   full viewport, with Recommendation given the spare width so it wraps onto
+   fewer lines. The body only scrolls if the screen is too small to fit it. */
 .priority-queue .table-modal {
   width: min(1400px, 96vw);
   max-height: 94vh;
@@ -2755,7 +2755,16 @@ body.is-resizing-cols iframe {
 
 .priority-queue .exception-table-full th:nth-child(5),
 .priority-queue .exception-table-full td:nth-child(5) {
+  white-space: nowrap;
+  min-width: 0;
   max-width: none;
+}
+
+.priority-queue .exception-table-full th:nth-child(6),
+.priority-queue .exception-table-full td:nth-child(6) {
+  white-space: normal;
+  word-break: break-word;
+  min-width: 360px;
 }
 
 /* Panel view of the Priority Action Queue: every cell keeps its full text on
@@ -2771,10 +2780,10 @@ body.is-resizing-cols iframe {
   white-space: nowrap;
 }
 
-/* Issue carries a full sentence, so it's capped and ellipsized (full text in
+/* Recommendation is a paragraph, so it's capped and ellipsized (full text in
    the hover title) rather than widening the table or wrapping the row taller. */
-.queue-table-scroll td:nth-child(4) {
-  max-width: 220px;
+.queue-table-scroll td:nth-child(5) {
+  max-width: 260px;
   overflow: hidden;
   text-overflow: ellipsis;
 }

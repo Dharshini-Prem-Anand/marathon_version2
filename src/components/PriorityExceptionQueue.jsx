@@ -8,6 +8,7 @@ import TableFillerRows from './TableFillerRows'
 import TableExpandModal from './TableExpandModal'
 import { useColumnSortFilter } from '../hooks/useColumnSortFilter'
 import { usePagedRows } from '../hooks/usePagedRows'
+import { exceptionLabel } from '../utils/exceptionsMappers'
 
 const PRIORITY_RANK = { High: 0, Medium: 1, Low: 2 }
 
@@ -132,9 +133,7 @@ function ExceptionTable({ ctl, paging, expanded, selectedId, onSelect, expandedI
                   </tr>
                   {open &&
                     g.exceptions.map((e) => {
-                      const text = `${e.exceptionFieldName} : ${e.exceptionFieldValue ?? '—'}, Exception Type : ${
-                        e.exceptionType ?? '—'
-                      }`
+                      const text = exceptionLabel(e)
                       return (
                         <tr
                           key={e.id}

@@ -52,6 +52,12 @@ function resolveExceptionType(row) {
   return { fieldName: 'InvoiceNumber', fieldValue: row.InvoiceNumber, exceptionType }
 }
 
+// One-line description of a single exception row, e.g.
+// "MaterialNumber : 1001, Exception Type : No GRN".
+export function exceptionLabel(row) {
+  return `${row.exceptionFieldName} : ${row.exceptionFieldValue ?? '—'}, Exception Type : ${row.exceptionType ?? '—'}`
+}
+
 export function buildExceptionRows(exceptions, vendorNamesByInvoice = {}) {
   return [...exceptions]
     .sort((a, b) => {

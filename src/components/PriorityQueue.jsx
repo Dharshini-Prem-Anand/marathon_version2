@@ -16,8 +16,8 @@ const COLUMNS = {
   invoice: (row) => row.invoice,
   vendor: (row) => row.vendor,
   amount: (row) => row.amount,
-  issue: (row) => row.issue,
-  due: (row) => row.due,
+  exception: (row) => row.exceptionType ?? '—',
+  recommendation: (row) => row.recommendation ?? '—',
   sla: (row) => row.sla,
 }
 
@@ -27,7 +27,7 @@ const COMPACT_COL_COUNT = 5
 const EXPANDED_COL_COUNT = 7
 
 // One flat row per exception — an invoice with several flagged exceptions
-// shows several rows, each carrying its own amount/issue/SLA. No grouping
+// shows several rows, each carrying its own amount/exception/SLA. No grouping
 // or expand/collapse; every exception is visible directly in the table.
 function QueueTable({ ctl, paging, expanded, selectedId, onSelect, emptyMessage }) {
   const colCount = expanded ? EXPANDED_COL_COUNT : COMPACT_COL_COUNT
@@ -42,8 +42,8 @@ function QueueTable({ ctl, paging, expanded, selectedId, onSelect, emptyMessage 
             <SortFilterTh columnKey="invoice" label="Invoice" ctl={ctl} />
             <SortFilterTh columnKey="vendor" label="Vendor" ctl={ctl} />
             {expanded && <SortFilterTh columnKey="amount" label="Amount" ctl={ctl} />}
-            <SortFilterTh columnKey="issue" label="Issue" ctl={ctl} />
-            <SortFilterTh columnKey="due" label="Due" ctl={ctl} />
+            <SortFilterTh columnKey="exception" label="Exception" ctl={ctl} />
+            <SortFilterTh columnKey="recommendation" label="Recommendation" ctl={ctl} />
             {expanded && <SortFilterTh columnKey="sla" label="SLA" ctl={ctl} />}
           </tr>
         </thead>
@@ -68,8 +68,8 @@ function QueueTable({ ctl, paging, expanded, selectedId, onSelect, emptyMessage 
                 <td className="cell-mono">{row.invoice}</td>
                 <td>{row.vendor}</td>
                 {expanded && <td>{row.amount}</td>}
-                <td title={row.issue}>{row.issue}</td>
-                <td className={row.dueColor ? `color-${row.dueColor}` : undefined}>{row.due}</td>
+                <td title={row.exceptionType ?? undefined}>{row.exceptionType ?? '—'}</td>
+                <td title={row.recommendation ?? undefined}>{row.recommendation ?? '—'}</td>
                 {expanded && (
                   <td>
                     <span className={`priority-dot color-${row.slaColor}`} />
